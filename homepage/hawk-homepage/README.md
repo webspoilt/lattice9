@@ -1,230 +1,193 @@
-# HAWK: Adversarial Intelligence Operating Environment
+# HAWK: A Graph-Native Probabilistic Offensive Intelligence Engine
 
-![Hawk Interface Banner](/final_verification.png)
-
-## 0. PREAMBLE: SCIENTIFIC INSTRUMENTALISM
-
-HAWK is not a dashboard. It is a **graph-native probabilistic offensive intelligence engine** and an adversarial systems analysis environment. It is built on the philosophy of **Scientific Instrumentalism**, where the interface behaves not as a reflection of data, but as a live computational instrument that shapes, propagates, and optimizes adversarial intelligence in real-time.
-
-Traditional cybersecurity tools focus on "visibility." HAWK focuses on **inference**. It treats the attack surface as a dynamical system governed by the laws of information theory, spectral graph theory, and reinforcement learning.
+> *“Reconnaissance is not an enumeration problem; it is a signal processing and topology stabilization problem.”*
 
 ---
 
-## 1. CORE INTELLIGENCE MODULES
+## 0. CORE IDENTITY: THE FAILURE OF MODERN RECONNAISSANCE
 
-### 1.1 Bayesian Attack Propagation Engine
+Modern offensive reconnaissance pipelines are fundamentally broken. We have reached a state of **Data Exhaustion**. The industry has optimized for the breadth of tool output—more subdomains, more open ports, more CVE matches—at the cost of actual intelligence. 
 
-The core of HAWK’s intelligence is a dynamic Bayesian network mapped onto an infrastructure graph.
+Raw findings are not intelligence. Intelligence is the result of **Decision Compression**.
 
-- **Probabilistic Edges**: Relationships between nodes are not binary. They represent the conditional probability $P(H|E)$ of lateral movement or exploit success.
-- **Confidence Propagation**: As new intelligence enters the system, confidence pulses ripple through the topology, illuminating attack chains based on updated posterior probabilities.
-- **Active Math**: Bayesian update formulas emerge dynamically near active edges, displaying live recalculations:
-  $$P(H|E) = \frac{P(E|H)P(H)}{P(E)}$$
+### The Reconnaissance Failure Mode
 
-### 1.2 Shannon Entropy Fields
+Current pipelines rely on **Tool Orchestration**—sequential execution of scanners whose outputs are aggregated but rarely synthesized. This leads to:
 
-HAWK visualizes uncertainty as a physical field. Shannon entropy is treated as a destabilizing force.
+1. **Observation Overload**: Thousands of "potential" findings with no conditional relationship to each other.
+2. **Epistemic Decay**: The relevance of a finding decays the moment it is observed, yet tools treat findings as static truths.
+3. **Context Fragmentation**: Discovered infrastructure is treated as a flat list rather than an evolving, interconnected graph.
 
-- **Topology Instability**: High-entropy nodes ($H(X) > 0.6$) exhibit visual jitter and stochastic coordinate offsets, simulating "probabilistic turbulence."
-- **Spectral Distortion**: Areas of high uncertainty generate visual noise and particle field interactions, signaling to the operator where intelligence is most decayed.
-- **Dynamic Signal/Noise**: The field stabilizes geometrically in areas of high certainty, creating a visual contrast between "known" infrastructure and "noisy" adversarial space.
+### The HAWK Thesis
 
-### 1.3 Spectral Topology System
+HAWK shifts the paradigm from tool orchestration to **Infrastructure Reasoning**. We treat an attack surface not as a target list, but as an **Evolving Probabilistic System**. 
 
-The geometric organization of the graph is driven by **Spectral Graph Theory**.
+HAWK is not attempting to automate hacking. It is an operational environment designed to reduce operator cognitive load by compressing massive observation sets into **High-Confidence Exploit Narratives**. It treats every finding as a probabilistic hypothesis until evidence convergence occurs across the spectral topology of the target.
 
-- **Graph Laplacians**: The system calculates the Laplacian matrix $L = D - A$ of the infrastructure in real-time.
-- **Algebraic Connectivity**: The Fiedler value ($\lambda_2$) determines cluster emergence and trust-boundary formation.
-- **infrastructure Segmentation**: Nodes are clustered based on their spectral harmonics, revealing hidden infrastructure relationships that traditional scanning would miss.
+### The Concept of “Decision Compression”
 
-### 1.4 Bellman Trajectory Optimization
-
-HAWK uses reinforcement learning principles to optimize reconnaissance and exploitation paths.
-
-- **Optimal Trajectories**: The interface renders a "Ghost Agent" traversing the Bellman-optimal path through the graph.
-- **Intelligence Gain Maximization**: Paths are calculated to maximize information gain while minimizing exposure, following the value function:
-  $$V^*(s) = \max_a [R + \gamma V^*]$$
+In a standard operation, an analyst might receive 5,000 findings. Each finding requires ~2 minutes of cognitive evaluation. This creates a **Cognitive Deficit** that HAWK seeks to resolve. Through **Decision Compression**, the engine reduces these 5,000 findings into 5-10 "Exploit Narratives"—high-confidence, mathematically-linked trajectories where the evidence has converged.
 
 ---
 
-## 2. USER EXPERIENCE & INTERFACE DESIGN
+## 1. MATHEMATICAL FOUNDATIONS
 
-### 2.1 Visual Language (Tungsten/Graphite)
+### 1.1 Spectral Graph Theory & Topology Stabilization
 
-The UI is designed to feel like a classified scientific computing environment (think Palantir Gotham meets CERN Control Room).
+We model infrastructure as a graph $G = (V, E)$, where $V$ are entities (hosts, services, identities) and $E$ are observed or inferred relationships. To understand the "structure" of the attack surface, we analyze the **Graph Laplacian**:
 
-- **Base Layers**: Graphite black and tungsten gray provide a high-contrast, low-fatigue background.
-- **Spectral Highlights**: Muted cyan and restrained amber are used only for active telemetry and anomaly detection.
-- **Probabilistic Glow**: Subtle emission effects are reserved for high-confidence nodes, creating a "computational aura."
+$$L = D - A$$
 
-### 2.2 Motion Systems & Physical Simulation
+Where $D$ is the degree matrix and $A$ is the adjacency matrix. By calculating the eigenvalues of the normalized Laplacian:
 
-Animations in HAWK are never decorative; they are **physically simulated** and **mathematically constrained**.
+$$\mathcal{L} = I - D^{-1/2} A D^{-1/2}$$
 
-- **Force-Directed Physics**: Nodes attract and repel based on D3 simulation parameters, reflecting their trust relationships.
-- **Inference-Driven Transitions**: When new relationships are inferred, the graph topology physically reorganizes to accommodate the new information.
-- **Diffusion Systems**: Changes in one part of the graph ripple through the topology like wave propagation in a dynamical field.
+We derive the **Algebraic Connectivity** ($\lambda_2$). This value is a physical constant of the target's infrastructure. A collapse in $\lambda_2$ indicates a segmentation breach or a hidden trust-boundary emergence.
 
-### 2.3 Dynamic Mathematical Infrastructure
+- **Spectral Clustering**: We use the eigenvectors associated with the smallest non-zero eigenvalues (the Fiedler vector) to partition the graph into "Functional Infrastructure Segments." This reveals hidden VPC boundaries, container clusters, and isolated networks that traditional scanning misses.
+- **Centrality & Chokepoints**: We calculate Eigenvector Centrality to identify nodes that, if compromised, maximize the diffusion of adversarial state across the entire topology. This is the **Topological Leverage** of a node.
 
-Powered by **KaTeX**, the interface injects live mathematical annotations directly into the DOM layer above the canvas. These annotations follow node coordinates and reflect the current state of the probabilistic engine.
+### 1.2 Bayesian Evidence Fusion & Posterior Sampling
 
----
+The Analysis Engine treats every observation as a piece of evidence $E$ that updates the probability of a hypothesis $H$ (e.g., "This node is vulnerable to lateral movement").
 
-## 3. DEEP DIVE: THE MATHEMATICAL MIDDLEWARE
+We apply **Bayesian Posterior Sampling**:
 
-### 3.1 Spectral Graph Theory & Topology Stabilization
+$$P(H|E) = \frac{P(E|H) \cdot P(H)}{P(E)}$$
 
-The stability of the intelligence field is maintained via the spectral properties of the graph. We define the normalized Laplacian as:
-$$\mathcal{L} = D^{-1/2} (D - A) D^{-1/2}$$
-where $D$ is the degree matrix and $A$ is the adjacency matrix.
+- **Uncertainty Propagation**: When evidence is discovered at Node $A$, the confidence pulse ripples to neighboring nodes $B$ and $C$ based on the conditional exploitability of their relationships.
+- **Confidence Decay**: Intelligence has a half-life. $P(H)$ is subject to temporal decay: $P(H)_t = P(H)_0 \cdot e^{-\lambda t}$. If a service isn't re-enumerated, the engine's confidence in its state automatically returns to a state of high entropy.
+- **False Positive Suppression**: Findings that lack "Evidence Convergence" across multiple independent observables are deprioritized, significantly reducing alert noise.
 
-- **Topology Analysis**: The second smallest eigenvalue $\lambda_2$ (the Algebraic Connectivity) is monitored. A collapse in $\lambda_2$ triggers a "Structural Anomaly" alert, indicating that the adversarial space has become disconnected or partitioned.
-- **Node Ranking**: We use Eigenvector Centrality to identify "Critical Path Intersections" which are visually emphasized with a high-intensity cyan glow.
+### 1.3 Information Theory & Signal-to-Noise
 
-### 3.2 Bayesian Posterior Sampling
+We measure the efficiency of our recon pipeline using **Shannon Entropy**:
 
-The `InferenceEngine` (internal logic) simulates thousands of posterior probability distributions for potential exploit paths.
+$$H(X) = -\sum_{i=1}^{n} P(x_i) \log_2 P(x_i)$$
 
-1. **Prior Distribution**: Initial recon data provides the $P(H)$.
-2. **Likelihood Function**: Success rates from similar infrastructure nodes provide $P(E|H)$.
-3. **Posterior Calculation**: The engine performs Markov Chain Monte Carlo (MCMC) sampling to visualize the most likely attack trajectories.
+The goal of the Recon Layer is the **Minimization of Graph Entropy**. 
+
+- **Response Instability**: If a host's responses vary over time, the node's entropy increases. This creates **Probabilistic Turbulence** in the interface, signaling to the operator that the underlying data is unreliable or transitioning.
+- **Anomalous Discovery**: Low-entropy infrastructure segments that suddenly exhibit high-information signals (new ports, changed headers) are flagged as "State Drift Anomalies."
+- **Entropy Fields**: We treat uncertainty as a physical field. High-entropy zones exhibit "stochastic jitter," visually representing the noise floor of the intelligence environment.
 
 ---
 
-## 4. DESIGN SYSTEM: THE "CYBERNETIC NOIR" AESTHETIC
+## 2. SYSTEM ARCHITECTURE
 
-### 4.1 Color Architecture (HEX & HSL)
-
-| Token | HEX | HSL | Semantic Role |
-| :--- | :--- | :--- | :--- |
-| **Tungsten** | `#2d2d2d` | `(0, 0%, 18%)` | Primary Surface |
-| **Graphite** | `#1a1a1a` | `(0, 0%, 10%)` | Deep Background |
-| **Operational Cyan** | `#00f2ff` | `(183, 100%, 50%)` | Intelligence Signal |
-| **Anomaly Amber** | `#d4a574` | `(31, 55%, 64%)` | Probabilistic Entropy |
-| **Terminal Red** | `#ff4444` | `(0, 100%, 63%)` | Critical Path / Exploit |
-
-### 4.2 Typography & Telemetry
-
-We use **IBM Plex Mono** exclusively to maintain the feel of a high-precision scientific instrument. All labels are automatically capitalized to mirror military and operational intelligence standards.
-
----
-
-## 5. COMPONENT ARCHITECTURE SPECIFICATION
-
-### 5.1 HeroGraph (The Core)
-
-- **Props**: `data`, `onNodeClick`, `entropyLevel`.
-- **Logic**: Implements a 3-tier rendering loop:
-  1. **Pre-render**: Physics calculation and coordinate validation.
-  2. **Canvas Render**: Node and edge drawing with custom gradients.
-  3. **Overlay Render**: KaTeX mathematical injection.
-- **Stability Gate**: Line 175 of `HeroGraph.tsx` implements a strict `isFinite()` check to prevent WebGL/Canvas collapse during high-velocity physics updates.
-
-### 5.2 BackgroundField (The Noise)
-
-- **Shader**: Custom GLSL fragment shader (`BackgroundField.tsx`).
-- **Function**: Visualizes the "Information Vacuum." As entropy increases in the graph, the background noise density scales exponentially.
-- **Optimization**: Uses `requestAnimationFrame` for smooth 60fps noise propagation without CPU overhead.
-
-### 5.3 MathAnnotations (The Infrastructure)
-
-- **Rendering**: Directly manipulates the DOM to overlay KaTeX elements on top of the Canvas.
-- **Sync**: Uses the `graph2ScreenPos` utility to ensure equations "stick" to nodes even during high-zoom or rapid panning.
-
----
-
-## 6. OPERATIONAL CASE STUDIES
-
-### 6.1 Case Study: Lateral Movement Inference
-
-In an infrastructure with 500+ nodes, HAWK detected a collapse in spectral connectivity between the "Public Web" and "Vault" segments. By applying the Bayesian update $P(H|E)$, the system identified a high-confidence ($P=0.89$) path through a misconfigured service account that traditional tools missed due to its low "static" risk.
-
-### 6.2 Case Study: Entropy Field Stabilization
-
-During an active "Red Team" simulation, the operator observed high "Probabilistic Turbulence" (visual jitter) in the DMZ segment. By focusing recon on those specific nodes, the operator successfully "collapsed the uncertainty," stabilizing the graph and revealing the true attack trajectory within minutes.
-
----
-
-## 7. INSTALLATION & EXTENSION GUIDE
-
-### 7.1 Prerequisites
-
-- Node.js 18+
-- pnpm (Recommended) or npm
-
-### 7.2 Customizing the Intelligence Engine
-
-To add new mathematical models:
-
-1. Open `client/src/components/HeroGraph.tsx`.
-2. Locate the `useEffect` responsible for annotation generation.
-3. Inject your LaTeX string and coordinate logic into the `annotations` state.
-
-### 7.3 Building for Production
-
-The system uses the Vite build pipeline with specialized CSS purging to ensure the "Cybernetic Noir" theme loads in under 400ms.
-
-```bash
-npm run build
-```
-
----
-
-## 8. GLOSSARY OF SCIENTIFIC TERMS
-
-- **Adversarial Systems Analysis**: The study of complex systems specifically through the lens of how they can be manipulated, bypassed, or compromised by an intelligent adversary.
-- **Graph Laplacian ($L$)**: A matrix used to describe the "connectedness" of a graph.
-- **MCMC Sampling**: A class of algorithms for sampling from a probability distribution.
-- **Algebraic Connectivity**: The second smallest eigenvalue of the Laplacian matrix.
-
----
-
-## 10. TECHNICAL APPENDIX: IMPLEMENTATION DETAILS
-
-### 10.1 File Structure & System Mapping
-
-The HAWK engine is organized into a modular hierarchy to ensure separation of concerns between the mathematical simulation and the UI rendering layers.
+### 2.1 The Distributed Intelligence Pipeline
 
 ```text
-client/src/
-├── components/
-│   ├── HeroGraph.tsx         <-- The Intelligence Field (Canvas Simulation)
-│   ├── MathAnnotations.tsx   <-- Infrastructure Layer (KaTeX DOM injection)
-│   ├── BackgroundField.tsx   <-- Entropy Shader (Three.js/GLSL)
-│   ├── CoreSections.tsx      <-- Operational Environments (Bento Grids)
-│   └── ui/                   <-- Atomic Design Primitives (Shadcn/UI)
-├── lib/
-│   └── utils.ts              <-- Geometric & Statistical Helpers
-├── pages/
-│   └── Home.tsx              <-- Main Mission Control Entry Point
-└── App.tsx                   <-- Global Router & Simulation Context
++----------------+       +-------------------+       +-----------------------+
+|  RECON LAYER   | ----> | EVIDENCE NORM     | ----> | INFERENCE ENGINE      |
+| (Distributed)  |       | (De-duplication)  |       | (Bayesian Reasoning)  |
++----------------+       +-------------------+       +-----------+-----------+
+                                                                 |
+                                                                 v
++----------------+       +-------------------+       +-----------+-----------+
+| EPISODIC MEMO  | <---- | GRAPH EVOLUTION   | <---- | TOPOLOGY STABILIZER   |
+| (Historical)   |       | (State Drift)     |       | (Spectral Analysis)   |
++----------------+       +-------------------+       +-----------+-----------+
+                                                                 |
+                                                                 v
+                                                     +-----------+-----------+
+                                                     | MISSION CONTROL       |
+                                                     | (Visual Intelligence) |
+                                                     +-----------------------+
 ```
 
-### 10.2 Intelligence Field Specs (HeroGraph.tsx)
+### 2.2 Probabilistic Propagation Architecture
 
-The `HeroGraph` utilizes `react-force-graph-2d` for its high-performance canvas engine.
-
-- **Node Simulation**: Nodes are treated as masses in a Newtonian force field.
-- **Link Tension**: Links are treated as Hookean springs, where the spring constant $k$ is inversely proportional to the inference confidence $P(H|E)$.
-- **Collision Avoidance**: A multi-body force is applied to prevent visual occlusion in dense infrastructure segments.
-
-### 10.3 The "Information Vacuum" (BackgroundField.tsx)
-
-The background is not a static color but a dynamic **Information Vacuum** field.
-
-- **Shader Pipeline**: A custom fragment shader calculates Perlin noise modulated by the global `entropy` state.
-- **Atmospheric Depth**: High-uncertainty zones ($H > 0.8$) trigger a "distortion" effect in the shader, visually representing the breakdown of intelligence signals.
-
-### 10.4 Deployment & Readiness Checklist
-
-Before the mission is launched (Production Deployment), the following stability gates must be cleared:
-
-- [x] **Finite State Gate**: All canvas rendering loops wrapped in `isFinite()` checks.
-- [x] **Type Safety**: Full TypeScript coverage for all probabilistic data objects.
-- [x] **KaTeX Latency**: Math annotations must render in $<10ms$ to prevent frame-drop during pans.
-- [x] **Responsive Topology**: The graph must auto-scale to fit $1536 \times 730$ operational viewports.
+```text
+[ NODE A ] --- (Signal: Port 80) ---> [ EVIDENCE FUSION ]
+                                              |
+[ NODE A ] --- (Signal: CVE Match) ---> [ WEIGHTED SCORING ]
+                                              |
+                                              v
+[ TOPOLOGY ] <----------------------- [ STATE PROPAGATION ]
+      |
+      |----(Conditional P=0.7)---> [ NODE B (Inferred Vulnerable) ]
+      |
+      |----(Conditional P=0.4)---> [ NODE C (Low Confidence) ]
+```
 
 ---
 
-**[ END OF MASTER MANUAL ]**
+## 3. CORE MODULES
+
+### 3.1 Graph Engine (The Topology)
+
+Built on high-performance graph primitives (NetworkX / Custom C++ bindings), the engine handles:
+
+- **Topology Partitioning**: Automated discovery of network segmentation.
+- **Chokepoint Discovery**: Mathematical identification of "Must-Pass" infrastructure nodes.
+- **Spectral Ranking**: Sorting targets not by "severity," but by "topological leverage."
+
+### 3.2 Analysis Engine (The Reasoning)
+
+The "Epistemic Core" of the platform:
+
+- **Confidence Fusion**: Merging evidence from Nmap, subfinder, and custom crawlers into a single Bayesian state.
+- **Exploit-Chain Weighting**: Dynamically calculating the cost of a multi-hop exploit path.
+- **Uncertainty Scoring**: Measuring the "Known-Unknowns" in a specific segment.
+
+### 3.4 Temporal Memory Layer
+
+- **Graph Snapshots**: Version-controlled states of the entire attack surface.
+- **Infrastructure Drift Analysis**: Identifying when "Shadow IT" emerges or when patches are reverted.
+- **Episodic Recall**: Comparing current operational signals against historical baseline behaviors.
+
+---
+
+## 4. OPERATIONAL PHILOSOPHY: EPISTEMIC CORRECTNESS
+
+HAWK is designed for the **Skeptical Operator**. We avoid "hallucinated findings" by adhering to a strict **Evidence-First** protocol.
+
+- **Explainability**: Every $P(H|E)$ calculation can be traced back to the specific observations that generated it.
+- **Hypothesis Testing**: HAWK treats every finding as a probabilistic hypothesis until evidence convergence occurs. 
+- **Reasoning Transparency**: The interface visualizes the "Confidence Field" so the operator knows exactly where the system is guessing and where it is certain.
+
+---
+
+## 5. UI / VISUALIZATION PHILOSOPHY
+
+The interface is intentionally designed as a **Scientific Computing Environment**, moving away from the aesthetic of traditional cybersecurity dashboards toward the look and feel of a **Computational Physics Simulation**.
+
+### 5.1 The Visual Language of Uncertainty
+
+- **Physically Simulated Topology**: Nodes do not move according to pre-scripted animations. They move according to a **Physically Simulated Force-Field** where distance represents trust and velocity represents change-frequency. The graph is a live, breathing representation of adversarial state.
+- **Entropy Field Rendering**: Areas of high uncertainty are rendered with stochastic noise and particle turbulence. This is not decorative; it is a visual representation of the noise floor of the intelligence environment.
+- **Spectral Topology Stabilization**: The graph "snaps" into geometric patterns as the Laplacian eigenvalues stabilize. When the topology becomes rigid, it indicates a well-understood, high-confidence infrastructure segment.
+- **Bayesian Propagation visualization**: When a new high-confidence finding enters the system, a cyan pulse ripples through the graph, physically displacing nodes and reorganizing the topology to accommodate the new evidence.
+
+---
+
+## 6. RESEARCH DIRECTIONS & ENGINEERING CONSTRAINTS
+
+### 6.1 Future Research
+
+- **Latent-Space Infrastructure Embeddings**: Mapping infrastructure into semantic vector spaces to identify "Similar-by-Behavior" targets.
+- **Autonomous Exploit Validation**: Safe, non-intrusive confirmation of inferred vulnerabilities.
+- **Temporal Topology Forecasting**: Predicting where new infrastructure will emerge based on historical growth patterns.
+- **Reinforcement Learning Recon**: Training agents to navigate the graph to minimize entropy with minimum packet footprint.
+
+### 6.2 Engineering Constraints (The Honest Truth)
+
+- **Graph Scaling Limits**: Analyzing a full `/16` network at the service level creates memory pressure that can crash the episodic memory layer. We currently utilize aggressive graph pruning to stay within RAM limits.
+- **Spectral Bottlenecks**: Calculating Laplacians for graphs with $|V| > 10,000$ is computationally expensive. We are exploring GPU-accelerated spectral analysis.
+- **Inference Degradation**: In disconnected graph segments, the engine's reasoning capability drops to near-zero, reverting to traditional tool-list behavior.
+- **Temporal Inconsistency**: Infrastructure drift can sometimes move faster than the enumeration cycle, leading to "Stale Intelligence" anomalies.
+
+---
+
+## 7. FINAL REFLECTION
+
+HAWK is an evolving research notebook. It is a manifesto for a more mathematically grounded approach to offensive operations. It is currently in a state of **High Prototype Instability**. It is an experiment in whether we can move beyond the "Scanning" era into the "Inference" era.
+
+**Status**: *Either the beginning of an extremely sophisticated offensive intelligence system or the early stages of a beautiful distributed systems disaster.*
+
+---
+
+**HAWK v0.8.2-Research**  
+*Adversarial Systems Research Group*  
+[Propagating Intelligence. Optimizing Adversity.]
