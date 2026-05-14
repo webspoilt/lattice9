@@ -1,193 +1,572 @@
-# HAWK: A Graph-Native Probabilistic Offensive Intelligence Engine
+# HAWK — Offensive Graph Intelligence Engine (v3.5)
 
-> *“Reconnaissance is not an enumeration problem; it is a signal processing and topology stabilization problem.”*
-
----
-
-## 0. CORE IDENTITY: THE FAILURE OF MODERN RECONNAISSANCE
-
-Modern offensive reconnaissance pipelines are fundamentally broken. We have reached a state of **Data Exhaustion**. The industry has optimized for the breadth of tool output—more subdomains, more open ports, more CVE matches—at the cost of actual intelligence.
-
-Raw findings are not intelligence. Intelligence is the result of **Decision Compression**.
-
-### The Reconnaissance Failure Mode
-
-Current pipelines rely on **Tool Orchestration**—sequential execution of scanners whose outputs are aggregated but rarely synthesized. This leads to:
-
-1. **Observation Overload**: Thousands of "potential" findings with no conditional relationship to each other.
-2. **Epistemic Decay**: The relevance of a finding decays the moment it is observed, yet tools treat findings as static truths.
-3. **Context Fragmentation**: Discovered infrastructure is treated as a flat list rather than an evolving, interconnected graph.
-
-### The HAWK Thesis
-
-HAWK shifts the paradigm from tool orchestration to **Infrastructure Reasoning**. We treat an attack surface not as a target list, but as an **Evolving Probabilistic System**.
-
-HAWK is not attempting to automate hacking. It is an operational environment designed to reduce operator cognitive load by compressing massive observation sets into **High-Confidence Exploit Narratives**. It treats every finding as a probabilistic hypothesis until evidence convergence occurs across the spectral topology of the target.
-
-### The Concept of “Decision Compression”
-
-In a standard operation, an analyst might receive 5,000 findings. Each finding requires ~2 minutes of cognitive evaluation. This creates a **Cognitive Deficit** that HAWK seeks to resolve. Through **Decision Compression**, the engine reduces these 5,000 findings into 5-10 "Exploit Narratives"—high-confidence, mathematically-linked trajectories where the evidence has converged.
+> **Status:** Experimental Research Prototype
+> Built to solve data exhaustion in modern offensive reconnaissance.
 
 ---
 
-## 1. MATHEMATICAL FOUNDATIONS
+# HAWK
 
-### 1.1 Spectral Graph Theory & Topology Stabilization
+Modern reconnaissance is fundamentally broken.
 
-We model infrastructure as a graph $G = (V, E)$, where $V$ are entities (hosts, services, identities) and $E$ are observed or inferred relationships. To understand the "structure" of the attack surface, we analyze the **Graph Laplacian**:
+Most offensive workflows generate:
+* millions of HTTP responses
+* thousands of endpoints
+* fragmented evidence chains
+* duplicated findings
+* unstructured telemetry
+* noisy vulnerability outputs
 
+Operators are expected to manually compress all of this into actionable intelligence.
+The result is cognitive exhaustion.
+
+HAWK exists because I got tired of running a dozen tools only to end up with:
+```text
+10,000 lines of unvalidated garbage.
+```
+
+This project is my attempt to move offensive security away from:
+```text
+tool execution
+```
+and toward:
+```text
+infrastructure reasoning.
+```
+
+HAWK treats reconnaissance as:
+* a graph problem
+* a probabilistic inference problem
+* a signal extraction problem
+* an evolving systems-analysis problem
+
+Instead of asking:
+```text
+"What vulnerabilities exist?"
+```
+HAWK asks:
+```text
+"What relationships matter?"
+"What evidence converges?"
+"What infrastructure behaves anomalously?"
+"What attack paths emerge probabilistically?"
+```
+
+---
+
+# Core Philosophy
+
+The modern attack surface is no longer linear.
+
+Infrastructure is:
+* distributed
+* ephemeral
+* interconnected
+* probabilistic
+* temporally unstable
+
+A subdomain list is not intelligence.
+A vulnerability list is not intelligence.
+Raw findings without relational context are observational debris.
+
+HAWK is designed around a concept I call:
+
+# Decision Compression
+
+The purpose of the engine is not to generate more data.
+The purpose is to compress massive observation sets into:
+* high-confidence exploit narratives
+* infrastructure relationships
+* trust-boundary models
+* probabilistic attack paths
+* operator-relevant intelligence
+
+---
+
+# Architectural Model
+
+```ascii
+                    [ TARGET ]
+                         |
+          +--------------+--------------+
+          |                             |
+      [ DNS ]                     [ SERVICES ]
+          |                             |
+          +--------------+--------------+
+                         |
+                 [ INGESTION LAYER ]
+                         |
+          +--------------+--------------+
+          |                             |
+  [ TOPOLOGY ENGINE ]          [ RECON LAYER ]
+          |                             |
+          +--------------+--------------+
+                         |
+                  [ ASSET GRAPH ]
+                         |
+      Spectral Partitioning / Centrality Analysis
+                         |
+                 [ EVIDENCE FUSION ]
+                         |
+        Bayesian Confidence Propagation Engine
+                         |
+          +--------------+--------------+
+          |                             |
+     [ ATTACK PATH ]            [ INFRASTATE ]
+          |                             |
+          +--------------+--------------+
+                         |
+               [ DECISION COMPRESSION ]
+                         |
+                    [ OPERATOR ]
+```
+
+---
+
+# Why Graphs Matter
+
+Most reconnaissance pipelines treat infrastructure as:
+```text
+lists
+```
+HAWK treats infrastructure as:
+```text
+relationships.
+```
+
+The graph is the source of truth.
+
+Assets are not isolated entities. They exist inside:
+* trust systems
+* shared authentication domains
+* deployment pipelines
+* cloud relationships
+* infrastructure coupling
+* temporal dependencies
+
+A single exposed asset may imply:
+* lateral movement opportunities
+* inherited trust
+* credential propagation
+* blast-radius escalation
+
+Traditional scanners cannot reason about these relationships.
+Graph-native systems can.
+
+---
+
+# Spectral Graph Theory
+
+HAWK uses graph-theoretic analysis to partition and reason about infrastructure.
+Each asset becomes a node inside a probabilistic topology model.
+Relationships become weighted edges:
+* authentication coupling
+* shared infrastructure
+* certificate reuse
+* DNS affinity
+* API dependency
+* deployment lineage
+* cloud adjacency
+
+The engine computes:
+* graph centrality
+* connected components
+* cluster density
+* trust gravity
+* spectral partitions
+
+---
+
+## Graph Laplacian
+
+The system uses the Graph Laplacian:
 $$L = D - A$$
 
-Where $D$ is the degree matrix and $A$ is the adjacency matrix. By calculating the eigenvalues of the normalized Laplacian:
+Where:
+* `D` = degree matrix
+* `A` = adjacency matrix
 
-$$\mathcal{L} = I - D^{-1/2} A D^{-1/2}$$
+The Laplacian spectrum helps identify:
+* infrastructure segmentation
+* anomalous clusters
+* isolated trust domains
+* chokepoint systems
+* high-centrality assets
 
-We derive the **Algebraic Connectivity** ($\lambda_2$). This value is a physical constant of the target's infrastructure. A collapse in $\lambda_2$ indicates a segmentation breach or a hidden trust-boundary emergence.
-
-- **Spectral Clustering**: We use the eigenvectors associated with the smallest non-zero eigenvalues (the Fiedler vector) to partition the graph into "Functional Infrastructure Segments." This reveals hidden VPC boundaries, container clusters, and isolated networks that traditional scanning misses.
-- **Centrality & Chokepoints**: We calculate Eigenvector Centrality to identify nodes that, if compromised, maximize the diffusion of adversarial state across the entire topology. This is the **Topological Leverage** of a node.
-
-### 1.2 Bayesian Evidence Fusion & Posterior Sampling
-
-The Analysis Engine treats every observation as a piece of evidence $E$ that updates the probability of a hypothesis $H$ (e.g., "This node is vulnerable to lateral movement").
-
-We apply **Bayesian Posterior Sampling**:
-
-$$P(H|E) = \frac{P(E|H) \cdot P(H)}{P(E)}$$
-
-- **Uncertainty Propagation**: When evidence is discovered at Node $A$, the confidence pulse ripples to neighboring nodes $B$ and $C$ based on the conditional exploitability of their relationships.
-- **Confidence Decay**: Intelligence has a half-life. $P(H)$ is subject to temporal decay: $P(H)_t = P(H)_0 \cdot e^{-\lambda t}$. If a service isn't re-enumerated, the engine's confidence in its state automatically returns to a state of high entropy.
-- **False Positive Suppression**: Findings that lack "Evidence Convergence" across multiple independent observables are deprioritized, significantly reducing alert noise.
-
-### 1.3 Information Theory & Signal-to-Noise
-
-We measure the efficiency of our recon pipeline using **Shannon Entropy**:
-
-$$H(X) = -\sum_{i=1}^{n} P(x_i) \log_2 P(x_i)$$
-
-The goal of the Recon Layer is the **Minimization of Graph Entropy**.
-
-- **Response Instability**: If a host's responses vary over time, the node's entropy increases. This creates **Probabilistic Turbulence** in the interface, signaling to the operator that the underlying data is unreliable or transitioning.
-- **Anomalous Discovery**: Low-entropy infrastructure segments that suddenly exhibit high-information signals (new ports, changed headers) are flagged as "State Drift Anomalies."
-- **Entropy Fields**: We treat uncertainty as a physical field. High-entropy zones exhibit "stochastic jitter," visually representing the noise floor of the intelligence environment.
-
----
-
-## 2. SYSTEM ARCHITECTURE
-
-### 2.1 The Distributed Intelligence Pipeline
-
+If a vulnerability appears inside a high-centrality node:
 ```text
-+----------------+       +-------------------+       +-----------------------+
-|  RECON LAYER   | ----> | EVIDENCE NORM     | ----> | INFERENCE ENGINE      |
-| (Distributed)  |       | (De-duplication)  |       | (Bayesian Reasoning)  |
-+----------------+       +-------------------+       +-----------+-----------+
-                                                                 |
-                                                                 v
-+----------------+       +-------------------+       +-----------+-----------+
-| EPISODIC MEMO  | <---- | GRAPH EVOLUTION   | <---- | TOPOLOGY STABILIZER   |
-| (Historical)   |       | (State Drift)     |       | (Spectral Analysis)   |
-+----------------+       +-------------------+       +-----------+-----------+
-                                                                 |
-                                                                 v
-                                                     +-----------+-----------+
-                                                     | MISSION CONTROL       |
-                                                     | (Visual Intelligence) |
-                                                     +-----------------------+
-```
-
-### 2.2 Probabilistic Propagation Architecture
-
-```text
-[ NODE A ] --- (Signal: Port 80) ---> [ EVIDENCE FUSION ]
-                                              |
-[ NODE A ] --- (Signal: CVE Match) ---> [ WEIGHTED SCORING ]
-                                              |
-                                              v
-[ TOPOLOGY ] <----------------------- [ STATE PROPAGATION ]
-      |
-      |----(Conditional P=0.7)---> [ NODE B (Inferred Vulnerable) ]
-      |
-      |----(Conditional P=0.4)---> [ NODE C (Low Confidence) ]
+the blast radius increases dramatically.
 ```
 
 ---
 
-## 3. CORE MODULES
+# Bayesian Evidence Fusion
 
-### 3.1 Graph Engine (The Topology)
+A finding is not truth.
+A finding is a hypothesis.
 
-Built on high-performance graph primitives (NetworkX / Custom C++ bindings), the engine handles:
+HAWK treats every observed condition probabilistically.
 
-- **Topology Partitioning**: Automated discovery of network segmentation.
-- **Chokepoint Discovery**: Mathematical identification of "Must-Pass" infrastructure nodes.
-- **Spectral Ranking**: Sorting targets not by "severity," but by "topological leverage."
+Instead of:
+```text
+"Potential Laravel Detected"
+```
+the engine asks:
+```text
+"How likely is this inference given all available evidence?"
+```
 
-### 3.2 Analysis Engine (The Reasoning)
-
-The "Epistemic Core" of the platform:
-
-- **Confidence Fusion**: Merging evidence from Nmap, subfinder, and custom crawlers into a single Bayesian state.
-- **Exploit-Chain Weighting**: Dynamically calculating the cost of a multi-hop exploit path.
-- **Uncertainty Scoring**: Measuring the "Known-Unknowns" in a specific segment.
-
-### 3.4 Temporal Memory Layer
-
-- **Graph Snapshots**: Version-controlled states of the entire attack surface.
-- **Infrastructure Drift Analysis**: Identifying when "Shadow IT" emerges or when patches are reverted.
-- **Episodic Recall**: Comparing current operational signals against historical baseline behaviors.
+Every conclusion is routed through a Bayesian evidence fusion layer.
 
 ---
 
-## 4. OPERATIONAL PHILOSOPHY: EPISTEMIC CORRECTNESS
+## Bayesian Update
 
-HAWK is designed for the **Skeptical Operator**. We avoid "hallucinated findings" by adhering to a strict **Evidence-First** protocol.
+$$P(H|E)=\frac{P(E|H)\cdot P(H)}{P(E)}$$
 
-- **Explainability**: Every $P(H|E)$ calculation can be traced back to the specific observations that generated it.
-- **Hypothesis Testing**: HAWK treats every finding as a probabilistic hypothesis until evidence convergence occurs.
-- **Reasoning Transparency**: The interface visualizes the "Confidence Field" so the operator knows exactly where the system is guessing and where it is certain.
+Where:
+* `H` = hypothesis
+* `E` = observed evidence
 
----
+This allows:
+* confidence propagation
+* uncertainty modeling
+* evidence convergence
+* false-positive suppression
+* exploitability weighting
 
-## 5. UI / VISUALIZATION PHILOSOPHY
+Example:
+* headers indicate Laravel
+* timing signatures disagree
+* middleware behavior mismatches
+* route structures diverge
 
-The interface is intentionally designed as a **Scientific Computing Environment**, moving away from the aesthetic of traditional cybersecurity dashboards toward the look and feel of a **Computational Physics Simulation**.
-
-### 5.1 The Visual Language of Uncertainty
-
-- **Physically Simulated Topology**: Nodes do not move according to pre-scripted animations. They move according to a **Physically Simulated Force-Field** where distance represents trust and velocity represents change-frequency. The graph is a live, breathing representation of adversarial state.
-- **Entropy Field Rendering**: Areas of high uncertainty are rendered with stochastic noise and particle turbulence. This is not decorative; it is a visual representation of the noise floor of the intelligence environment.
-- **Spectral Topology Stabilization**: The graph "snaps" into geometric patterns as the Laplacian eigenvalues stabilize. When the topology becomes rigid, it indicates a well-understood, high-confidence infrastructure segment.
-- **Bayesian Propagation visualization**: When a new high-confidence finding enters the system, a cyan pulse ripples through the graph, physically displacing nodes and reorganizing the topology to accommodate the new evidence.
-
----
-
-## 6. RESEARCH DIRECTIONS & ENGINEERING CONSTRAINTS
-
-### 6.1 Future Research
-
-- **Latent-Space Infrastructure Embeddings**: Mapping infrastructure into semantic vector spaces to identify "Similar-by-Behavior" targets.
-- **Autonomous Exploit Validation**: Safe, non-intrusive confirmation of inferred vulnerabilities.
-- **Temporal Topology Forecasting**: Predicting where new infrastructure will emerge based on historical growth patterns.
-- **Reinforcement Learning Recon**: Training agents to navigate the graph to minimize entropy with minimum packet footprint.
-
-### 6.2 Engineering Constraints (The Honest Truth)
-
-- **Graph Scaling Limits**: Analyzing a full `/16` network at the service level creates memory pressure that can crash the episodic memory layer. We currently utilize aggressive graph pruning to stay within RAM limits.
-- **Spectral Bottlenecks**: Calculating Laplacians for graphs with $|V| > 10,000$ is computationally expensive. We are exploring GPU-accelerated spectral analysis.
-- **Inference Degradation**: In disconnected graph segments, the engine's reasoning capability drops to near-zero, reverting to traditional tool-list behavior.
-- **Temporal Inconsistency**: Infrastructure drift can sometimes move faster than the enumeration cycle, leading to "Stale Intelligence" anomalies.
+Result:
+```text
+confidence decays probabilistically.
+```
 
 ---
 
-## 7. FINAL REFLECTION
+# Information Theory
 
-HAWK is an evolving research notebook. It is a manifesto for a more mathematically grounded approach to offensive operations. It is currently in a state of **High Prototype Instability**. It is an experiment in whether we can move beyond the "Scanning" era into the "Inference" era.
+Reconnaissance is fundamentally a signal extraction problem.
 
-**Status**: *Either the beginning of an extremely sophisticated offensive intelligence system or the early stages of a beautiful distributed systems disaster.*
+Most infrastructure emits:
+```text
+noise.
+```
+
+HAWK uses information-theoretic modeling to identify:
+* anomalous responses
+* unstable infrastructure
+* encoded secrets
+* entropy spikes
+* probabilistic anomalies
 
 ---
 
-**HAWK v0.8.2-Research**  
-*Adversarial Systems Research Group*  
-[Propagating Intelligence. Optimizing Adversity.]
+## Shannon Entropy
+
+$$H(X)=-\sum p(x_i)\log_2 p(x_i)$$
+
+Applications include:
+* secret detection
+* API token discovery
+* encoded payload analysis
+* response instability mapping
+* entropy-field visualization
+
+High entropy often correlates with:
+* secrets
+* obfuscation
+* anomalous state transitions
+* dynamically generated infrastructure
+
+---
+
+# Temporal Infrastructure Modeling
+
+Infrastructure evolves continuously.
+Attack surfaces drift over time:
+* APIs appear
+* authentication changes
+* trust boundaries weaken
+* deployment topology mutates
+
+HAWK treats time as:
+```text
+a first-class intelligence layer.
+```
+
+The system stores:
+* graph snapshots
+* infrastructure states
+* historical edge weights
+* temporal confidence propagation
+* attack-surface mutations
+
+This enables:
+* historical diffing
+* exploit emergence tracking
+* infrastructure drift analysis
+* temporal anomaly detection
+
+---
+
+# Core Modules
+
+## Graph Engine
+
+Built on:
+* `networkx`
+* graph centrality algorithms
+* spectral partitioning
+* topology clustering
+
+Responsibilities:
+* asset relationship modeling
+* trust-boundary emergence
+* attack-surface segmentation
+* chokepoint detection
+* graph harmonics analysis
+
+---
+
+## Probabilistic Analysis Engine
+
+Custom reasoning pipeline responsible for:
+* uncertainty propagation
+* Bayesian evidence fusion
+* exploit confidence scoring
+* inference decay
+* probabilistic attack chaining
+
+The engine intentionally avoids deterministic claims unless:
+```text
+evidence convergence exceeds confidence thresholds.
+```
+
+---
+
+## Recon Layer
+
+The reconnaissance layer focuses on:
+* stealth enumeration
+* asynchronous crawling
+* distributed collection
+* adaptive discovery
+
+Powered by:
+* `Scrapling`
+* asynchronous pipelines
+* topology-aware traversal
+
+The crawler is designed to:
+* reduce behavioral fingerprints
+* adapt request timing
+* maintain graph continuity
+* preserve evidence provenance
+
+---
+
+## Temporal Memory Layer
+
+Experimental subsystem for:
+* episodic graph memory
+* infrastructure drift analysis
+* temporal replay
+* attack-surface evolution
+
+Future versions will support:
+* persistent graph memory
+* confidence aging
+* historical topology forecasting
+
+---
+
+## Mission Control Interface
+
+The frontend is intentionally designed as:
+```text
+a live adversarial systems observability environment.
+```
+Not:
+```text
+a traditional dashboard.
+```
+
+The UI visualizes:
+* probabilistic attack graphs
+* confidence propagation
+* topology clustering
+* infrastructure entropy
+* temporal exploit diffusion
+* graph-native operational intelligence
+
+Built using:
+* React
+* Vite
+* D3.js
+* force-directed topology systems
+
+---
+
+# Operational Philosophy
+
+HAWK is built around:
+
+# epistemic restraint.
+
+The system assumes:
+```text
+most findings are wrong until evidence converges.
+```
+
+This project intentionally prioritizes:
+* explainability
+* evidence provenance
+* confidence transparency
+* probabilistic reasoning
+* operator trust
+
+Every major inference should answer:
+```text
+Why does the engine believe this?
+```
+
+If the system cannot explain its reasoning:
+```text
+the intelligence layer has failed.
+```
+
+---
+
+# Engineering Constraints
+
+This is still a research prototype.
+There are significant limitations.
+
+---
+
+## Computational Cost
+
+Large graph operations become expensive quickly.
+
+Particularly:
+* Laplacian spectrum analysis
+* centrality calculations
+* probabilistic propagation
+* temporal graph replay
+
+Large infrastructures may:
+* consume significant RAM
+* increase topology convergence time
+* degrade inference responsiveness
+
+---
+
+## Graph Explosion
+
+Relationship modeling scales aggressively.
+
+A moderately sized infrastructure can generate:
+* massive edge density
+* overlapping trust systems
+* recursive graph coupling
+* inference propagation instability
+
+Graph explosion is currently one of the largest architectural challenges.
+
+---
+
+## Probabilistic Ambiguity
+
+Confidence propagation is difficult.
+
+Not all evidence:
+* converges cleanly
+* behaves deterministically
+* maps linearly to exploitability
+
+The engine intentionally preserves uncertainty instead of masking it.
+
+---
+
+# Roadmap
+
+## Planned Research Directions
+
+* [ ] Autonomous exploit validation
+* [ ] Episodic infrastructure memory
+* [ ] Reinforcement-learning recon routing
+* [ ] Temporal topology forecasting
+* [ ] Latent-space infrastructure embeddings
+* [ ] Probabilistic exploit-chain generation
+* [ ] Distributed reasoning agents
+* [ ] Semantic attack-surface clustering
+* [ ] Adaptive stealth orchestration
+* [ ] Graph-native infrastructure simulation
+
+---
+
+# Running the Prototype
+
+## Engine
+
+```bash
+cd server-py
+pip install -r requirements.txt
+python main.py
+```
+
+---
+
+## Dashboard
+
+```bash
+pnpm install
+pnpm run dev
+```
+
+---
+
+# Caveats
+
+1. This is experimental research infrastructure.
+2. APIs and mathematical models may change rapidly.
+3. Some graph operations are computationally expensive.
+4. Confidence propagation models are still evolving.
+5. This tool is intended for authorized testing only.
+
+---
+
+# Final Notes
+
+HAWK is not trying to automate hacking.
+
+It is an attempt to build:
+```text
+probabilistic offensive intelligence infrastructure.
+```
+
+The long-term goal is not:
+```text
+more scanning.
+```
+The goal is:
+```text
+better reasoning.
+```
+
+Built by a single founder for operators who care about:
+* signal over noise
+* graph-native intelligence
+* probabilistic reasoning
+* evidence convergence
+* ground truth
+
+---
+
+**License:** MIT
+**Status:** Experimental Research System
