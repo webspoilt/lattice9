@@ -195,42 +195,38 @@ export default function Home() {
               <PretextLog 
                 color="#4a9eff"
                 className="opacity-80"
-                content={`[SYSTEM_INIT] Loading Bayesian inference models... OK
-[TRACE] Estimating posterior confidence matrix:
-      P(H|E) = [P(E|H) · P(H)] / P(E)
-      Where E = {e₁, e₂, ..., eₙ} evidence vector from edge nodes.
-      Current max variance σ² = 0.041
+                content={`[SYSTEM_INIT] Initializing adversarial systems theory engine... OK
+[STATUS] Project status: ESCAPING_CONTAINMENT
+[LOGIC] Executing Offensive Intelligence Compression:
+      Target: 1,000,000 observations -> 3 high-confidence narratives.
+      Inference Engine: Stable. Confidence propagation: 0.94
 
-[DIAGNOSTIC] Laplacian Spectrum analysis of asset graph G=(V,E)
-      Computing L = D − A
-      Fiedler vector (λ₂) convergence detected.
-      λ₂ = 0.142 -> Graph is connected, bisecting trust zones...
-      Trust zone partition completed.
-
-[STREAM_ANALYTICS] Measuring payload Shannon Entropy
-      H(X) = −Σ p(xᵢ) log₂ p(xᵢ)
-      Alert: High entropy block found at 0x4A9EFF (H=4.21 bits)
-      Likely encrypted payload or compressed debug artifact.
-
-[MDP_EVAL] Bellman convergence on attack state space
+[DIAGNOSTIC] Analyzing graph-native recon topology G=(V,E)
       V*(s) = maxₐ Σ P(s′|s,a)[R + γV*(s′)]
-      γ = 0.95
-      Optimal path derived. Policy extracted.
+      "Does the intelligence layer outperform experienced operators?"
+      Evaluating probabilistic truth propagation... SUCCESS.
 
-[WARN] Drift detected in continuous representation space.
+[STREAM] Measuring Shannon Entropy across trust zones
+      H(X) = −Σ p(xᵢ) log₂ p(xᵢ)
+      Alert: Transitive confidence cascade instability detected at 0x4A9EFF.
+      Stabilizing ontology... OK.
+
+[EVOLUTION] Drift toward systems-level cyber observability
       ∂Ω/∂t = ∫K(x,y)·φ(y)dΓ(y)
-      Re-calculating topology...
+      Warning: Abstraction recursion detected. 
+      Decoupling cyber-philosophy from operational outcomes.
 
-[END_OF_DUMP] SYSTEM NOMINAL`}
+[GOAL] Reducing noise. Grounding inference quality.
+[END_OF_DUMP] SYSTEM_NOMINAL // STATUS: DANGEROUSLY_AMBITIOUS`}
               />
               
               {/* Scattered ambient formulas - now looking like readable diagnostic data */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden mix-blend-screen opacity-30">
                 {[
-                  { text: '0x00A1: V*(s) = maxₐ Σ P(s′|s,a)[R + γV*(s′)]', top: '15%', right: '10%', rotate: '0deg' },
-                  { text: '0x00F3: C_B(v) = Σ σ(s,t|v) / σ(s,t)', bottom: '20%', left: '15%', rotate: '0deg' },
-                  { text: '0x01A4: ∂Ω/∂t = ∫K(x,y)·φ(y)dΓ(y)', top: '60%', right: '20%', rotate: '0deg' },
-                  { text: '0x02B1: G = (V, E, w) | w: E → ℝ⁺', bottom: '40%', right: '30%', rotate: '0deg' },
+                  { text: '0x00A1: INTELLIGENCE_COMPRESSION_RATIO = 333,333:1', top: '15%', right: '10%', rotate: '0deg' },
+                  { text: '0x00F3: ADVERSARIAL_SYSTEMS_THEORY_v4.1', bottom: '20%', left: '15%', rotate: '0deg' },
+                  { text: '0x01A4: REASONING_QUALITY > RUNNING_TOOLS', top: '60%', right: '20%', rotate: '0deg' },
+                  { text: '0x02B1: PROBABILISTIC_TRUTH_PROPAGATION', bottom: '40%', right: '30%', rotate: '0deg' },
                 ].map((f, i) => (
                   <motion.div key={i} className="absolute text-xs font-mono text-[#d4a574] tracking-wide" style={{ top: f.top, bottom: f.bottom, left: f.left, right: f.right, transform: `rotate(${f.rotate})` }}
                     initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.5 + 0.5 }}>
