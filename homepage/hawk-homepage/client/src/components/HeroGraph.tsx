@@ -35,21 +35,20 @@ interface Link {
   equation?: string;
 }
 
+const colors = {
+  blue: '#4a9eff',
+  teal: '#00d9ff',
+  purple: '#8c52ff',
+  cyan: '#00f2ff',
+  amber: '#d4a574',
+  red: '#ff4444'
+};
+
 export function HeroGraph() {
   const fgRef = useRef<any>();
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoverNode, setHoverNode] = useState<any>(null);
-  const [time, setTime] = useState(0);
   const [annotations, setAnnotations] = useState<MathAnnotation[]>([]);
-
-  // Simulation time loop
-  useEffect(() => {
-    let id = requestAnimationFrame(function loop() {
-      setTime(t => t + 0.016);
-      id = requestAnimationFrame(loop);
-    });
-    return () => cancelAnimationFrame(id);
-  }, []);
 
   const data = useMemo(() => {
     const nodes: Node[] = [
@@ -96,196 +95,200 @@ export function HeroGraph() {
     if (!fgRef.current) return;
     
     const interval = setInterval(() => {
-      const { nodes, links } = data;
+      const graphData = fgRef.current.getGraphData();
+      if (!graphData) return;
+      
+      const internalNodes = graphData.nodes;
+      const internalLinks = graphData.links;
+      
       const newAnns: MathAnnotation[] = [];
       
-      // Randomly pick a few links to annotate
-      links.forEach((l, i) => {
-        if (l.equation && Math.random() > 0.7) {
-          const s = typeof l.source === 'object' ? l.source : nodes.find(n => n.id === l.source);
-          const d = typeof l.target === 'object' ? l.target : nodes.find(n => n.id === l.target);
-          
-          if (s && d && s.x !== undefined) {
-            const screenPos = fgRef.current.graph2ScreenPos(
-              (s.x + d.x) / 2,
-              (s.y + d.y) / 2
-            );
+      // Randomly annotate active links
+      internalLinks.forEach((link: any) => {
+        if (link.equation && Math.random() > 0.6) {
+          const s = link.source;
+          const d = link.target;
+          if (s && d && !isNaN(s.x) && !isNaN(d.x)) {
+            const midX = (s.x + d.x) / 2;
+            const midY = (s.y + d.y) / 2;
             
-            newAnns.push({
-              id: `ann-link-${i}-${Date.now()}`,
-              latex: l.equation,
-              x: screenPos.x,
-              y: screenPos.y - 20,
-              opacity: 0.6,
-              scale: 0.8,
-              color: l.type === 'exploit' ? '#d4a574' : '#4a9eff'
-            });
+            const screenPos = fgRef.current.graph2ScreenPos(midX, midY);
+            if (screenPos && !isNaN(screenPos.x)) {
+              newAnns.push({
+                id: `link-${link.index || Math.random()}`,
+                latex: link.equation,
+                x: screenPos.x,
+                y: screenPos.y,
+                opacity: 0.6,
+                scale: 0.7,
+                color: colors.cyan
+              });
+            }
           }
         }
       });
 
-      // Randomly pick high entropy nodes to annotate
-      nodes.forEach((n, i) => {
-        if (n.entropy > 0.7 && Math.random() > 0.8) {
-          if (n.x !== undefined) {
-            const screenPos = fgRef.current.graph2ScreenPos(n.x, n.y);
-            newAnns.push({
-              id: `ann-node-${i}-${Date.now()}`,
-              latex: `H = ${(n.entropy * 4).toFixed(2)}`,
-              x: screenPos.x,
-              y: screenPos.y - 30,
-              opacity: 0.5,
-              scale: 0.7,
-              color: '#d4a574'
-            });
+      // Annotate uncertain nodes
+      internalNodes.forEach((node: any) => {
+        if (node.entropy > 0.6 && Math.random() > 0.5) {
+          if (!isNaN(node.x) && !isNaN(node.y)) {
+            const screenPos = fgRef.current.graph2ScreenPos(node.x, node.y);
+            if (screenPos && !isNaN(screenPos.x)) {
+              newAnns.push({
+                id: `node-${node.id}`,
+                latex: `H(X) = ${(node.entropy || 0).toFixed(2)}`,
+                x: screenPos.x,
+                y: screenPos.y - 20,
+                opacity: 0.8,
+                color: colors.amber
+              });
+            }
           }
         }
       });
 
       setAnnotations(newAnns);
-    }, 2000);
-
+    }, 3000);
     return () => clearInterval(interval);
   }, [data]);
 
-  const colors = {
-    cyan: '#4a9eff',
-    amber: '#d4a574',
-    teal: '#00d9ff',
-    gray: '#8c8ca0',
-    danger: '#ff4444',
-    bg: '#0a0a0b',
-  };
-
   const getClusterColor = (c: number) => {
-    const pal = [colors.cyan, colors.amber, colors.teal, colors.gray];
-    return pal[c % pal.length];
+    const clusterColors = [colors.blue, colors.teal, colors.purple, colors.cyan];
+    return clusterColors[(c || 0) % clusterColors.length];
   };
 
   return (
-    <div ref={containerRef} className="relative w-full h-full bg-[#0a0a0b]">
+    <div ref={containerRef} className="relative w-full h-full bg-[#0a0a0b] overflow-hidden">
       <ForceGraph2D
         ref={fgRef}
         graphData={data}
-        backgroundColor="#0a0a0b"
-        showNavInfo={false}
+        backgroundColor="rgba(0,0,0,0)"
+        nodeRelSize={1}
+        nodeLabel={node => node.name}
+        linkColor={() => 'rgba(255,255,255,0.05)'}
+        linkWidth={1}
         d3AlphaDecay={0.01}
-        d3VelocityDecay={0.1}
-        cooldownTicks={100}
+        d3VelocityDecay={0.3}
         
         nodeCanvasObject={(node: any, ctx, globalScale) => {
+          const time = performance.now() / 1000;
           const c = getClusterColor(node.cluster);
-          const size = node.val;
+          const size = node.val || 5;
           
           if (node.entropy > 0.6) {
-            const distortionR = size * 4 + Math.sin(time * 3 + node.id) * 5;
-            const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, distortionR);
-            grad.addColorStop(0, `rgba(212, 165, 116, ${0.1 * node.entropy})`);
-            grad.addColorStop(1, 'transparent');
-            ctx.fillStyle = grad;
-            ctx.beginPath(); ctx.arc(node.x, node.y, distortionR, 0, Math.PI * 2); ctx.fill();
-            
-            ctx.fillStyle = `rgba(212, 165, 116, ${0.4 * node.entropy})`;
-            for(let i=0; i<3; i++) {
-              const px = node.x + Math.sin(time * 5 + i * 2) * size * 2;
-              const py = node.y + Math.cos(time * 4 + i * 3) * size * 2;
-              ctx.beginPath(); ctx.arc(px, py, 0.5, 0, Math.PI * 2); ctx.fill();
-            }
+            // Turbulence/Entropy field
+            ctx.save();
+            ctx.beginPath();
+            ctx.setLineDash([2, 2]);
+            ctx.strokeStyle = `rgba(212, 165, 116, ${0.2 + Math.random() * 0.2})`;
+            ctx.arc(node.x, node.y, size * (1.5 + Math.sin(time * 10) * 0.2), 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
           }
 
-          ctx.strokeStyle = c;
-          ctx.lineWidth = 0.5 / globalScale;
-          ctx.setLineDash([2 / globalScale, 4 / globalScale]);
-          ctx.beginPath(); ctx.arc(node.x, node.y, size * 2.5, 0, Math.PI * 2); ctx.stroke();
-          ctx.setLineDash([]);
+          // Stability Rings
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size + 2, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(74, 158, 255, ${0.1 + Math.sin(time * 2 + (parseInt(node.id) || 0)) * 0.05})`;
+          ctx.stroke();
 
-          const coreAlpha = 0.4 + node.confidence * 0.4;
-          ctx.fillStyle = c;
-          ctx.globalAlpha = coreAlpha;
-          ctx.beginPath(); ctx.arc(node.x, node.y, size, 0, Math.PI * 2); ctx.fill();
-          ctx.globalAlpha = 1.0;
+          // Core node
+          const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, size);
+          gradient.addColorStop(0, c);
+          gradient.addColorStop(1, 'rgba(0,0,0,0)');
+          
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+          ctx.fill();
 
+          // Label and telemetry
           if (globalScale > 1.5) {
             ctx.font = `${8 / globalScale}px "IBM Plex Mono"`;
             ctx.textAlign = 'center';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.fillText(node.name.toUpperCase(), node.x, node.y + size + 10 / globalScale);
+            ctx.fillText((node.name || '').toUpperCase(), node.x, node.y + size + 10 / globalScale);
             
             ctx.fillStyle = colors.cyan;
-            ctx.fillText(`P=${node.confidence.toFixed(2)}`, node.x, node.y - size - 5 / globalScale);
+            ctx.fillText(`P=${(node.confidence || 0).toFixed(2)}`, node.x, node.y - size - 5 / globalScale);
           }
         }}
 
         linkCanvasObject={(link: any, ctx, globalScale) => {
-          const s = link.source;
-          const d = link.target;
-          if (typeof s !== 'object' || typeof d !== 'object') return;
+          const time = performance.now() / 1000;
+          const start = link.source;
+          const end = link.target;
+          if (typeof start !== 'object' || typeof end !== 'object') return;
 
-          const color = link.type === 'exploit' ? colors.amber : colors.cyan;
-          const alpha = link.probability * 0.25;
-          
+          // Base line
           ctx.beginPath();
-          ctx.moveTo(s.x, s.y);
-          
-          if (link.type === 'lateral' || link.type === 'temporal') {
-            const midX = (s.x + d.x) / 2 + Math.sin(time + link.index) * 20;
-            const midY = (s.y + d.y) / 2 + Math.cos(time + link.index) * 20;
-            ctx.quadraticCurveTo(midX, midY, d.x, d.y);
-          } else {
-            ctx.lineTo(d.x, d.y);
-          }
-
-          ctx.strokeStyle = color;
-          ctx.globalAlpha = alpha;
-          ctx.lineWidth = (1 + link.probability * 2) / globalScale;
+          ctx.moveTo(start.x, start.y);
+          ctx.lineTo(end.x, end.y);
+          ctx.strokeStyle = link.type === 'exploit' ? 'rgba(255, 68, 68, 0.15)' : 'rgba(74, 158, 255, 0.1)';
+          ctx.lineWidth = 1 / globalScale;
           ctx.stroke();
-          ctx.globalAlpha = 1.0;
 
-          const pulseT = (time * 0.5 * link.probability) % 1;
-          const px = s.x + (d.x - s.x) * pulseT;
-          const py = s.y + (d.y - s.y) * pulseT;
-          ctx.fillStyle = color;
-          ctx.beginPath(); ctx.arc(px, py, 1.5 / globalScale, 0, Math.PI * 2); ctx.fill();
+          // Confidence pulse
+          if (link.probability > 0.5) {
+            const progress = (time * 0.5 + ((link.index || 0) % 10) / 10) % 1;
+            const px = start.x + (end.x - start.x) * progress;
+            const py = start.y + (end.y - start.y) * progress;
+            
+            ctx.beginPath();
+            ctx.arc(px, py, 1 / globalScale, 0, Math.PI * 2);
+            ctx.fillStyle = link.type === 'exploit' ? '#ff4444' : colors.cyan;
+            ctx.fill();
+          }
         }}
 
         onRenderFramePre={(ctx, globalScale) => {
-          if (!data.bellmanPath || !data.nodes) return;
-          const pathIds = data.bellmanPath;
-          const pathNodes = pathIds.map(id => data.nodes.find(n => n.id === id)).filter(n => n && n.x !== undefined) as any[];
-          
-          if (pathNodes.length < 2) return;
+          const time = performance.now() / 1000;
+          const graphData = fgRef.current?.getGraphData();
+          if (!graphData) return;
 
-          ctx.beginPath();
-          ctx.strokeStyle = colors.teal;
-          ctx.globalAlpha = 0.05 + Math.sin(time * 2) * 0.05;
-          ctx.lineWidth = 3 / globalScale;
-          pathNodes.forEach((n, i) => {
-            if (i === 0) ctx.moveTo(n.x, n.y);
-            else ctx.lineTo(n.x, n.y);
-          });
-          ctx.stroke();
-          ctx.globalAlpha = 1.0;
-
-          const speed = 0.4;
-          const agentT = (time * speed) % (pathNodes.length - 1);
-          const segmentIdx = Math.floor(agentT);
-          const segmentT = agentT % 1;
-          const n1 = pathNodes[segmentIdx];
-          const n2 = pathNodes[segmentIdx + 1];
+          const nodes = graphData.nodes;
+          const path = data.bellmanPath;
           
-          if (n1 && n2) {
-            const ax = n1.x + (n2.x - n1.x) * segmentT;
-            const ay = n1.y + (n2.y - n1.y) * segmentT;
+          // Render Bellman Optimal Path
+          for (let i = 0; i < path.length - 1; i++) {
+            const n1 = nodes.find((n: any) => n.id === path[i]);
+            const n2 = nodes.find((n: any) => n.id === path[i + 1]);
             
-            ctx.fillStyle = colors.teal;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = colors.teal;
-            ctx.beginPath(); ctx.arc(ax, ay, 2 / globalScale, 0, Math.PI * 2); ctx.fill();
-            ctx.shadowBlur = 0;
+            if (n1 && n2 && !isNaN(n1.x) && !isNaN(n2.x)) {
+              ctx.beginPath();
+              ctx.moveTo(n1.x, n1.y);
+              ctx.lineTo(n2.x, n2.y);
+              ctx.strokeStyle = `rgba(0, 217, 255, ${0.1 + Math.sin(time * 3) * 0.05})`;
+              ctx.lineWidth = 2 / globalScale;
+              ctx.stroke();
+            }
+          }
+
+          // Ghost Agent traversing the optimal path
+          if (path.length > 1) {
+            const totalDuration = 10;
+            const progressTotal = (time % totalDuration) / totalDuration;
+            const segmentCount = path.length - 1;
+            const segmentIndex = Math.floor(progressTotal * segmentCount);
+            const segmentProgress = (progressTotal * segmentCount) % 1;
             
-            ctx.font = `${5 / globalScale}px "IBM Plex Mono"`;
-            ctx.fillStyle = `rgba(0, 217, 255, ${0.4 + Math.sin(time * 5) * 0.2})`;
-            ctx.fillText('OPTIMAL_RECON_TRAJECTORY', ax + 8 / globalScale, ay);
+            const n1 = nodes.find((n: any) => n.id === path[segmentIndex]);
+            const n2 = nodes.find((n: any) => n.id === path[segmentIndex + 1]);
+            
+            if (n1 && n2 && !isNaN(n1.x) && !isNaN(n2.x)) {
+              const ax = n1.x + (n2.x - n1.x) * segmentProgress;
+              const ay = n1.y + (n2.y - n1.y) * segmentProgress;
+              
+              ctx.fillStyle = colors.teal;
+              ctx.shadowBlur = 15;
+              ctx.shadowColor = colors.teal;
+              ctx.beginPath(); ctx.arc(ax, ay, 2 / globalScale, 0, Math.PI * 2); ctx.fill();
+              ctx.shadowBlur = 0;
+              
+              ctx.font = `${5 / globalScale}px "IBM Plex Mono"`;
+              ctx.fillStyle = `rgba(0, 217, 255, ${0.4 + Math.sin(time * 5) * 0.2})`;
+              ctx.fillText('OPTIMAL_RECON_TRAJECTORY', ax + 8 / globalScale, ay);
+            }
           }
         }}
         
@@ -329,21 +332,21 @@ export function HeroGraph() {
             initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
             className="p-4 border border-[#4a9eff]/30 bg-[#0a0a0b]/95 backdrop-blur-xl rounded shadow-[0_0_40px_rgba(74,158,255,0.05)]"
           >
-            <div className="text-[11px] font-mono text-[#4a9eff] mb-1 font-bold tracking-tight">{hoverNode.name.toUpperCase()}</div>
-            <div className="text-[9px] font-mono text-[#555] mb-3">ID_{hoverNode.id.padStart(4, '0')} // GROUP_{hoverNode.group.toUpperCase()}</div>
+            <div className="text-[11px] font-mono text-[#4a9eff] mb-1 font-bold tracking-tight">{(hoverNode.name || '').toUpperCase()}</div>
+            <div className="text-[9px] font-mono text-[#555] mb-3">ID_{(hoverNode.id || '').toString().padStart(4, '0')} // GROUP_{(hoverNode.group || '').toUpperCase()}</div>
             
             <div className="space-y-2 border-t border-[#1e1e20] pt-3">
               <div className="flex justify-between">
                 <span className="text-[8px] font-mono text-[#444]">INFERENCE_CONF</span>
-                <span className="text-[9px] font-mono text-[#e0e0e0] font-bold">{hoverNode.confidence.toFixed(4)}</span>
+                <span className="text-[9px] font-mono text-[#e0e0e0] font-bold">{(hoverNode.confidence || 0).toFixed(4)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[8px] font-mono text-[#444]">LOCAL_ENTROPY</span>
-                <span className="text-[9px] font-mono text-[#d4a574] font-bold">{hoverNode.entropy.toFixed(4)}</span>
+                <span className="text-[9px] font-mono text-[#d4a574] font-bold">{(hoverNode.entropy || 0).toFixed(4)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[8px] font-mono text-[#444]">SPECTRAL_RANK</span>
-                <span className="text-[9px] font-mono text-[#8c8ca0] font-bold">#{(hoverNode.cluster + 1).toString().padStart(2, '0')}</span>
+                <span className="text-[9px] font-mono text-[#8c8ca0] font-bold">#{((hoverNode.cluster || 0) + 1).toString().padStart(2, '0')}</span>
               </div>
             </div>
           </motion.div>
