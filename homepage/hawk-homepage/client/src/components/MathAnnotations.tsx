@@ -16,21 +16,21 @@ export function MathAnnotations() {
       {annotations.map((a, i) => (
         <motion.div
           key={i}
-          className="absolute text-[10px] font-mono text-[#4a9eff] whitespace-nowrap bg-[#000000]/40 p-1 border-l border-[#4a9eff]/30"
+          className="absolute text-xs font-mono text-[#4a9eff] whitespace-nowrap opacity-50"
           style={{
             top: a.top,
             bottom: a.bottom,
             right: a.right,
           }}
           initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 0.4, 0.1] }}
+          animate={{ opacity: [0, 0.7, 0.2] }}
           transition={{
-            duration: 0.2, // quick glitch flash
+            duration: 0.1, // quick glitch flash
             delay: a.delay,
             ease: 'linear',
             repeat: Infinity,
             repeatType: 'reverse',
-            repeatDelay: 2 + i * 1.5,
+            repeatDelay: 3 + i * 2,
           }}
         >
           {a.text}

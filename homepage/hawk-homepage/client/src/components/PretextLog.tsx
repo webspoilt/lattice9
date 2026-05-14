@@ -21,8 +21,8 @@ export function PretextLog({ content, width = 600, color = '#4a9eff', className 
     
     try {
       const prepared = prepareWithSegments(content, font, { whiteSpace: 'pre-wrap' });
-      // 20px line height
-      const layout = layoutWithLines(prepared, actualWidth, 20);
+      // 26px line height for more breathing room
+      const layout = layoutWithLines(prepared, actualWidth, 26);
       setLines(layout.lines.map(l => l.text));
     } catch (e) {
       // Fallback if pretext fails for some reason
@@ -33,7 +33,7 @@ export function PretextLog({ content, width = 600, color = '#4a9eff', className 
   return (
     <div 
       ref={containerRef}
-      className={`font-mono text-[12px] leading-[20px] ${className}`}
+      className={`font-mono text-[12px] leading-[26px] ${className}`}
       style={{ color, opacity: 0.8 }}
     >
       {lines.map((line, i) => (

@@ -84,7 +84,7 @@ export default function Home() {
                   <div className="h-px w-8 bg-[#4a9eff]/40" />
                   <span className="text-[10px] font-mono text-[#4a9eff] tracking-[0.25em] uppercase">Offensive Intelligence Engine</span>
                 </div>
-                <h1 className="text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.1] tracking-tight" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
+                <h1 className="text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.1] tracking-normal" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
                   Graph-native<br /><span className="text-[#4a9eff]">attack surface</span><br />reasoning.
                 </h1>
                 <p className="text-sm leading-relaxed text-[#888] max-w-md" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -191,10 +191,10 @@ export default function Home() {
             </motion.div>
 
             {/* Raw pretext log dump instead of cards */}
-            <div className="relative min-h-[500px] border border-[#1e1e20] bg-[#000000] p-6 overflow-hidden">
+            <div className="relative min-h-[600px] border border-[#1e1e20] bg-[#000000] p-8 overflow-hidden shadow-2xl">
               <PretextLog 
                 color="#4a9eff"
-                className="opacity-70"
+                className="opacity-80"
                 content={`[SYSTEM_INIT] Loading Bayesian inference models... OK
 [TRACE] Estimating posterior confidence matrix:
       P(H|E) = [P(E|H) · P(H)] / P(E)
@@ -224,15 +224,15 @@ export default function Home() {
 [END_OF_DUMP] SYSTEM NOMINAL`}
               />
               
-              {/* Scattered ambient formulas - now looking like glitch text */}
-              <div className="absolute inset-0 pointer-events-none overflow-hidden mix-blend-screen opacity-20">
+              {/* Scattered ambient formulas - now looking like readable diagnostic data */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden mix-blend-screen opacity-30">
                 {[
                   { text: '0x00A1: V*(s) = maxₐ Σ P(s′|s,a)[R + γV*(s′)]', top: '15%', right: '10%', rotate: '0deg' },
                   { text: '0x00F3: C_B(v) = Σ σ(s,t|v) / σ(s,t)', bottom: '20%', left: '15%', rotate: '0deg' },
                   { text: '0x01A4: ∂Ω/∂t = ∫K(x,y)·φ(y)dΓ(y)', top: '60%', right: '20%', rotate: '0deg' },
                   { text: '0x02B1: G = (V, E, w) | w: E → ℝ⁺', bottom: '40%', right: '30%', rotate: '0deg' },
                 ].map((f, i) => (
-                  <motion.div key={i} className="absolute text-[10px] font-mono text-[#d4a574]" style={{ top: f.top, bottom: f.bottom, left: f.left, right: f.right, transform: `rotate(${f.rotate})` }}
+                  <motion.div key={i} className="absolute text-xs font-mono text-[#d4a574] tracking-wide" style={{ top: f.top, bottom: f.bottom, left: f.left, right: f.right, transform: `rotate(${f.rotate})` }}
                     initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.5 + 0.5 }}>
                     {f.text}
                   </motion.div>
