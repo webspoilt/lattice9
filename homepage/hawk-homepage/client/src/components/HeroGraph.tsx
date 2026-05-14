@@ -45,7 +45,7 @@ const colors = {
 };
 
 export function HeroGraph() {
-  const fgRef = useRef<any>();
+  const fgRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoverNode, setHoverNode] = useState<any>(null);
   const [annotations, setAnnotations] = useState<MathAnnotation[]>([]);
@@ -171,9 +171,14 @@ export function HeroGraph() {
         d3VelocityDecay={0.3}
         
         nodeCanvasObject={(node: any, ctx, globalScale) => {
+          // Robust check for finite coordinates to prevent Canvas crashes
+          if (typeof node.x !== 'number' || typeof node.y !== 'number' || !isFinite(node.x) || !isFinite(node.y)) {
+            return;
+          }
+
           const time = performance.now() / 1000;
           const c = getClusterColor(node.cluster);
-          const size = node.val || 5;
+          const size = Number(node.val) || 5;
           
           if (node.entropy > 0.6) {
             // Turbulence/Entropy field
@@ -193,21 +198,30 @@ export function HeroGraph() {
           ctx.stroke();
 
           // Core node
-          const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, size);
-          gradient.addColorStop(0, c);
-          gradient.addColorStop(1, 'rgba(0,0,0,0)');
-          
-          ctx.fillStyle = gradient;
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
-          ctx.fill();
+          try {
+            const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, size);
+            gradient.addColorStop(0, c);
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+            ctx.fill();
+          } catch (e) {
+            // Fallback if gradient fails
+            ctx.fillStyle = c;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+            ctx.fill();
+          }
 
           // Label and telemetry
           if (globalScale > 1.5) {
             ctx.font = `${8 / globalScale}px "IBM Plex Mono"`;
             ctx.textAlign = 'center';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.fillText((node.name || '').toUpperCase(), node.x, node.y + size + 10 / globalScale);
+            const nameLabel = String(node.name || '').toUpperCase();
+            ctx.fillText(nameLabel, node.x, node.y + size + 10 / globalScale);
             
             ctx.fillStyle = colors.cyan;
             ctx.fillText(`P=${(node.confidence || 0).toFixed(2)}`, node.x, node.y - size - 5 / globalScale);
@@ -215,10 +229,13 @@ export function HeroGraph() {
         }}
 
         linkCanvasObject={(link: any, ctx, globalScale) => {
-          const time = performance.now() / 1000;
           const start = link.source;
           const end = link.target;
           if (typeof start !== 'object' || typeof end !== 'object') return;
+          if (typeof start.x !== 'number' || typeof start.y !== 'number' || typeof end.x !== 'number' || typeof end.y !== 'number') return;
+          if (!isFinite(start.x) || !isFinite(start.y) || !isFinite(end.x) || !isFinite(end.y)) return;
+
+          const time = performance.now() / 1000;
 
           // Base line
           ctx.beginPath();
@@ -332,8 +349,8 @@ export function HeroGraph() {
             initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
             className="p-4 border border-[#4a9eff]/30 bg-[#0a0a0b]/95 backdrop-blur-xl rounded shadow-[0_0_40px_rgba(74,158,255,0.05)]"
           >
-            <div className="text-[11px] font-mono text-[#4a9eff] mb-1 font-bold tracking-tight">{(hoverNode.name || '').toUpperCase()}</div>
-            <div className="text-[9px] font-mono text-[#555] mb-3">ID_{(hoverNode.id || '').toString().padStart(4, '0')} // GROUP_{(hoverNode.group || '').toUpperCase()}</div>
+            <div className="text-[11px] font-mono text-[#4a9eff] mb-1 font-bold tracking-tight">{String(hoverNode.name || '').toUpperCase()}</div>
+            <div className="text-[9px] font-mono text-[#555] mb-3">ID_{(hoverNode.id || '').toString().padStart(4, '0')} // GROUP_{String(hoverNode.group || '').toUpperCase()}</div>
             
             <div className="space-y-2 border-t border-[#1e1e20] pt-3">
               <div className="flex justify-between">
