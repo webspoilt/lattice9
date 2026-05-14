@@ -103,43 +103,50 @@ export function HeroGraph() {
       
       const newAnns: MathAnnotation[] = [];
       
-      // Randomly annotate active links
+      // Randomly annotate active links with dynamic Bayesian updates
       internalLinks.forEach((link: any) => {
-        if (link.equation && Math.random() > 0.6) {
+        if (link.equation && Math.random() > 0.4) {
           const s = link.source;
           const d = link.target;
-          if (s && d && !isNaN(s.x) && !isNaN(d.x)) {
+          if (s && d && isFinite(s.x) && isFinite(d.x)) {
             const midX = (s.x + d.x) / 2;
             const midY = (s.y + d.y) / 2;
             
             const screenPos = fgRef.current.graph2ScreenPos(midX, midY);
-            if (screenPos && !isNaN(screenPos.x)) {
+            if (screenPos && isFinite(screenPos.x)) {
+              // Dynamic LaTeX based on probability
+              const prob = (link.probability || 0).toFixed(2);
+              const dynamicLatex = link.equation.includes('P(E|H)') 
+                ? `P(H|E) = \\frac{${prob} \\times P(H)}{P(E)}`
+                : link.equation;
+
               newAnns.push({
                 id: `link-${link.index || Math.random()}`,
-                latex: link.equation,
+                latex: dynamicLatex,
                 x: screenPos.x,
                 y: screenPos.y,
-                opacity: 0.6,
-                scale: 0.7,
-                color: colors.cyan
+                opacity: 0.5 + Math.random() * 0.3,
+                scale: 0.6 + Math.random() * 0.2,
+                color: link.type === 'exploit' ? colors.red : colors.cyan
               });
             }
           }
         }
       });
 
-      // Annotate uncertain nodes
+      // Annotate uncertain nodes with Shannon entropy
       internalNodes.forEach((node: any) => {
-        if (node.entropy > 0.6 && Math.random() > 0.5) {
-          if (!isNaN(node.x) && !isNaN(node.y)) {
+        if (node.entropy > 0.4 && Math.random() > 0.3) {
+          if (isFinite(node.x) && isFinite(node.y)) {
             const screenPos = fgRef.current.graph2ScreenPos(node.x, node.y);
-            if (screenPos && !isNaN(screenPos.x)) {
+            if (screenPos && isFinite(screenPos.x)) {
               newAnns.push({
-                id: `node-${node.id}`,
-                latex: `H(X) = ${(node.entropy || 0).toFixed(2)}`,
+                id: `node-${node.id}-${Math.random()}`,
+                latex: `H(X) = ${(node.entropy || 0).toFixed(3)} \\text{ bit}`,
                 x: screenPos.x,
-                y: screenPos.y - 20,
-                opacity: 0.8,
+                y: screenPos.y - 30,
+                opacity: 0.7,
+                scale: 0.8,
                 color: colors.amber
               });
             }
@@ -148,7 +155,7 @@ export function HeroGraph() {
       });
 
       setAnnotations(newAnns);
-    }, 3000);
+    }, 2000);
     return () => clearInterval(interval);
   }, [data]);
 
@@ -177,6 +184,16 @@ export function HeroGraph() {
           }
 
           const time = performance.now() / 1000;
+          
+          // Apply entropy-driven jitter
+          let nx = node.x;
+          let ny = node.y;
+          if (node.entropy > 0.4) {
+            const jitterAmount = (node.entropy - 0.4) * 3;
+            nx += (Math.random() - 0.5) * jitterAmount;
+            ny += (Math.random() - 0.5) * jitterAmount;
+          }
+
           const c = getClusterColor(node.cluster);
           const size = Number(node.val) || 5;
           
@@ -186,32 +203,32 @@ export function HeroGraph() {
             ctx.beginPath();
             ctx.setLineDash([2, 2]);
             ctx.strokeStyle = `rgba(212, 165, 116, ${0.2 + Math.random() * 0.2})`;
-            ctx.arc(node.x, node.y, size * (1.5 + Math.sin(time * 10) * 0.2), 0, Math.PI * 2);
+            ctx.arc(nx, ny, size * (1.5 + Math.sin(time * 10) * 0.2), 0, Math.PI * 2);
             ctx.stroke();
             ctx.restore();
           }
 
           // Stability Rings
           ctx.beginPath();
-          ctx.arc(node.x, node.y, size + 2, 0, Math.PI * 2);
+          ctx.arc(nx, ny, size + 2, 0, Math.PI * 2);
           ctx.strokeStyle = `rgba(74, 158, 255, ${0.1 + Math.sin(time * 2 + (parseInt(node.id) || 0)) * 0.05})`;
           ctx.stroke();
 
           // Core node
           try {
-            const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, size);
+            const gradient = ctx.createRadialGradient(nx, ny, 0, nx, ny, size);
             gradient.addColorStop(0, c);
             gradient.addColorStop(1, 'rgba(0,0,0,0)');
             
             ctx.fillStyle = gradient;
             ctx.beginPath();
-            ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+            ctx.arc(nx, ny, size, 0, Math.PI * 2);
             ctx.fill();
           } catch (e) {
             // Fallback if gradient fails
             ctx.fillStyle = c;
             ctx.beginPath();
-            ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+            ctx.arc(nx, ny, size, 0, Math.PI * 2);
             ctx.fill();
           }
 
@@ -221,10 +238,10 @@ export function HeroGraph() {
             ctx.textAlign = 'center';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
             const nameLabel = String(node.name || '').toUpperCase();
-            ctx.fillText(nameLabel, node.x, node.y + size + 10 / globalScale);
+            ctx.fillText(nameLabel, nx, ny + size + 10 / globalScale);
             
             ctx.fillStyle = colors.cyan;
-            ctx.fillText(`P=${(node.confidence || 0).toFixed(2)}`, node.x, node.y - size - 5 / globalScale);
+            ctx.fillText(`P=${(node.confidence || 0).toFixed(2)}`, nx, ny - size - 5 / globalScale);
           }
         }}
 
