@@ -287,9 +287,71 @@
 
   @media (min-width: 1024px) {
     .container {
-      padding-left: 2rem; /* 32px - desktop padding */
+      padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
+      max-width: 1280px;
     }
   }
+
+  /* Telemetry text */
+  .telemetry-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Hawk card */
+  .hawk-card {
+    background: linear-gradient(135deg, rgba(14, 17, 24, 0.9), rgba(21, 25, 33, 0.7));
+    border: 1px solid rgba(26, 31, 44, 0.6);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hawk-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(74, 158, 255, 0.15), transparent);
+  }
+  .hawk-card:hover {
+    border-color: rgba(74, 158, 255, 0.2);
+  }
+
+  /* Section line */
+  .hawk-section-line {
+    height: 1px;
+    background: linear-gradient(90deg, rgba(74, 158, 255, 0.3), rgba(74, 158, 255, 0.05), transparent);
+  }
+
+  /* Status dots */
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .status-active { background: #4a9eff; box-shadow: 0 0 6px rgba(74, 158, 255, 0.4); }
+  .status-warning { background: #d4a574; box-shadow: 0 0 6px rgba(212, 165, 116, 0.4); }
+  .status-critical { background: #c44040; box-shadow: 0 0 6px rgba(196, 64, 64, 0.4); }
+
+  /* Grid background */
+  .hawk-grid-bg {
+    background-image:
+      linear-gradient(rgba(26, 31, 44, 0.3) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26, 31, 44, 0.3) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Telemetry scroll */
+  @keyframes telemetry-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .animate-telemetry-scroll {
+    animation: telemetry-scroll 45s linear infinite;
+  }
 }
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0a0a0b; }
+::-webkit-scrollbar-thumb { background: #1e1e20; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2a2a2d; }

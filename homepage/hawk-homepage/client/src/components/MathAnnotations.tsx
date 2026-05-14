@@ -1,46 +1,45 @@
 import { motion } from 'framer-motion';
 
 /**
- * MathAnnotations Component
- * Renders faint mathematical equations and formulas as research-layer annotations
- * 
- * Design: Scientific Instrumentalism
- * - Very subtle opacity (15-25%)
- * - Monospace font for authenticity
- * - Spectral cyan color for consistency
- * - Positioned absolutely for layering effect
+ * MathAnnotations: Faint research-layer equation overlays
+ * Positioned across the hero section as environmental detail.
+ * These should feel like annotations in a research paper, not decoration.
  */
 
 export function MathAnnotations() {
   const annotations = [
-    { text: 'P(A|B) = P(B|A)P(A) / P(B)', top: '10%', left: '5%', delay: 0 },
-    { text: 'H = -Σ pᵢ log pᵢ', top: '20%', right: '8%', delay: 0.2 },
-    { text: 'L = D - A', top: '35%', left: '3%', delay: 0.4 },
-    { text: 'V*(s) = max_a Σ P(s\'|s,a)[R(s,a,s\') + γV*(s\')]', bottom: '15%', right: '5%', delay: 0.6 },
-    { text: 'λᵢ ∈ spectrum(L)', bottom: '25%', left: '10%', delay: 0.8 },
+    { text: 'P(H|E) = P(E|H)·P(H) / P(E)', top: '15%', right: '12%', delay: 0.5 },
+    { text: 'H(X) = −Σ p(xᵢ) log₂ p(xᵢ)', top: '28%', right: '6%', delay: 1.0 },
+    { text: 'L = D − A', top: '42%', right: '15%', delay: 1.5 },
+    { text: 'V*(s) = maxₐ Σ P(s′|s,a)[R + γV*(s′)]', bottom: '22%', right: '8%', delay: 2.0 },
+    { text: 'λ₂(L) > 0  ⟹  G connected', bottom: '35%', right: '18%', delay: 2.5 },
+    { text: 'C_B(v) = Σ σ(s,t|v) / σ(s,t)', top: '55%', right: '4%', delay: 3.0 },
+    { text: 'σ² = Var[P(H|E₁,...,Eₙ)]', bottom: '48%', right: '22%', delay: 3.5 },
   ];
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {annotations.map((annotation, idx) => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-5" style={{ top: '56px' }}>
+      {annotations.map((a, i) => (
         <motion.div
-          key={idx}
-          className="absolute mono-sm text-accent opacity-20 font-light"
+          key={i}
+          className="absolute text-[10px] font-mono text-[#4a9eff] whitespace-nowrap"
           style={{
-            top: annotation.top,
-            bottom: annotation.bottom,
-            left: annotation.left,
-            right: annotation.right,
+            top: a.top,
+            bottom: a.bottom,
+            right: a.right,
           }}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.15 }}
+          animate={{ opacity: [0, 0.12, 0.08] }}
           transition={{
-            duration: 1.5,
-            delay: annotation.delay,
+            duration: 3,
+            delay: a.delay,
             ease: 'easeInOut',
+            repeat: Infinity,
+            repeatType: 'reverse',
+            repeatDelay: 4 + i * 0.5,
           }}
         >
-          {annotation.text}
+          {a.text}
         </motion.div>
       ))}
     </div>

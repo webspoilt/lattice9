@@ -1,330 +1,285 @@
-import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Zap, Network, Brain, Radar, Layers, TrendingUp, Cpu } from 'lucide-react';
+import { ArrowRight, Radar, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HeroGraph } from '@/components/HeroGraph';
-import { CapabilityCard } from '@/components/CapabilityCard';
-import { ResearchCard } from '@/components/ResearchCard';
 import { MathAnnotations } from '@/components/MathAnnotations';
-import { SectionDivider } from '@/components/SectionDivider';
-
-/**
- * Design Philosophy: Scientific Instrumentalism
- * - Dark graphite and tungsten palette
- * - Spectral cyan and amber accents
- * - Force-directed graph hero with orbital node behavior
- * - Faint mathematical overlays as research annotations
- * - Asymmetric layouts with left-aligned content
- * - Restrained animations (2-3s cycles)
- */
+import { TelemetryBar } from '@/components/TelemetryBar';
+import { CoreSections } from '@/components/CoreSections';
 
 export default function Home() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Animation variants for staggered entrance
-  const containerVariants = {
+  const stagger = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
+    visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.3 } },
   };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.8, ease: [0.23, 1, 0.32, 1] },
-    },
+  const fadeUp = {
+    hidden: { opacity: 0, y: 16 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: [0.23, 1, 0.32, 1] } },
   };
+  const fadeIn = (i: number) => ({
+    hidden: { opacity: 0, y: 24 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.7, delay: i * 0.12, ease: [0.23, 1, 0.32, 1] } },
+  });
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-background text-foreground">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-        <div className="container flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-gradient-spectral flex items-center justify-center">
-              <Radar className="w-5 h-5 text-background" />
+    <div className="min-h-screen bg-[#0a0a0b] text-[#e0e0e0] selection:bg-[#4a9eff]/20">
+
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#1e1e20] bg-[#0a0a0b]/90 backdrop-blur-md">
+        <div className="container flex items-center justify-between h-14">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-sm bg-[#4a9eff] flex items-center justify-center">
+              <Radar className="w-4 h-4 text-[#0a0a0b]" />
             </div>
-            <span className="display-sm">HAWK</span>
+            <span className="text-sm font-bold tracking-[0.15em] uppercase" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>HAWK</span>
+            <span className="hidden sm:inline text-[10px] font-mono text-[#555] ml-2 tracking-widest">v3.5</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="body-md text-muted-foreground hover:text-foreground transition">
-              Features
-            </a>
-            <a href="#capabilities" className="body-md text-muted-foreground hover:text-foreground transition">
-              Capabilities
-            </a>
-            <a href="#research" className="body-md text-muted-foreground hover:text-foreground transition">
-              Research
-            </a>
+            {['Architecture', 'Modules', 'Research'].map((l) => (
+              <a key={l} href={`#${l.toLowerCase()}`} className="text-xs font-mono text-[#777] hover:text-[#ccc] transition-colors tracking-wider uppercase">{l}</a>
+            ))}
           </div>
-          <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
-            Access Platform
-          </Button>
+          <a href="https://github.com/webspoilt/hawk-pentest-platform" target="_blank" rel="noopener noreferrer">
+            <Button size="sm" className="bg-[#4a9eff] text-[#0a0a0b] hover:bg-[#3d8ce6] text-xs font-mono tracking-wider h-8 px-4">GitHub</Button>
+          </a>
         </div>
       </nav>
 
-      {/* Hero Section with Force-Directed Graph */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        <div className="absolute inset-0 mesh-background opacity-30" />
-
-        {/* Mathematical annotations layer */}
+      {/* Hero */}
+      <section className="relative pt-14 min-h-screen flex flex-col hawk-grid-bg">
+        <div className="absolute inset-0 w-full h-full" style={{ top: '56px' }}><HeroGraph /></div>
         <MathAnnotations />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0b]/95 via-[#0a0a0b]/60 to-transparent pointer-events-none" style={{ top: '56px' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[#0a0a0b] to-transparent pointer-events-none" />
 
-        {/* Hero graph visualization */}
-        <div className="absolute inset-0 w-full h-full" style={{ height: '600px' }}>
-          <HeroGraph />
+        {/* Side annotations */}
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4 pointer-events-none">
+          <div className="telemetry-text text-[#2a2a2d]" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>ATTACK_SURFACE_TOPOLOGY_v3.5.1</div>
+        </div>
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-3 pointer-events-none">
+          {['PROB', 'GRAPH', 'BAYES', 'ENTROPY'].map((l, i) => (
+            <div key={l} className="flex items-center gap-1.5 justify-end">
+              <span className="telemetry-text text-[#2a2a2d]">{l}</span>
+              <div className="w-1 h-1 rounded-full" style={{ background: ['#4a9eff', '#4a9eff', '#d4a574', '#4a9eff'][i], opacity: 0.4 }} />
+            </div>
+          ))}
         </div>
 
-        {/* Hero content overlay */}
-        <div className="relative container z-10">
-          <motion.div
-            className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {/* Left: Content */}
-            <motion.div className="space-y-8" variants={itemVariants}>
-              <div className="space-y-4">
-                <h1 className="display-lg leading-tight">
-                  Autonomous Graph-Native Offensive Intelligence
+        {/* Node legend */}
+        <div className="absolute bottom-16 left-6 hidden md:flex items-center gap-5 pointer-events-none z-10">
+          {[{ l: 'Recon', c: '#4a9eff' }, { l: 'Exploit', c: '#d4a574' }, { l: 'Auth', c: '#00d9ff' }, { l: 'Infra', c: '#8c8ca0' }].map((n) => (
+            <div key={n.l} className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full" style={{ background: n.c, opacity: 0.6 }} />
+              <span className="telemetry-text text-[#555]">{n.l.toUpperCase()}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Hero content */}
+        <div className="relative z-10 flex-1 flex items-center">
+          <div className="container">
+            <motion.div className="max-w-xl space-y-8" variants={stagger} initial="hidden" animate="visible">
+              <motion.div className="space-y-5" variants={fadeUp}>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-px w-8 bg-[#4a9eff]/40" />
+                  <span className="text-[10px] font-mono text-[#4a9eff] tracking-[0.25em] uppercase">Offensive Intelligence Engine</span>
+                </div>
+                <h1 className="text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.1] tracking-tight" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
+                  Graph-native<br /><span className="text-[#4a9eff]">attack surface</span><br />reasoning.
                 </h1>
-                <p className="body-lg text-muted-foreground max-w-md">
-                  Probabilistic attack surface analysis powered by Bayesian inference, graph theory, and distributed systems observability.
+                <p className="text-sm leading-relaxed text-[#888] max-w-md" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  Probabilistic reconnaissance intelligence built on Bayesian inference, spectral graph theory, and decision compression. Reduces 10,000 observations into 3 actionable attack paths.
                 </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
-                  Start Reconnaissance <ArrowRight className="w-4 h-4" />
-                </Button>
-                <Button size="lg" variant="outline" className="border-border hover:bg-secondary">
-                  View Documentation
-                </Button>
-              </div>
-
-              {/* Key metrics */}
-              <div className="grid grid-cols-3 gap-4 pt-8 border-t border-border">
-                <div>
-                  <div className="mono-md text-accent">99.2%</div>
-                  <div className="body-sm text-muted-foreground">Accuracy</div>
-                </div>
-                <div>
-                  <div className="mono-md text-accent">2.4s</div>
-                  <div className="body-sm text-muted-foreground">Avg Latency</div>
-                </div>
-                <div>
-                  <div className="mono-md text-accent">∞</div>
-                  <div className="body-sm text-muted-foreground">Scalability</div>
-                </div>
-              </div>
+              </motion.div>
+              <motion.div className="flex items-center gap-4" variants={fadeUp}>
+                <a href="https://github.com/webspoilt/hawk-pentest-platform" target="_blank" rel="noopener noreferrer">
+                  <Button className="bg-[#4a9eff] text-[#0a0a0b] hover:bg-[#3d8ce6] gap-2 text-xs font-mono tracking-wider h-10 px-5">
+                    View Repository <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </a>
+                <a href="#architecture">
+                  <Button variant="outline" className="border-[#2a2a2d] text-[#888] hover:bg-[#151517] hover:text-[#ccc] text-xs font-mono tracking-wider h-10 px-5">Architecture</Button>
+                </a>
+              </motion.div>
+              <motion.div className="flex items-center gap-6 pt-6 border-t border-[#1e1e20]" variants={fadeUp}>
+                {[{ l: 'Confidence', v: '0.982' }, { l: 'Variance', v: '±0.04' }, { l: 'Paths', v: '3' }, { l: 'Nodes', v: '20' }].map((m) => (
+                  <div key={m.l} className="space-y-1">
+                    <div className="text-xs font-mono text-[#4a9eff] tracking-wider">{m.v}</div>
+                    <div className="text-[9px] font-mono text-[#555] uppercase tracking-[0.2em]">{m.l}</div>
+                  </div>
+                ))}
+              </motion.div>
             </motion.div>
-
-            {/* Right: Mathematical annotations */}
-            <motion.div
-              className="relative h-96 hidden lg:flex items-center justify-center"
-              variants={itemVariants}
-            >
-              <div className="absolute inset-0 flex flex-col justify-center gap-8 text-xs font-mono opacity-40">
-                <div className="text-accent">P(A|B) = P(B|A)P(A) / P(B)</div>
-                <div className="text-muted-foreground">H = -Σ pᵢ log pᵢ</div>
-                <div className="text-accent">L = D - A</div>
-                <div className="text-muted-foreground">V*(s) = max_a Σ P(s'|s,a)[R(s,a,s') + γV*(s')]</div>
-              </div>
-            </motion.div>
-          </motion.div>
+          </div>
         </div>
+        <motion.div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10" animate={{ y: [0, 6, 0] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}>
+          <ChevronDown className="w-4 h-4 text-[#444]" />
+        </motion.div>
       </section>
 
-      {/* Section divider */}
-      <SectionDivider />
-
-      {/* Core Capabilities Section */}
-      <section id="capabilities" className="py-20 border-t border-border">
+      {/* Architecture */}
+      <section id="architecture" className="py-24 border-t border-[#1a1a1c]">
         <div className="container">
-          <motion.div
-            className="space-y-16"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            <div className="space-y-4">
-              <h2 className="display-md">Core Intelligence Capabilities</h2>
-              <p className="body-lg text-muted-foreground max-w-2xl">
-                Hawk combines graph-native architecture with probabilistic reasoning to deliver operationally intelligent attack surface analysis.
+          <motion.div className="space-y-16" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={stagger}>
+            <motion.div className="max-w-lg space-y-4" variants={fadeUp}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-px w-6 bg-[#4a9eff]/30" />
+                <span className="text-[9px] font-mono text-[#4a9eff] tracking-[0.3em] uppercase">Architecture</span>
+              </div>
+              <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>How the engine reasons.</h2>
+              <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
+                HAWK models every target as a graph. Nodes are assets, edges are relationships. Intelligence flows through the topology via Bayesian updates.
               </p>
-            </div>
-
-            {/* Capabilities grid - asymmetric layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            </motion.div>
+            <motion.div className="p-8 rounded border border-[#1e1e20] bg-[#0e0e10] overflow-x-auto" variants={fadeUp}>
+              <pre className="text-[11px] font-mono text-[#555] leading-loose whitespace-pre">
+{`       [ TARGET ]
+           │
+    ┌──────┴──────┐
+    │             │
+ [ DNS ]     [ SERVICE ] ←── Scrapling (Stealth)
+    │             │
+    └──────┬──────┘
+           │
+    [ ASSET GRAPH ] ←── Spectral Partitioning (Laplacian)
+           │
+    [ EVIDENCE FUSION ] ←── P(H|E) = P(E|H)·P(H) / P(E)
+           │
+    ┌──────┴──────┐
+    │             │
+ [ PATH A ]   [ PATH B ] ←── Decision Compression
+    │             │
+    └─────────────┘
+           │
+     [ OPERATOR ]`}
+              </pre>
+            </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {[
-                {
-                  icon: Network,
-                  title: 'Attack Surface Intelligence',
-                  description: 'Graph-based topology mapping with probabilistic edge weighting and latent-space clustering.',
-                },
-                {
-                  icon: Zap,
-                  title: 'Autonomous Recon Orchestration',
-                  description: 'Self-directed reconnaissance workflows with Bayesian confidence propagation and temporal diffusion.',
-                },
-                {
-                  icon: Brain,
-                  title: 'Probabilistic Exploit Correlation',
-                  description: 'Multi-evidence Bayesian updates correlating findings across heterogeneous data sources.',
-                },
-                {
-                  icon: Layers,
-                  title: 'Temporal Infrastructure Diffing',
-                  description: 'Real-time attack surface evolution tracking with entropy-based anomaly detection.',
-                },
-                {
-                  icon: TrendingUp,
-                  title: 'Graph-Based Threat Reasoning',
-                  description: 'Spectral graph analysis for identifying critical infrastructure chokepoints and attack paths.',
-                },
-                {
-                  icon: Cpu,
-                  title: 'Embedding Space Analysis',
-                  description: 'Latent-space visualization of asset relationships and probabilistic threat clustering.',
-                },
-              ].map((capability, idx) => (
-                <CapabilityCard key={idx} {...capability} index={idx} />
+                { s: '01', t: 'Evidence Collection', d: 'Gather raw signals from headers, DNS, timing, and entropy analysis.' },
+                { s: '02', t: 'Confidence Calibration', d: 'Weigh each signal by source type (Deterministic, Statistical, Heuristic).' },
+                { s: '03', t: 'Graph Fusion', d: 'Map evidence onto the asset graph. Calculate centrality-weighted risk.' },
+                { s: '04', t: 'Decision Compression', d: 'Synthesize all intelligence into the top 3 attack paths.' },
+              ].map((p, i) => (
+                <motion.div key={p.s} className="p-5 rounded border border-[#1e1e20] bg-[#0e0e10] hover:border-[#4a9eff]/20 transition-colors group"
+                  custom={i} variants={fadeIn(i)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+                  <div className="text-[10px] font-mono text-[#4a9eff] tracking-[0.3em] mb-3">{p.s}</div>
+                  <h3 className="text-sm font-bold mb-2 group-hover:text-[#4a9eff] transition-colors" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{p.t}</h3>
+                  <p className="text-xs text-[#666] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>{p.d}</p>
+                </motion.div>
               ))}
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Section divider */}
-      <SectionDivider />
+      {/* Core Modules (from zai design) */}
+      <div id="modules">
+        <CoreSections />
+      </div>
 
-      {/* Research Layer Section */}
-      <section id="research" className="py-20 border-t border-border">
-        <div className="container">
-          <motion.div
-            className="space-y-12"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            <div className="space-y-4">
-              <h2 className="display-md">Mathematical Foundation</h2>
-              <p className="body-lg text-muted-foreground max-w-2xl">
-                Hawk's intelligence engine is built on rigorous mathematical principles from graph theory, Bayesian inference, and distributed systems.
+      {/* Mathematical Foundation — scattered layout */}
+      <section id="research" className="py-24 border-t border-[#1a1a1c] relative overflow-hidden">
+        <div className="container relative z-10">
+          <motion.div className="space-y-16" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={stagger}>
+            <motion.div className="max-w-lg space-y-4" variants={fadeUp}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-px w-6 bg-[#4a9eff]/30" />
+                <span className="text-[9px] font-mono text-[#4a9eff] tracking-[0.3em] uppercase">Research</span>
+              </div>
+              <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Mathematical foundation.</h2>
+              <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
+                Every conclusion is grounded in formal mathematics. No heuristic guesses without traceable provenance.
               </p>
+            </motion.div>
+
+            {/* Scattered formula cards */}
+            <div className="relative min-h-[500px]">
+              {/* Main 3 cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                  { t: 'Bayesian Evidence Fusion', f: 'P(H|E) = P(E|H) · P(H) / P(E)', d: 'Multi-source probabilistic reasoning with uncertainty propagation (σ²) for attack path validation.', a: 'Posterior confidence with variance tracking' },
+                  { t: 'Graph Laplacian Spectrum', f: 'L = D − A,  λᵢ ∈ spectrum(L)', d: 'Spectral partitioning of the asset graph into functionally coupled trust zones and infrastructure clusters.', a: 'Fiedler vector for graph bisection' },
+                  { t: 'Information Entropy', f: 'H(X) = −Σ p(xᵢ) log₂ p(xᵢ)', d: 'Shannon entropy of response payloads to detect anomalous secrets, debug artifacts, and structural signatures.', a: 'Anomaly detection via entropy deviation' },
+                ].map((p, i) => (
+                  <motion.div key={p.t} className="p-6 rounded border border-[#1e1e20] bg-[#0e0e10] hover:border-[#4a9eff]/15 transition-colors group"
+                    custom={i} variants={fadeIn(i)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+                    <h3 className="text-sm font-bold mb-4 group-hover:text-[#4a9eff] transition-colors" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{p.t}</h3>
+                    <div className="p-3 rounded bg-[#0a0a0b] border border-[#1a1a1c] mb-4">
+                      <code className="text-xs font-mono text-[#4a9eff]/80 break-all">{p.f}</code>
+                    </div>
+                    <p className="text-xs text-[#666] leading-relaxed mb-4" style={{ fontFamily: "'Inter', sans-serif" }}>{p.d}</p>
+                    <div className="pt-3 border-t border-[#1a1a1c]">
+                      <span className="text-[9px] font-mono text-[#444] italic">{p.a}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Scattered ambient formulas */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                {[
+                  { text: 'V*(s) = maxₐ Σ P(s′|s,a)[R + γV*(s′)]', top: '5%', right: '2%', rotate: '-2deg' },
+                  { text: 'C_B(v) = Σ σ(s,t|v) / σ(s,t)', bottom: '10%', left: '5%', rotate: '1deg' },
+                  { text: '∂Ω/∂t = ∫K(x,y)·φ(y)dΓ(y)', top: '40%', right: '10%', rotate: '-1deg' },
+                  { text: 'G = (V, E, w) | w: E → ℝ⁺', bottom: '25%', right: '20%', rotate: '2deg' },
+                ].map((f, i) => (
+                  <motion.div key={i} className="absolute text-[9px] font-mono text-[#4a9eff]" style={{ top: f.top, bottom: f.bottom, left: f.left, right: f.right, transform: `rotate(${f.rotate})` }}
+                    initial={{ opacity: 0 }} whileInView={{ opacity: 0.08 }} viewport={{ once: true }} transition={{ delay: i * 0.3 + 0.5 }}>
+                    {f.text}
+                  </motion.div>
+                ))}
+              </div>
             </div>
 
-            {/* Research principles grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                {
-                  title: 'Bayesian Inference',
-                  formula: 'P(H|E) = P(E|H)P(H) / P(E)',
-                  description: 'Multi-evidence probabilistic reasoning for attack path validation',
-                },
-                {
-                  title: 'Graph Laplacian',
-                  formula: 'L = D - A',
-                  description: 'Spectral analysis for identifying infrastructure bottlenecks',
-                },
-                {
-                  title: 'Information Entropy',
-                  formula: 'H = -Σ pᵢ log pᵢ',
-                  description: 'Uncertainty quantification in probabilistic threat models',
-                },
-              ].map((principle, idx) => (
-                <ResearchCard key={idx} {...principle} index={idx} />
-              ))}
+            {/* Research annotation footer */}
+            <div className="flex items-center justify-center gap-4">
+              <div className="hawk-section-line w-32" />
+              <div className="text-center">
+                <p className="text-[9px] font-mono text-[#4a9eff]/10">∂Ω/∂t = ∫K(x,y)·φ(y)dΓ(y) — surface evolution operator</p>
+                <p className="text-[8px] font-mono text-[#d4a574]/8 mt-1">G = (V, E, w) | w: E → ℝ⁺ | ∀ path p: Σw(e) → min</p>
+              </div>
+              <div className="hawk-section-line w-32" style={{ background: 'linear-gradient(90deg, rgba(74,158,255,0.3), rgba(74,158,255,0.05), transparent)' }} />
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Section divider */}
-      <SectionDivider />
-
-      {/* CTA Section */}
-      <section className="py-20 border-t border-border">
+      {/* CTA */}
+      <section className="py-24 border-t border-[#1a1a1c]">
         <div className="container">
-          <motion.div
-            className="max-w-2xl space-y-8"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            <div className="space-y-4">
-              <h2 className="display-md">Ready to Deploy Autonomous Intelligence?</h2>
-              <p className="body-lg text-muted-foreground">
-                Integrate Hawk into your offensive security infrastructure and unlock graph-native attack surface analysis.
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 gap-2">
-                Start Free Trial <ArrowRight className="w-4 h-4" />
-              </Button>
-              <Button size="lg" variant="outline" className="border-border hover:bg-secondary">
-                Schedule Demo
-              </Button>
-            </div>
+          <motion.div className="max-w-lg space-y-6" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
+            <motion.div variants={fadeUp}>
+              <h2 className="text-2xl font-bold tracking-tight mb-3" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Built for operators who care about ground truth.</h2>
+              <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>HAWK is an experimental prototype. Open source, graph-native, and mathematically grounded.</p>
+            </motion.div>
+            <motion.div className="flex gap-4" variants={fadeUp}>
+              <a href="https://github.com/webspoilt/hawk-pentest-platform" target="_blank" rel="noopener noreferrer">
+                <Button className="bg-[#4a9eff] text-[#0a0a0b] hover:bg-[#3d8ce6] gap-2 text-xs font-mono tracking-wider h-10 px-5">View on GitHub <ArrowRight className="w-3.5 h-3.5" /></Button>
+              </a>
+            </motion.div>
           </motion.div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-border bg-card/50">
+      <footer className="py-10 border-t border-[#1a1a1c] bg-[#08080a] mb-7">
         <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-gradient-spectral flex items-center justify-center">
-                  <Radar className="w-4 h-4 text-background" />
-                </div>
-                <span className="heading-sm">HAWK</span>
-              </div>
-              <p className="body-sm text-muted-foreground">Autonomous offensive intelligence infrastructure.</p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 rounded-sm bg-[#4a9eff] flex items-center justify-center"><Radar className="w-3 h-3 text-[#0a0a0b]" /></div>
+              <span className="text-xs font-mono text-[#555]">HAWK — Offensive Intelligence Engine</span>
             </div>
-            <div className="space-y-3">
-              <h4 className="heading-sm">Product</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition">Features</a></li>
-                <li><a href="#" className="hover:text-foreground transition">Pricing</a></li>
-                <li><a href="#" className="hover:text-foreground transition">Documentation</a></li>
-              </ul>
+            <div className="flex items-center gap-6">
+              <a href="https://github.com/webspoilt/hawk-pentest-platform" className="text-[10px] font-mono text-[#555] hover:text-[#888] transition-colors tracking-wider uppercase">GitHub</a>
+              <span className="text-[10px] font-mono text-[#333]">by zeroday</span>
+              <span className="text-[10px] font-mono text-[#333]">v3.5.1</span>
             </div>
-            <div className="space-y-3">
-              <h4 className="heading-sm">Company</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition">About</a></li>
-                <li><a href="#" className="hover:text-foreground transition">Blog</a></li>
-                <li><a href="#" className="hover:text-foreground transition">Contact</a></li>
-              </ul>
-            </div>
-            <div className="space-y-3">
-              <h4 className="heading-sm">Legal</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground transition">Privacy</a></li>
-                <li><a href="#" className="hover:text-foreground transition">Terms</a></li>
-                <li><a href="#" className="hover:text-foreground transition">Security</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="pt-8 border-t border-border flex items-center justify-between">
-            <p className="body-sm text-muted-foreground">© 2026 Hawk. All rights reserved.</p>
-            <p className="mono-sm text-muted-foreground opacity-60">v3.5 | Graph-Native Intelligence</p>
           </div>
         </div>
       </footer>
+
+      {/* Telemetry Bar */}
+      <TelemetryBar />
     </div>
   );
 }
