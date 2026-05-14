@@ -648,86 +648,125 @@ export default function HAWKDashboard() {
               </Card>
             </TabsContent>
 
-            {/* Analysis Tab */}
+            {/* Analysis Tab: Decision Compression & Reasoning Trace */}
             <TabsContent value="intelligence" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 
-                {/* Top Attack Paths */}
+                {/* Decision Compression: Top Attack Paths */}
                 <Card className="lg:col-span-1 bg-slate-900 border-slate-700 p-5 flex flex-col">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xs font-mono font-bold text-cyan-300">TOP_ATTACK_PATHS</h3>
+                    <h3 className="text-xs font-mono font-bold text-cyan-300 tracking-widest uppercase">Decision_Compression</h3>
                     <Radar className="w-4 h-4 text-cyan-500" />
                   </div>
                   <div className="space-y-3 flex-1 overflow-y-auto">
                     {[
-                      { id: 1, path: "Laravel -> Debug -> RCE", prob: "0.82", critical: true },
-                      { id: 2, path: "Auth -> JWT -> IDOR", prob: "0.45", critical: false },
-                      { id: 3, path: "API -> Entropy -> Secret", prob: "0.68", critical: true },
+                      { id: "PATH_01", path: "Laravel -> Debug -> RCE", conf: 0.82, priority: "CRITICAL" },
+                      { id: "PATH_02", path: "Auth -> JWT -> IDOR", conf: 0.45, priority: "MEDIUM" },
+                      { id: "PATH_03", path: "API -> Entropy -> Secret", conf: 0.68, priority: "HIGH" },
                     ].map((p) => (
-                      <div key={p.id} className={`p-3 rounded border cursor-pointer transition-colors ${
-                        p.critical ? "bg-cyan-950/20 border-cyan-800/50 hover:bg-cyan-900/30" : "bg-slate-950/50 border-slate-800 hover:bg-slate-900/50"
+                      <div key={p.id} className={`p-4 rounded border cursor-pointer transition-all ${
+                        p.priority === "CRITICAL" ? "bg-red-950/10 border-red-900/30 hover:bg-red-900/20" : "bg-slate-950/50 border-slate-800 hover:bg-slate-900/50"
                       }`}>
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-[10px] font-mono text-slate-500">PATH_{p.id}</span>
-                          <span className="text-[10px] font-bold text-cyan-400">{Math.round(parseFloat(p.prob) * 100)}% Confidence</span>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-[9px] font-mono font-bold text-slate-500">{p.id}</span>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                            p.priority === "CRITICAL" ? "bg-red-900/40 text-red-400" : "bg-slate-800 text-slate-400"
+                          }`}>{p.priority}</span>
                         </div>
-                        <div className="text-xs font-bold text-slate-200 truncate">{p.path}</div>
+                        <div className="text-xs font-bold text-slate-200 mb-2 truncate">{p.path}</div>
+                        <div className="flex items-center gap-2">
+                           <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
+                             <div className="h-full bg-cyan-500" style={{ width: `${p.conf * 100}%` }} />
+                           </div>
+                           <span className="text-[9px] font-mono text-cyan-400">{Math.round(p.conf * 100)}% P</span>
+                        </div>
                       </div>
                     ))}
                   </div>
+                  <div className="mt-4 p-3 bg-slate-950/80 rounded border border-slate-800 text-[10px] text-slate-500 italic leading-relaxed">
+                    "Synthesizing 450+ observations into 3 actionable attack vectors."
+                  </div>
                 </Card>
 
-                {/* Finding Details */}
+                {/* Reasoning Trace & Evidence Audit */}
                 <Card className="lg:col-span-3 bg-slate-900 border-slate-700 p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-sm font-mono font-bold text-cyan-300">FINDING_DETAILS</h3>
+                  <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-800">
+                    <h3 className="text-sm font-mono font-bold text-cyan-300">REASONING_TRACE & EVIDENCE_AUDIT</h3>
+                    <div className="flex gap-2">
+                      <div className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-[9px] text-slate-500 font-mono">ONTOLOGY_v3.5.1</div>
+                    </div>
                   </div>
                   
-                  <div className="space-y-6">
-                    <div className="p-4 bg-slate-950/50 rounded border border-slate-800">
-                      <div className="flex justify-between items-start mb-6">
+                  <div className="space-y-8">
+                    {/* Active Finding View */}
+                    <div className="space-y-8">
+                      <div className="flex justify-between items-start">
                         <div>
-                          <h4 className="text-md font-bold text-slate-100 font-mono uppercase tracking-tight">Laravel Debug Exposure</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] text-slate-500 font-mono">Target: api.target.com</span>
+                          <h4 className="text-lg font-bold text-slate-100 font-mono tracking-tight uppercase">Laravel Debug Mode Exposure</h4>
+                          <div className="flex items-center gap-2 mt-2">
+                            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                            <span className="text-[10px] text-slate-400 font-mono uppercase">Status: Actionable_Intelligence</span>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-[9px] text-cyan-500 uppercase font-bold mb-1">Confidence Score</div>
-                          <div className="flex items-center gap-2">
-                            <div className="text-xl font-bold text-slate-100">0.982</div>
-                            <div className="text-xs text-slate-500 font-mono">± 0.04</div>
+                          <div className="text-[9px] text-cyan-500 uppercase font-bold mb-1 tracking-tighter">Confidence Index</div>
+                          <div className="flex items-end gap-2">
+                            <div className="text-2xl font-bold text-slate-100 leading-none">0.982</div>
+                            <div className="text-[10px] text-slate-500 font-mono pb-0.5">± 0.04</div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Evidence */}
-                        <div className="space-y-3">
-                          <div className="text-[10px] text-slate-500 font-bold uppercase mb-2 border-b border-slate-800 pb-1">Evidence Chain</div>
-                          {[
-                            { type: "DET", name: "Header Match (X-Powered-By)", conf: 0.98 },
-                            { type: "STAT", name: "Response Timing Anomaly", conf: 0.75 },
-                            { type: "HEU", name: "Entropy Secret Signature", conf: 0.85 }
-                          ].map((e, i) => (
-                            <div key={i} className="flex items-center gap-3 group">
-                              <div className={`w-2 h-2 rounded-full ${e.conf > 0.9 ? "bg-green-500" : "bg-cyan-500"}`} />
-                              <div className="flex-1">
-                                <div className="text-[11px] text-slate-300 font-mono">{e.name}</div>
-                                <div className="text-[9px] text-slate-600 font-mono">P: {e.conf}</div>
-                              </div>
-                            </div>
-                          ))}
+                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                        {/* Structured Reasoning Trace */}
+                        <div className="space-y-4">
+                          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-4 border-b border-slate-800 pb-1">Logical Walkthrough</div>
+                          <div className="space-y-4">
+                             {[
+                               { id: 1, obs: "Detected Laravel framework signature via header analysis.", inf: "Establishing framework-specific exploit priors.", impact: "+0.45" },
+                               { id: 2, obs: "Statistical timing anomaly (2.1 sigma) at /api/v1.", inf: "Correlating behavior with unoptimized debug middleware.", impact: "+0.25" },
+                               { id: 3, obs: "Direct match on entropy-based secret signature.", inf: "Confirming high-fidelity vulnerability. Recommending RCE transition.", impact: "+0.28" }
+                             ].map((step) => (
+                               <div key={step.id} className="flex gap-4 p-3 bg-slate-950/30 rounded border border-slate-800/50 hover:border-cyan-900/50 transition-colors group">
+                                 <div className="text-xs font-mono text-cyan-600 font-bold mt-0.5">{step.id.toString().padStart(2, '0')}</div>
+                                 <div className="space-y-1">
+                                   <div className="text-[11px] text-slate-300 leading-relaxed italic">"{step.obs}"</div>
+                                   <div className="text-[10px] text-slate-500 font-mono">↳ {step.inf}</div>
+                                 </div>
+                                 <div className="ml-auto text-[9px] font-mono text-cyan-500 font-bold">{step.impact}</div>
+                               </div>
+                             ))}
+                          </div>
                         </div>
 
-                        {/* Analysis Notes */}
-                        <div className="space-y-3 p-4 bg-slate-900/50 rounded border border-slate-800/50">
-                          <div className="text-[10px] text-slate-500 font-bold uppercase mb-2">Analysis Notes</div>
-                          <div className="space-y-3">
-                             <div className="text-[10px] text-slate-400">01: Detected Laravel via headers.</div>
-                             <div className="text-[10px] text-slate-400">02: Found timing anomaly at /api/v1.</div>
-                             <div className="text-[10px] text-slate-400">03: Recommended: Directory bruteforce for debug endpoints.</div>
-                          </div>
+                        {/* Evidence Chain Audit */}
+                        <div className="space-y-4">
+                           <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-4 border-b border-slate-800 pb-1">Evidence Chain Audit</div>
+                           <div className="space-y-2">
+                             {[
+                               { type: "DET", name: "Header Match (X-Powered-By)", conf: 0.98, status: "Verified" },
+                               { type: "STAT", name: "Response Timing Anomaly", conf: 0.75, status: "Anomalous" },
+                               { type: "HEU", name: "Entropy Secret Signature", conf: 0.85, status: "Matched" }
+                             ].map((e, i) => (
+                               <div key={i} className="flex items-center justify-between p-3 bg-slate-950/50 rounded border border-slate-800 group hover:bg-slate-900/50 transition-colors">
+                                 <div className="flex items-center gap-3">
+                                   <div className={`text-[8px] font-bold px-1 rounded ${
+                                     e.type === "DET" ? "bg-green-900/30 text-green-500" : "bg-cyan-900/30 text-cyan-500"
+                                   }`}>{e.type}</div>
+                                   <div className="text-[11px] text-slate-300 font-mono">{e.name}</div>
+                                 </div>
+                                 <div className="flex items-center gap-4">
+                                   <div className="text-[10px] text-slate-500 font-mono">P: {e.conf}</div>
+                                   <div className="text-[9px] uppercase font-bold text-slate-600">{e.status}</div>
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+
+                           <div className="mt-6 p-4 bg-cyan-950/10 rounded border border-cyan-900/20">
+                             <div className="text-[9px] text-cyan-500 font-bold uppercase mb-2">Next Optimal Action</div>
+                             <div className="text-xs font-bold text-slate-200 font-mono">RECON_DIRECTORY_BRUTEFORCE --target api.target.com/api/v1</div>
+                           </div>
                         </div>
                       </div>
                     </div>
