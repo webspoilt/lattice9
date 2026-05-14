@@ -9,6 +9,7 @@ export default defineConfig({
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
     },
+    dedupe: ["react", "react-dom"],
   },
   root: path.resolve(import.meta.dirname, "client"),
   build: {

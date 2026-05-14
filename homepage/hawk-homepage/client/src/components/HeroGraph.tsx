@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { motion } from 'framer-motion';
-import * as d3 from 'd3';
+import { MathAnnotations, MathAnnotation } from './MathAnnotations';
 
 /**
  * HeroGraph: Adversarial Intelligence Operating Environment
@@ -23,11 +23,13 @@ interface Node {
   entropy: number;
   cluster: number;
   group: string;
+  x?: number;
+  y?: number;
 }
 
 interface Link {
-  source: string;
-  target: string;
+  source: string | any;
+  target: string | any;
   probability: number;
   type: 'exploit' | 'trust' | 'lateral' | 'temporal';
   equation?: string;
@@ -35,8 +37,10 @@ interface Link {
 
 export function HeroGraph() {
   const fgRef = useRef<any>();
+  const containerRef = useRef<HTMLDivElement>(null);
   const [hoverNode, setHoverNode] = useState<any>(null);
   const [time, setTime] = useState(0);
+  const [annotations, setAnnotations] = useState<MathAnnotation[]>([]);
 
   // Simulation time loop
   useEffect(() => {
@@ -67,11 +71,11 @@ export function HeroGraph() {
     ];
 
     const links: Link[] = [
-      { source: '0', target: '1', probability: 0.9, type: 'trust', equation: 'P(A|B) = [P(B|A)P(A)] / P(B)' },
-      { source: '1', target: '7', probability: 0.8, type: 'trust', equation: 'λ₂(L) > 0' },
-      { source: '1', target: '3', probability: 0.4, type: 'exploit', equation: 'H(X) = -Σ p(x) log p(x)' },
+      { source: '0', target: '1', probability: 0.9, type: 'trust', equation: 'P(H|E) = \\frac{P(E|H)P(H)}{P(E)}' },
+      { source: '1', target: '7', probability: 0.8, type: 'trust', equation: '\\lambda_2(L) > 0' },
+      { source: '1', target: '3', probability: 0.4, type: 'exploit', equation: 'H(X) = -\\sum p(x) \\log p(x)' },
       { source: '0', target: '13', probability: 0.7, type: 'trust' },
-      { source: '13', target: '8', probability: 0.85, type: 'exploit', equation: 'V*(s) = max[R + γV*]' },
+      { source: '13', target: '8', probability: 0.85, type: 'exploit', equation: 'V^*(s) = \\max_a [R + \\gamma V^*]' },
       { source: '8', target: '12', probability: 0.9, type: 'exploit' },
       { source: '12', target: '2', probability: 0.3, type: 'lateral' },
       { source: '4', target: '5', probability: 0.75, type: 'exploit' },
@@ -86,6 +90,63 @@ export function HeroGraph() {
 
     return { nodes, links, bellmanPath };
   }, []);
+
+  // Update annotations based on graph state
+  useEffect(() => {
+    if (!fgRef.current) return;
+    
+    const interval = setInterval(() => {
+      const { nodes, links } = data;
+      const newAnns: MathAnnotation[] = [];
+      
+      // Randomly pick a few links to annotate
+      links.forEach((l, i) => {
+        if (l.equation && Math.random() > 0.7) {
+          const s = typeof l.source === 'object' ? l.source : nodes.find(n => n.id === l.source);
+          const d = typeof l.target === 'object' ? l.target : nodes.find(n => n.id === l.target);
+          
+          if (s && d && s.x !== undefined) {
+            const screenPos = fgRef.current.graph2ScreenPos(
+              (s.x + d.x) / 2,
+              (s.y + d.y) / 2
+            );
+            
+            newAnns.push({
+              id: `ann-link-${i}-${Date.now()}`,
+              latex: l.equation,
+              x: screenPos.x,
+              y: screenPos.y - 20,
+              opacity: 0.6,
+              scale: 0.8,
+              color: l.type === 'exploit' ? '#d4a574' : '#4a9eff'
+            });
+          }
+        }
+      });
+
+      // Randomly pick high entropy nodes to annotate
+      nodes.forEach((n, i) => {
+        if (n.entropy > 0.7 && Math.random() > 0.8) {
+          if (n.x !== undefined) {
+            const screenPos = fgRef.current.graph2ScreenPos(n.x, n.y);
+            newAnns.push({
+              id: `ann-node-${i}-${Date.now()}`,
+              latex: `H = ${(n.entropy * 4).toFixed(2)}`,
+              x: screenPos.x,
+              y: screenPos.y - 30,
+              opacity: 0.5,
+              scale: 0.7,
+              color: '#d4a574'
+            });
+          }
+        }
+      });
+
+      setAnnotations(newAnns);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [data]);
 
   const colors = {
     cyan: '#4a9eff',
@@ -102,7 +163,7 @@ export function HeroGraph() {
   };
 
   return (
-    <div className="relative w-full h-full bg-[#0a0a0b]">
+    <div ref={containerRef} className="relative w-full h-full bg-[#0a0a0b]">
       <ForceGraph2D
         ref={fgRef}
         graphData={data}
@@ -116,7 +177,6 @@ export function HeroGraph() {
           const c = getClusterColor(node.cluster);
           const size = node.val;
           
-          // Layer 1: Entropy Distortion Field
           if (node.entropy > 0.6) {
             const distortionR = size * 4 + Math.sin(time * 3 + node.id) * 5;
             const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, distortionR);
@@ -125,7 +185,6 @@ export function HeroGraph() {
             ctx.fillStyle = grad;
             ctx.beginPath(); ctx.arc(node.x, node.y, distortionR, 0, Math.PI * 2); ctx.fill();
             
-            // Instability particles
             ctx.fillStyle = `rgba(212, 165, 116, ${0.4 * node.entropy})`;
             for(let i=0; i<3; i++) {
               const px = node.x + Math.sin(time * 5 + i * 2) * size * 2;
@@ -134,28 +193,24 @@ export function HeroGraph() {
             }
           }
 
-          // Layer 2: Laplacian Stability Ring
           ctx.strokeStyle = c;
           ctx.lineWidth = 0.5 / globalScale;
           ctx.setLineDash([2 / globalScale, 4 / globalScale]);
           ctx.beginPath(); ctx.arc(node.x, node.y, size * 2.5, 0, Math.PI * 2); ctx.stroke();
           ctx.setLineDash([]);
 
-          // Layer 3: Core Bayesian Node
           const coreAlpha = 0.4 + node.confidence * 0.4;
           ctx.fillStyle = c;
           ctx.globalAlpha = coreAlpha;
           ctx.beginPath(); ctx.arc(node.x, node.y, size, 0, Math.PI * 2); ctx.fill();
           ctx.globalAlpha = 1.0;
 
-          // Node Text Overlay (Active Metrics)
           if (globalScale > 1.5) {
             ctx.font = `${8 / globalScale}px "IBM Plex Mono"`;
             ctx.textAlign = 'center';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
             ctx.fillText(node.name.toUpperCase(), node.x, node.y + size + 10 / globalScale);
             
-            // Dynamic Metric
             ctx.fillStyle = colors.cyan;
             ctx.fillText(`P=${node.confidence.toFixed(2)}`, node.x, node.y - size - 5 / globalScale);
           }
@@ -169,11 +224,9 @@ export function HeroGraph() {
           const color = link.type === 'exploit' ? colors.amber : colors.cyan;
           const alpha = link.probability * 0.25;
           
-          // Bayesian Probability Edge
           ctx.beginPath();
           ctx.moveTo(s.x, s.y);
           
-          // Curved lateral paths
           if (link.type === 'lateral' || link.type === 'temporal') {
             const midX = (s.x + d.x) / 2 + Math.sin(time + link.index) * 20;
             const midY = (s.y + d.y) / 2 + Math.cos(time + link.index) * 20;
@@ -188,18 +241,6 @@ export function HeroGraph() {
           ctx.stroke();
           ctx.globalAlpha = 1.0;
 
-          // Active Mathematics: Equation Floating near Edge
-          if (link.equation && globalScale > 2) {
-            const midX = (s.x + d.x) / 2;
-            const midY = (s.y + d.y) / 2;
-            ctx.font = `${6 / globalScale}px "IBM Plex Mono"`;
-            ctx.fillStyle = color;
-            ctx.globalAlpha = 0.4 + Math.sin(time * 2) * 0.2;
-            ctx.fillText(link.equation, midX + 5, midY - 5);
-            ctx.globalAlpha = 1.0;
-          }
-
-          // Confidence Propagation Packet
           const pulseT = (time * 0.5 * link.probability) % 1;
           const px = s.x + (d.x - s.x) * pulseT;
           const py = s.y + (d.y - s.y) * pulseT;
@@ -207,7 +248,6 @@ export function HeroGraph() {
           ctx.beginPath(); ctx.arc(px, py, 1.5 / globalScale, 0, Math.PI * 2); ctx.fill();
         }}
 
-        // Layer 5: Bellman Trajectory Optimization (RL Ghost Agent)
         onRenderFramePre={(ctx, globalScale) => {
           if (!data.bellmanPath || !data.nodes) return;
           const pathIds = data.bellmanPath;
@@ -215,7 +255,6 @@ export function HeroGraph() {
           
           if (pathNodes.length < 2) return;
 
-          // Draw optimal path glow
           ctx.beginPath();
           ctx.strokeStyle = colors.teal;
           ctx.globalAlpha = 0.05 + Math.sin(time * 2) * 0.05;
@@ -227,7 +266,6 @@ export function HeroGraph() {
           ctx.stroke();
           ctx.globalAlpha = 1.0;
 
-          // Ghost Agent Agent
           const speed = 0.4;
           const agentT = (time * speed) % (pathNodes.length - 1);
           const segmentIdx = Math.floor(agentT);
@@ -245,32 +283,43 @@ export function HeroGraph() {
             ctx.beginPath(); ctx.arc(ax, ay, 2 / globalScale, 0, Math.PI * 2); ctx.fill();
             ctx.shadowBlur = 0;
             
-            // Label with fade
             ctx.font = `${5 / globalScale}px "IBM Plex Mono"`;
             ctx.fillStyle = `rgba(0, 217, 255, ${0.4 + Math.sin(time * 5) * 0.2})`;
-            ctx.fillText('OPTIMAL_TRAJECTORY_AGENT', ax + 8 / globalScale, ay);
+            ctx.fillText('OPTIMAL_RECON_TRAJECTORY', ax + 8 / globalScale, ay);
           }
         }}
         
         onNodeHover={setHoverNode}
       />
 
-      {/* Side Status HUD */}
-      <div className="absolute top-20 right-6 w-48 space-y-4 pointer-events-none">
-        <div className="p-3 border border-[#1e1e20] bg-[#0a0a0b]/80 backdrop-blur-sm rounded">
-          <div className="text-[10px] font-mono text-[#555] mb-2">SYSTEM_TOPOLOGY_v4.1</div>
-          <div className="space-y-1">
-            <div className="flex justify-between">
-              <span className="text-[9px] font-mono text-[#444]">NODES:</span>
-              <span className="text-[9px] font-mono text-[#4a9eff]">15 [STABLE]</span>
+      <MathAnnotations annotations={annotations} containerRef={containerRef} />
+
+      <div className="absolute top-20 right-6 w-56 space-y-4 pointer-events-none">
+        <div className="p-4 border border-[#1e1e20] bg-[#0a0a0b]/90 backdrop-blur-md rounded shadow-2xl">
+          <div className="text-[10px] font-mono text-[#555] mb-3 flex justify-between items-center">
+            <span>TOPOLOGY_METRICS_v4.1</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-[#4a9eff] animate-pulse" />
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-baseline">
+              <span className="text-[9px] font-mono text-[#444]">L_EIGENVALUE_λ₂:</span>
+              <span className="text-[10px] font-mono text-[#4a9eff]">0.482</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-[9px] font-mono text-[#444]">EDGES:</span>
-              <span className="text-[9px] font-mono text-[#4a9eff]">13 [INFERRED]</span>
+            <div className="flex justify-between items-baseline">
+              <span className="text-[9px] font-mono text-[#444]">SHANNON_H(X):</span>
+              <span className="text-[10px] font-mono text-[#d4a574]">2.84 bits</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-[9px] font-mono text-[#444]">ENTROPY:</span>
-              <span className="text-[9px] font-mono text-[#d4a574]">H=2.84 bits</span>
+            <div className="flex justify-between items-baseline">
+              <span className="text-[9px] font-mono text-[#444]">BELLMAN_VALUE:</span>
+              <span className="text-[10px] font-mono text-[#00d9ff]">0.942</span>
+            </div>
+            <div className="h-1 bg-[#1e1e20] w-full mt-2 relative overflow-hidden">
+              <motion.div 
+                className="absolute inset-y-0 left-0 bg-[#4a9eff]"
+                initial={{ width: 0 }}
+                animate={{ width: '94%' }}
+                transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
+              />
             </div>
           </div>
         </div>
@@ -278,28 +327,31 @@ export function HeroGraph() {
         {hoverNode && (
           <motion.div 
             initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-            className="p-3 border border-[#4a9eff]/30 bg-[#0a0a0b]/90 backdrop-blur-sm rounded shadow-[0_0_20px_rgba(74,158,255,0.1)]"
+            className="p-4 border border-[#4a9eff]/30 bg-[#0a0a0b]/95 backdrop-blur-xl rounded shadow-[0_0_40px_rgba(74,158,255,0.05)]"
           >
-            <div className="text-[10px] font-mono text-[#4a9eff] mb-1 font-bold">{hoverNode.name.toUpperCase()}</div>
-            <div className="text-[9px] font-mono text-[#666] mb-2">{hoverNode.type.toUpperCase()} // CLUSTER_{hoverNode.cluster}</div>
-            <div className="h-px bg-[#1e1e20] mb-2" />
-            <div className="space-y-1">
+            <div className="text-[11px] font-mono text-[#4a9eff] mb-1 font-bold tracking-tight">{hoverNode.name.toUpperCase()}</div>
+            <div className="text-[9px] font-mono text-[#555] mb-3">ID_{hoverNode.id.padStart(4, '0')} // GROUP_{hoverNode.group.toUpperCase()}</div>
+            
+            <div className="space-y-2 border-t border-[#1e1e20] pt-3">
               <div className="flex justify-between">
-                <span className="text-[8px] font-mono text-[#444]">CONFIDENCE</span>
-                <span className="text-[8px] font-mono text-[#e0e0e0]">{hoverNode.confidence.toFixed(4)}</span>
+                <span className="text-[8px] font-mono text-[#444]">INFERENCE_CONF</span>
+                <span className="text-[9px] font-mono text-[#e0e0e0] font-bold">{hoverNode.confidence.toFixed(4)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[8px] font-mono text-[#444]">ENTROPY</span>
-                <span className="text-[8px] font-mono text-[#d4a574]">{hoverNode.entropy.toFixed(4)}</span>
+                <span className="text-[8px] font-mono text-[#444]">LOCAL_ENTROPY</span>
+                <span className="text-[9px] font-mono text-[#d4a574] font-bold">{hoverNode.entropy.toFixed(4)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[8px] font-mono text-[#444]">SPECTRAL_RANK</span>
+                <span className="text-[9px] font-mono text-[#8c8ca0] font-bold">#{(hoverNode.cluster + 1).toString().padStart(2, '0')}</span>
               </div>
             </div>
           </motion.div>
         )}
       </div>
 
-      {/* Laplacian Background Equations */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03] select-none flex items-center justify-center">
-        <div className="text-[20vw] font-mono font-bold">L=D-A</div>
+      <div className="absolute inset-0 pointer-events-none opacity-[0.02] select-none flex items-center justify-center">
+        <div className="text-[25vw] font-mono font-bold tracking-tighter" style={{ filter: 'blur(2px)' }}>L=D-A</div>
       </div>
     </div>
   );
