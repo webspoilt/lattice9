@@ -2,10 +2,10 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Radar, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HeroGraph } from '@/components/HeroGraph';
-import { MathAnnotations } from '@/components/MathAnnotations';
 import { TelemetryBar } from '@/components/TelemetryBar';
 import { CoreSections } from '@/components/CoreSections';
 import { PretextLog } from '@/components/PretextLog';
+import { BackgroundField } from '@/components/BackgroundField';
 
 export default function Home() {
   const stagger = {
@@ -24,32 +24,34 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#0a0a0b] text-[#e0e0e0] selection:bg-[#4a9eff]/20">
 
+      {/* Background Spectral Field (Entropy Simulation) */}
+      <BackgroundField />
+
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#1e1e20] bg-[#0a0a0b]/90 backdrop-blur-md">
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#1e1e20] bg-[#0a0a0b]/80 backdrop-blur-md">
         <div className="container flex items-center justify-between h-14">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-sm bg-[#4a9eff] flex items-center justify-center">
               <Radar className="w-4 h-4 text-[#0a0a0b]" />
             </div>
             <span className="text-sm font-bold tracking-[0.15em] uppercase" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>HAWK</span>
-            <span className="hidden sm:inline text-[10px] font-mono text-[#555] ml-2 tracking-widest">v3.5</span>
+            <span className="hidden sm:inline text-[10px] font-mono text-[#444] ml-2 tracking-widest lowercase">system.intelligence_v4.1</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
-            {['Architecture', 'Modules', 'Research'].map((l) => (
-              <a key={l} href={`#${l.toLowerCase()}`} className="text-xs font-mono text-[#777] hover:text-[#ccc] transition-colors tracking-wider uppercase">{l}</a>
+            {['Topology', 'Entropy', 'Inference'].map((l) => (
+              <a key={l} href={`#${l.toLowerCase()}`} className="text-[10px] font-mono text-[#555] hover:text-[#4a9eff] transition-colors tracking-widest uppercase">{l}</a>
             ))}
           </div>
           <a href="https://github.com/webspoilt/hawk-pentest-platform" target="_blank" rel="noopener noreferrer">
-            <Button size="sm" className="bg-[#4a9eff] text-[#0a0a0b] hover:bg-[#3d8ce6] text-xs font-mono tracking-wider h-8 px-4">GitHub</Button>
+            <Button size="sm" className="bg-[#4a9eff] text-[#0a0a0b] hover:bg-[#3d8ce6] text-[10px] font-mono tracking-widest h-7 px-4 lowercase">deploy_node</Button>
           </a>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative pt-14 min-h-screen flex flex-col hawk-grid-bg">
-        <div className="absolute inset-0 w-full h-full" style={{ top: '56px' }}><HeroGraph /></div>
-        <MathAnnotations />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0b]/95 via-[#0a0a0b]/60 to-transparent pointer-events-none" style={{ top: '56px' }} />
+      {/* Hero: Active Intelligence Environment */}
+      <section className="relative pt-14 min-h-screen flex flex-col overflow-hidden">
+        <div className="absolute inset-0 w-full h-full opacity-60"><HeroGraph /></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0b] via-[#0a0a0b]/40 to-transparent pointer-events-none" />
         <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[#0a0a0b] to-transparent pointer-events-none" />
 
         {/* Side annotations */}
@@ -78,17 +80,18 @@ export default function Home() {
         {/* Hero content */}
         <div className="relative z-10 flex-1 flex items-center">
           <div className="container">
-            <motion.div className="max-w-xl space-y-8" variants={stagger} initial="hidden" animate="visible">
-              <motion.div className="space-y-5" variants={fadeUp}>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-px w-8 bg-[#4a9eff]/40" />
-                  <span className="text-[10px] font-mono text-[#4a9eff] tracking-[0.25em] uppercase">Offensive Intelligence Engine</span>
+            <motion.div className="max-w-xl space-y-10" variants={stagger} initial="hidden" animate="visible">
+              <motion.div className="space-y-6" variants={fadeUp}>
+                <div className="flex items-center gap-3">
+                  <div className="h-px w-12 bg-[#4a9eff]/30" />
+                  <span className="text-[10px] font-mono text-[#4a9eff] tracking-[0.4em] uppercase">Adversarial Systems Theory</span>
                 </div>
-                <h1 className="text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.1] tracking-normal" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
-                  Graph-native<br /><span className="text-[#4a9eff]">attack surface</span><br />reasoning.
+                <h1 className="text-[clamp(2.5rem,6vw,4rem)] font-bold leading-[1.05] tracking-tight text-[#f0f0f0] lowercase" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
+                  Adversarial Intelligence <br />
+                  <span className="text-[#4a9eff]">Compression.</span>
                 </h1>
-                <p className="text-sm leading-relaxed text-[#888] max-w-md" style={{ fontFamily: "'Inter', sans-serif" }}>
-                  Probabilistic reconnaissance intelligence built on Bayesian inference, spectral graph theory, and decision compression. Reduces 10,000 observations into 3 actionable attack paths.
+                <p className="text-base leading-relaxed text-[#666] max-w-lg lowercase font-light" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  A graph-native probabilistic reasoning engine for the automated discovery of adversarial system states. Solving for intelligence yield at the edge of computational observability.
                 </p>
               </motion.div>
               <motion.div className="flex items-center gap-4" variants={fadeUp}>

@@ -1,326 +1,259 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
+import ForceGraph2D from 'react-force-graph-2d';
 import { motion } from 'framer-motion';
+import * as d3 from 'd3';
 
 /**
- * HeroGraph: Adversarial Systems Theory Engine
+ * HeroGraph: Adversarial Intelligence Operating Environment
  * 
- * A high-fidelity force-directed simulation visualizing:
- * - Bayesian attack graphs (probabilistic edge transitions)
- * - Spectral topology (Laplacian clustering)
- * - Shannon Entropy (node instability/heatmaps)
- * - Bellman recon routing (optimized path highlight)
+ * A mathematically-driven interface using D3 force simulation.
+ * Visualizes:
+ * - Bayesian Attack Propagation (Inference-driven edges)
+ * - Shannon Entropy Fields (Visual distortion/noise)
+ * - Spectral Topology (Laplacian clustering)
+ * - Bellman Trajectory Optimization (RL-style pathing)
  */
 
 interface Node {
-  id: number;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  radius: number;
+  id: string;
+  name: string;
   type: 'domain' | 'api' | 'cloud' | 'cred' | 'vuln' | 'auth';
+  val: number; // size
   confidence: number;
   entropy: number;
-  label: string;
   cluster: number;
-  centrality: number;
+  group: string;
 }
 
-interface Edge {
-  source: number;
-  target: number;
+interface Link {
+  source: string;
+  target: string;
   probability: number;
   type: 'exploit' | 'trust' | 'lateral' | 'temporal';
+  equation?: string;
 }
 
 export function HeroGraph() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fgRef = useRef<any>();
+  const [hoverNode, setHoverNode] = useState<any>(null);
+  const [time, setTime] = useState(0);
 
+  // Simulation time loop
   useEffect(() => {
-    if (!canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let w = 0, h = 0;
-
-    const resizeCanvas = () => {
-      const dpr = window.devicePixelRatio || 1;
-      w = canvas.offsetWidth;
-      h = canvas.offsetHeight;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    // Color Palette: Scientific Graphite & Spectral Cyan/Amber
-    const colors = {
-      cyan: { r: 74, g: 158, b: 255 },   // recon/trust
-      amber: { r: 212, g: 165, b: 116 },  // exploit/entropy
-      teal: { r: 0, g: 217, b: 255 },    // auth/identity
-      gray: { r: 140, g: 140, b: 160 },  // infra/static
-      danger: { r: 255, g: 68, b: 68 },   // critical vuln
-    };
-
-    const getClusterColor = (c: number) => {
-      const pal = [colors.cyan, colors.amber, colors.teal, colors.gray];
-      return pal[c % pal.length];
-    };
-
-    // Initialize Nodes
-    const nodeData: Partial<Node>[] = [
-      { label: 'api.hawk.io', type: 'api', cluster: 0, centrality: 0.9, entropy: 0.2, confidence: 0.95 },
-      { label: 'auth.v1', type: 'auth', cluster: 2, centrality: 0.95, entropy: 0.1, confidence: 0.98 },
-      { label: 'prod-db-cluster', type: 'cloud', cluster: 3, centrality: 0.8, entropy: 0.05, confidence: 0.92 },
-      { label: 'admin-creds', type: 'cred', cluster: 2, centrality: 0.7, entropy: 0.8, confidence: 0.4 },
-      { label: 'CVE-2024-X1', type: 'vuln', cluster: 1, centrality: 0.85, entropy: 0.9, confidence: 0.15 },
-      { label: 'edge-lb-01', type: 'cloud', cluster: 3, centrality: 0.6, entropy: 0.15, confidence: 0.88 },
-      { label: 's3://evidence', type: 'cloud', cluster: 3, centrality: 0.4, entropy: 0.4, confidence: 0.7 },
-      { label: 'jwt-sign-key', type: 'cred', cluster: 2, centrality: 0.6, entropy: 0.2, confidence: 0.9 },
-      { label: 'ssrf-entry', type: 'vuln', cluster: 1, centrality: 0.5, entropy: 0.7, confidence: 0.3 },
-      { label: 'internal-net', type: 'domain', cluster: 0, centrality: 0.4, entropy: 0.1, confidence: 0.9 },
-      { label: 'user-db', type: 'cloud', cluster: 3, centrality: 0.5, entropy: 0.3, confidence: 0.8 },
-      { label: 'oauth-proxy', type: 'auth', cluster: 2, centrality: 0.4, entropy: 0.2, confidence: 0.85 },
-      { label: 'shell-access', type: 'vuln', cluster: 1, centrality: 0.7, entropy: 0.95, confidence: 0.1 },
-      { label: 'metadata-svc', type: 'api', cluster: 0, centrality: 0.3, entropy: 0.6, confidence: 0.5 },
-      { label: 'config-repo', type: 'domain', cluster: 0, centrality: 0.2, entropy: 0.1, confidence: 0.92 },
-    ];
-
-    const nodes: Node[] = nodeData.map((d, i) => ({
-      id: i,
-      x: Math.random() * w,
-      y: Math.random() * h,
-      vx: 0, vy: 0,
-      radius: 4 + (d.centrality || 0) * 8,
-      type: d.type as Node['type'],
-      confidence: d.confidence || 0.5,
-      entropy: d.entropy || 0.1,
-      label: d.label || '',
-      cluster: d.cluster || 0,
-      centrality: d.centrality || 0.5,
-    }));
-
-    const edges: Edge[] = [
-      { source: 0, target: 1, probability: 0.9, type: 'trust' },
-      { source: 1, target: 7, probability: 0.8, type: 'trust' },
-      { source: 1, target: 3, probability: 0.4, type: 'exploit' },
-      { source: 0, target: 13, probability: 0.7, type: 'trust' },
-      { source: 13, target: 8, probability: 0.85, type: 'exploit' },
-      { source: 8, target: 12, probability: 0.9, type: 'exploit' },
-      { source: 12, target: 2, probability: 0.3, type: 'lateral' },
-      { source: 4, target: 5, probability: 0.75, type: 'exploit' },
-      { source: 5, target: 9, probability: 0.6, type: 'lateral' },
-      { source: 9, target: 10, probability: 0.5, type: 'lateral' },
-      { source: 7, target: 11, probability: 0.4, type: 'temporal' },
-      { source: 2, target: 6, probability: 0.3, type: 'temporal' },
-      { source: 10, target: 14, probability: 0.2, type: 'temporal' },
-    ];
-
-    let animId: number;
-    let t = 0;
-
-    const animate = () => {
-      t += 0.006;
-      ctx.fillStyle = '#0a0a0b';
-      ctx.fillRect(0, 0, w, h);
-
-      // Background: Laplacian Grid (Subtle spectral gap lines)
-      ctx.strokeStyle = 'rgba(74, 158, 255, 0.02)';
-      ctx.lineWidth = 0.5;
-      const gridSize = 60;
-      for (let x = 0; x < w; x += gridSize) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-      }
-      for (let y = 0; y < h; y += gridSize) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-      }
-
-      // Physics: Bayesian Force Simulation
-      const damping = 0.97;
-      const repulsion = 120;
-      const attraction = 0.012;
-      const gravity = 0.0005;
-
-      nodes.forEach((n, i) => {
-        let fx = 0, fy = 0;
-
-        // Soft center gravity
-        fx += (w * 0.5 - n.x) * gravity;
-        fy += (h * 0.45 - n.y) * gravity;
-
-        // Repulsion (Shannon Entropy based instability)
-        nodes.forEach((other, j) => {
-          if (i === j) return;
-          const dx = n.x - other.x;
-          const dy = n.y - other.y;
-          const distSq = dx * dx + dy * dy + 0.1;
-          const dist = Math.sqrt(distSq);
-          // High entropy nodes are more "repulsive" and unstable
-          const f = (repulsion * (1 + n.entropy * 0.5)) / distSq;
-          fx += (dx / dist) * f;
-          fy += (dy / dist) * f;
-        });
-
-        // Attraction (Bayesian Probability weight)
-        edges.forEach(e => {
-          let otherId = -1;
-          if (e.source === i) otherId = e.target;
-          else if (e.target === i) otherId = e.source;
-          if (otherId === -1) return;
-          const other = nodes[otherId];
-          const dx = other.x - n.x;
-          const dy = other.y - n.y;
-          // Edges are stronger if probability is high
-          fx += dx * attraction * e.probability;
-          fy += dy * attraction * e.probability;
-        });
-
-        // Orbital drift (Adversarial perturbation)
-        fx += Math.sin(t * 0.8 + i) * 0.03;
-        fy += Math.cos(t * 0.7 + i) * 0.03;
-
-        n.vx = (n.vx + fx) * damping;
-        n.vy = (n.vy + fy) * damping;
-        n.x += n.vx;
-        n.y += n.vy;
-
-        // Boundaries
-        const margin = 40;
-        n.x = Math.max(margin, Math.min(w - margin, n.x));
-        n.y = Math.max(margin, Math.min(h - margin, n.y));
-      });
-
-      // Layer 1: Confidence Diffusion (Soft probability waves)
-      nodes.forEach(n => {
-        if (n.entropy > 0.6) {
-          const waveR = (t * 80 + n.id * 20) % 150;
-          const alpha = Math.max(0, 0.05 * (1 - waveR / 150));
-          ctx.strokeStyle = `rgba(212, 165, 116, ${alpha})`;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(n.x, n.y, waveR, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      });
-
-      // Layer 2: Probabilistic Edges
-      edges.forEach(e => {
-        const s = nodes[e.source];
-        const d = nodes[e.target];
-        
-        const alpha = e.probability * 0.2;
-        const color = e.type === 'exploit' ? colors.amber : colors.cyan;
-        
-        ctx.beginPath();
-        ctx.moveTo(s.x, s.y);
-        // Bayesian "Curved" path for inferred edges
-        if (e.type === 'temporal' || e.type === 'lateral') {
-          const midX = (s.x + d.x) / 2 + Math.sin(t + e.source) * 20;
-          const midY = (s.y + d.y) / 2 + Math.cos(t + e.target) * 20;
-          ctx.quadraticCurveTo(midX, midY, d.x, d.y);
-          ctx.setLineDash([2, 5]);
-        } else {
-          ctx.lineTo(d.x, d.y);
-          ctx.setLineDash([]);
-        }
-        
-        const grad = ctx.createLinearGradient(s.x, s.y, d.x, d.y);
-        grad.addColorStop(0, `rgba(${color.r},${color.g},${color.b},${alpha})`);
-        grad.addColorStop(1, `rgba(${color.r},${color.g},${color.b},${alpha * 0.3})`);
-        
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = 1 + e.probability * 1.5;
-        ctx.stroke();
-        
-        // Confidence pulses (diffusion packets)
-        const pulseT = (t * 0.5 * e.probability) % 1;
-        const px = s.x + (d.x - s.x) * pulseT;
-        const py = s.y + (d.y - s.y) * pulseT;
-        ctx.fillStyle = `rgba(${color.r},${color.g},${color.b},${alpha * 2})`;
-        ctx.beginPath(); ctx.arc(px, py, 1.5, 0, Math.PI * 2); ctx.fill();
-      });
-      ctx.setLineDash([]);
-
-      // Layer 3: Nodes (Instrumental Render)
-      nodes.forEach(n => {
-        const c = getClusterColor(n.cluster);
-        
-        // Laplacian Stability Ring
-        const ringR = n.radius * 2.5 + Math.sin(t * 1.5 + n.id) * 2;
-        ctx.strokeStyle = `rgba(${c.r},${c.g},${c.b},${0.05 + n.centrality * 0.1})`;
-        ctx.lineWidth = 0.5;
-        ctx.beginPath(); ctx.arc(n.x, n.y, ringR, 0, Math.PI * 2); ctx.stroke();
-
-        // Entropy Distortion (Heatmap effect for high-entropy nodes)
-        if (n.entropy > 0.7) {
-          const glow = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.radius * 6);
-          glow.addColorStop(0, `rgba(${colors.amber.r},${colors.amber.g},${colors.amber.b},0.1)`);
-          glow.addColorStop(1, 'transparent');
-          ctx.fillStyle = glow;
-          ctx.beginPath(); ctx.arc(n.x, n.y, n.radius * 6, 0, Math.PI * 2); ctx.fill();
-        }
-
-        // Core
-        const coreAlpha = 0.4 + n.confidence * 0.4;
-        ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${coreAlpha})`;
-        ctx.beginPath(); ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2); ctx.fill();
-        
-        // Outer glow
-        ctx.shadowBlur = 15 * n.confidence;
-        ctx.shadowColor = `rgba(${c.r},${c.g},${c.b},0.3)`;
-        
-        // Label
-        if (n.centrality > 0.4) {
-          ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.6)`;
-          ctx.font = '9px "IBM Plex Mono", monospace';
-          ctx.textAlign = 'center';
-          ctx.fillText(n.label.toUpperCase(), n.x, n.y + n.radius + 15);
-          
-          // Probability tag
-          ctx.fillStyle = 'rgba(74, 158, 255, 0.3)';
-          ctx.fillText(`P=${n.confidence.toFixed(2)}`, n.x, n.y - n.radius - 8);
-        }
-        ctx.shadowBlur = 0;
-      });
-
-      // Layer 4: Mathematical System Overlays (Floating equations)
-      const equations = [
-        { text: 'P(A|B) = [P(B|A)P(A)] / P(B)', x: w * 0.1, y: h * 0.2 },
-        { text: 'L = D - A', x: w * 0.8, y: h * 0.15 },
-        { text: 'H(X) = -Σ p(x) log p(x)', x: w * 0.15, y: h * 0.8 },
-        { text: 'V*(s) = max[R + γV*]', x: w * 0.75, y: h * 0.85 },
-      ];
-
-      ctx.font = '10px "IBM Plex Mono", monospace';
-      ctx.textAlign = 'left';
-      equations.forEach((eq, i) => {
-        const alpha = 0.1 + Math.sin(t * 0.5 + i) * 0.05;
-        ctx.fillStyle = `rgba(74, 158, 255, ${alpha})`;
-        ctx.fillText(eq.text, eq.x + Math.sin(t * 0.3 + i) * 10, eq.y + Math.cos(t * 0.4 + i) * 10);
-      });
-
-      animId = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener('resize', resizeCanvas);
-    };
+    let id = requestAnimationFrame(function loop() {
+      setTime(t => t + 0.016);
+      id = requestAnimationFrame(loop);
+    });
+    return () => cancelAnimationFrame(id);
   }, []);
 
+  const data = useMemo(() => {
+    const nodes: Node[] = [
+      { id: '0', name: 'api.hawk.io', type: 'api', val: 12, confidence: 0.95, entropy: 0.1, cluster: 0, group: 'recon' },
+      { id: '1', name: 'auth.v1', type: 'auth', val: 15, confidence: 0.98, entropy: 0.05, cluster: 2, group: 'auth' },
+      { id: '2', name: 'prod-db-cluster', type: 'cloud', val: 10, confidence: 0.92, entropy: 0.08, cluster: 3, group: 'infra' },
+      { id: '3', name: 'admin-creds', type: 'cred', val: 8, confidence: 0.4, entropy: 0.8, cluster: 2, group: 'auth' },
+      { id: '4', name: 'CVE-2024-X1', type: 'vuln', val: 9, confidence: 0.15, entropy: 0.9, cluster: 1, group: 'exploit' },
+      { id: '5', name: 'edge-lb-01', type: 'cloud', val: 7, confidence: 0.88, entropy: 0.15, cluster: 3, group: 'infra' },
+      { id: '6', name: 's3://evidence', type: 'cloud', val: 6, confidence: 0.7, entropy: 0.4, cluster: 3, group: 'infra' },
+      { id: '7', name: 'jwt-sign-key', type: 'cred', val: 8, confidence: 0.9, entropy: 0.2, cluster: 2, group: 'auth' },
+      { id: '8', name: 'ssrf-entry', type: 'vuln', val: 7, confidence: 0.3, entropy: 0.7, cluster: 1, group: 'exploit' },
+      { id: '9', name: 'internal-net', type: 'domain', val: 6, confidence: 0.9, entropy: 0.1, cluster: 0, group: 'recon' },
+      { id: '10', name: 'user-db', type: 'cloud', val: 7, confidence: 0.8, entropy: 0.3, cluster: 3, group: 'infra' },
+      { id: '11', name: 'oauth-proxy', type: 'auth', val: 6, confidence: 0.85, entropy: 0.2, cluster: 2, group: 'auth' },
+      { id: '12', name: 'shell-access', type: 'vuln', val: 9, confidence: 0.1, entropy: 0.95, cluster: 1, group: 'exploit' },
+      { id: '13', name: 'metadata-svc', type: 'api', val: 5, confidence: 0.5, entropy: 0.6, cluster: 0, group: 'recon' },
+      { id: '14', name: 'config-repo', type: 'domain', val: 4, confidence: 0.92, entropy: 0.1, cluster: 0, group: 'recon' },
+    ];
+
+    const links: Link[] = [
+      { source: '0', target: '1', probability: 0.9, type: 'trust', equation: 'P(A|B) = [P(B|A)P(A)] / P(B)' },
+      { source: '1', target: '7', probability: 0.8, type: 'trust', equation: 'λ₂(L) > 0' },
+      { source: '1', target: '3', probability: 0.4, type: 'exploit', equation: 'H(X) = -Σ p(x) log p(x)' },
+      { source: '0', target: '13', probability: 0.7, type: 'trust' },
+      { source: '13', target: '8', probability: 0.85, type: 'exploit', equation: 'V*(s) = max[R + γV*]' },
+      { source: '8', target: '12', probability: 0.9, type: 'exploit' },
+      { source: '12', target: '2', probability: 0.3, type: 'lateral' },
+      { source: '4', target: '5', probability: 0.75, type: 'exploit' },
+      { source: '5', target: '9', probability: 0.6, type: 'lateral' },
+      { source: '9', target: '10', probability: 0.5, type: 'lateral' },
+      { source: '7', target: '11', probability: 0.4, type: 'temporal' },
+      { source: '2', target: '6', probability: 0.3, type: 'temporal' },
+      { source: '10', target: '14', probability: 0.2, type: 'temporal' },
+    ];
+
+    return { nodes, links };
+  }, []);
+
+  const colors = {
+    cyan: '#4a9eff',
+    amber: '#d4a574',
+    teal: '#00d9ff',
+    gray: '#8c8ca0',
+    danger: '#ff4444',
+    bg: '#0a0a0b',
+  };
+
+  const getClusterColor = (c: number) => {
+    const pal = [colors.cyan, colors.amber, colors.teal, colors.gray];
+    return pal[c % pal.length];
+  };
+
   return (
-    <motion.div
-      className="relative w-full h-full"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 1.5 }}
-    >
-      <canvas ref={canvasRef} className="w-full h-full" />
-    </motion.div>
+    <div className="relative w-full h-full bg-[#0a0a0b]">
+      <ForceGraph2D
+        ref={fgRef}
+        graphData={data}
+        backgroundColor="#0a0a0b"
+        showNavInfo={false}
+        d3AlphaDecay={0.01}
+        d3VelocityDecay={0.1}
+        cooldownTicks={100}
+        
+        nodeCanvasObject={(node: any, ctx, globalScale) => {
+          const c = getClusterColor(node.cluster);
+          const size = node.val;
+          
+          // Layer 1: Entropy Distortion Field
+          if (node.entropy > 0.6) {
+            const distortionR = size * 4 + Math.sin(time * 3 + node.id) * 5;
+            const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, distortionR);
+            grad.addColorStop(0, `rgba(212, 165, 116, ${0.1 * node.entropy})`);
+            grad.addColorStop(1, 'transparent');
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.arc(node.x, node.y, distortionR, 0, Math.PI * 2); ctx.fill();
+            
+            // Instability particles
+            ctx.fillStyle = `rgba(212, 165, 116, ${0.4 * node.entropy})`;
+            for(let i=0; i<3; i++) {
+              const px = node.x + Math.sin(time * 5 + i * 2) * size * 2;
+              const py = node.y + Math.cos(time * 4 + i * 3) * size * 2;
+              ctx.beginPath(); ctx.arc(px, py, 0.5, 0, Math.PI * 2); ctx.fill();
+            }
+          }
+
+          // Layer 2: Laplacian Stability Ring
+          ctx.strokeStyle = c;
+          ctx.lineWidth = 0.5 / globalScale;
+          ctx.setLineDash([2 / globalScale, 4 / globalScale]);
+          ctx.beginPath(); ctx.arc(node.x, node.y, size * 2.5, 0, Math.PI * 2); ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Layer 3: Core Bayesian Node
+          const coreAlpha = 0.4 + node.confidence * 0.4;
+          ctx.fillStyle = c;
+          ctx.globalAlpha = coreAlpha;
+          ctx.beginPath(); ctx.arc(node.x, node.y, size, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1.0;
+
+          // Node Text Overlay (Active Metrics)
+          if (globalScale > 1.5) {
+            ctx.font = `${8 / globalScale}px "IBM Plex Mono"`;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.fillText(node.name.toUpperCase(), node.x, node.y + size + 10 / globalScale);
+            
+            // Dynamic Metric
+            ctx.fillStyle = colors.cyan;
+            ctx.fillText(`P=${node.confidence.toFixed(2)}`, node.x, node.y - size - 5 / globalScale);
+          }
+        }}
+
+        linkCanvasObject={(link: any, ctx, globalScale) => {
+          const s = link.source;
+          const d = link.target;
+          if (typeof s !== 'object' || typeof d !== 'object') return;
+
+          const color = link.type === 'exploit' ? colors.amber : colors.cyan;
+          const alpha = link.probability * 0.25;
+          
+          // Bayesian Probability Edge
+          ctx.beginPath();
+          ctx.moveTo(s.x, s.y);
+          
+          // Curved lateral paths
+          if (link.type === 'lateral' || link.type === 'temporal') {
+            const midX = (s.x + d.x) / 2 + Math.sin(time + link.index) * 20;
+            const midY = (s.y + d.y) / 2 + Math.cos(time + link.index) * 20;
+            ctx.quadraticCurveTo(midX, midY, d.x, d.y);
+          } else {
+            ctx.lineTo(d.x, d.y);
+          }
+
+          ctx.strokeStyle = color;
+          ctx.globalAlpha = alpha;
+          ctx.lineWidth = (1 + link.probability * 2) / globalScale;
+          ctx.stroke();
+          ctx.globalAlpha = 1.0;
+
+          // Active Mathematics: Equation Floating near Edge
+          if (link.equation && globalScale > 2) {
+            const midX = (s.x + d.x) / 2;
+            const midY = (s.y + d.y) / 2;
+            ctx.font = `${6 / globalScale}px "IBM Plex Mono"`;
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.4 + Math.sin(time * 2) * 0.2;
+            ctx.fillText(link.equation, midX + 5, midY - 5);
+            ctx.globalAlpha = 1.0;
+          }
+
+          // Confidence Propagation Packet
+          const pulseT = (time * 0.5 * link.probability) % 1;
+          const px = s.x + (d.x - s.x) * pulseT;
+          const py = s.y + (d.y - s.y) * pulseT;
+          ctx.fillStyle = color;
+          ctx.beginPath(); ctx.arc(px, py, 1.5 / globalScale, 0, Math.PI * 2); ctx.fill();
+        }}
+        
+        onNodeHover={setHoverNode}
+      />
+
+      {/* Side Status HUD */}
+      <div className="absolute top-20 right-6 w-48 space-y-4 pointer-events-none">
+        <div className="p-3 border border-[#1e1e20] bg-[#0a0a0b]/80 backdrop-blur-sm rounded">
+          <div className="text-[10px] font-mono text-[#555] mb-2">SYSTEM_TOPOLOGY_v4.1</div>
+          <div className="space-y-1">
+            <div className="flex justify-between">
+              <span className="text-[9px] font-mono text-[#444]">NODES:</span>
+              <span className="text-[9px] font-mono text-[#4a9eff]">15 [STABLE]</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[9px] font-mono text-[#444]">EDGES:</span>
+              <span className="text-[9px] font-mono text-[#4a9eff]">13 [INFERRED]</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[9px] font-mono text-[#444]">ENTROPY:</span>
+              <span className="text-[9px] font-mono text-[#d4a574]">H=2.84 bits</span>
+            </div>
+          </div>
+        </div>
+        
+        {hoverNode && (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+            className="p-3 border border-[#4a9eff]/30 bg-[#0a0a0b]/90 backdrop-blur-sm rounded shadow-[0_0_20px_rgba(74,158,255,0.1)]"
+          >
+            <div className="text-[10px] font-mono text-[#4a9eff] mb-1 font-bold">{hoverNode.name.toUpperCase()}</div>
+            <div className="text-[9px] font-mono text-[#666] mb-2">{hoverNode.type.toUpperCase()} // CLUSTER_{hoverNode.cluster}</div>
+            <div className="h-px bg-[#1e1e20] mb-2" />
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span className="text-[8px] font-mono text-[#444]">CONFIDENCE</span>
+                <span className="text-[8px] font-mono text-[#e0e0e0]">{hoverNode.confidence.toFixed(4)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[8px] font-mono text-[#444]">ENTROPY</span>
+                <span className="text-[8px] font-mono text-[#d4a574]">{hoverNode.entropy.toFixed(4)}</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Laplacian Background Equations */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] select-none flex items-center justify-center">
+        <div className="text-[20vw] font-mono font-bold">L=D-A</div>
+      </div>
+    </div>
   );
 }
