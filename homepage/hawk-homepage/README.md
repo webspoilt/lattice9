@@ -95,13 +95,13 @@ A vulnerability report without relational context is observational debris.
 
 ---
 
-## Decision Compression
+## The Decision Compression Paradigm
 
 Modern attack surfaces generate more telemetry than humans can reason about efficiently.
 
 HAWK introduces a concept called:
 
-### Decision Compression
+### Core Concept: Decision Compression
 
 The purpose of the system is to compress:
 
@@ -460,7 +460,6 @@ Powered by:
 * graph-aware routing systems
 
 The crawler is designed to:
-
 * minimize behavioral fingerprints
 * preserve evidence provenance
 * maintain graph continuity
