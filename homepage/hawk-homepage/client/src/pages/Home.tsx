@@ -177,68 +177,66 @@ export default function Home() {
         <CoreSections />
       </div>
 
-      {/* Mathematical Foundation — scattered layout */}
-      <section id="research" className="py-24 border-t border-[#1a1a1c] relative overflow-hidden">
+      {/* Mathematical Foundation — raw dump layout */}
+      <section id="research" className="py-24 border-t border-[#1a1a1c] relative overflow-hidden bg-[#050506]">
         <div className="container relative z-10">
           <motion.div className="space-y-16" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={stagger}>
             <motion.div className="max-w-lg space-y-4" variants={fadeUp}>
               <div className="flex items-center gap-3 mb-2">
                 <div className="h-px w-6 bg-[#4a9eff]/30" />
-                <span className="text-[9px] font-mono text-[#4a9eff] tracking-[0.3em] uppercase">Research</span>
+                <span className="text-[9px] font-mono text-[#4a9eff] tracking-[0.3em] uppercase">SYSTEM.DUMP</span>
               </div>
-              <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Mathematical foundation.</h2>
-              <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
-                Every conclusion is grounded in formal mathematics. No heuristic guesses without traceable provenance.
-              </p>
+              <h2 className="text-xl font-bold tracking-tight text-[#888]" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>OPERATIONAL_LOG_v3.5.1</h2>
             </motion.div>
 
-            {/* Scattered formula cards */}
-            <div className="relative min-h-[500px]">
-              {/* Main 3 cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[
-                  { t: 'Bayesian Evidence Fusion', f: 'P(H|E) = P(E|H) · P(H) / P(E)', d: 'Multi-source probabilistic reasoning with uncertainty propagation (σ²) for attack path validation.', a: 'Posterior confidence with variance tracking' },
-                  { t: 'Graph Laplacian Spectrum', f: 'L = D − A,  λᵢ ∈ spectrum(L)', d: 'Spectral partitioning of the asset graph into functionally coupled trust zones and infrastructure clusters.', a: 'Fiedler vector for graph bisection' },
-                  { t: 'Information Entropy', f: 'H(X) = −Σ p(xᵢ) log₂ p(xᵢ)', d: 'Shannon entropy of response payloads to detect anomalous secrets, debug artifacts, and structural signatures.', a: 'Anomaly detection via entropy deviation' },
-                ].map((p, i) => (
-                  <motion.div key={p.t} className="p-6 rounded border border-[#1e1e20] bg-[#0e0e10] hover:border-[#4a9eff]/15 transition-colors group"
-                    custom={i} variants={fadeIn(i)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                    <h3 className="text-sm font-bold mb-4 group-hover:text-[#4a9eff] transition-colors" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{p.t}</h3>
-                    <div className="p-3 rounded bg-[#0a0a0b] border border-[#1a1a1c] mb-4">
-                      <code className="text-xs font-mono text-[#4a9eff]/80 break-all">{p.f}</code>
-                    </div>
-                    <p className="text-xs text-[#666] leading-relaxed mb-4" style={{ fontFamily: "'Inter', sans-serif" }}>{p.d}</p>
-                    <div className="pt-3 border-t border-[#1a1a1c]">
-                      <span className="text-[9px] font-mono text-[#444] italic">{p.a}</span>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+            {/* Raw pretext log dump instead of cards */}
+            <div className="relative min-h-[500px] border border-[#1e1e20] bg-[#000000] p-6 overflow-hidden">
+              <PretextLog 
+                color="#4a9eff"
+                className="opacity-70"
+                content={`[SYSTEM_INIT] Loading Bayesian inference models... OK
+[TRACE] Estimating posterior confidence matrix:
+      P(H|E) = [P(E|H) · P(H)] / P(E)
+      Where E = {e₁, e₂, ..., eₙ} evidence vector from edge nodes.
+      Current max variance σ² = 0.041
 
-              {/* Scattered ambient formulas */}
-              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+[DIAGNOSTIC] Laplacian Spectrum analysis of asset graph G=(V,E)
+      Computing L = D − A
+      Fiedler vector (λ₂) convergence detected.
+      λ₂ = 0.142 -> Graph is connected, bisecting trust zones...
+      Trust zone partition completed.
+
+[STREAM_ANALYTICS] Measuring payload Shannon Entropy
+      H(X) = −Σ p(xᵢ) log₂ p(xᵢ)
+      Alert: High entropy block found at 0x4A9EFF (H=4.21 bits)
+      Likely encrypted payload or compressed debug artifact.
+
+[MDP_EVAL] Bellman convergence on attack state space
+      V*(s) = maxₐ Σ P(s′|s,a)[R + γV*(s′)]
+      γ = 0.95
+      Optimal path derived. Policy extracted.
+
+[WARN] Drift detected in continuous representation space.
+      ∂Ω/∂t = ∫K(x,y)·φ(y)dΓ(y)
+      Re-calculating topology...
+
+[END_OF_DUMP] SYSTEM NOMINAL`}
+              />
+              
+              {/* Scattered ambient formulas - now looking like glitch text */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden mix-blend-screen opacity-20">
                 {[
-                  { text: 'V*(s) = maxₐ Σ P(s′|s,a)[R + γV*(s′)]', top: '5%', right: '2%', rotate: '-2deg' },
-                  { text: 'C_B(v) = Σ σ(s,t|v) / σ(s,t)', bottom: '10%', left: '5%', rotate: '1deg' },
-                  { text: '∂Ω/∂t = ∫K(x,y)·φ(y)dΓ(y)', top: '40%', right: '10%', rotate: '-1deg' },
-                  { text: 'G = (V, E, w) | w: E → ℝ⁺', bottom: '25%', right: '20%', rotate: '2deg' },
+                  { text: '0x00A1: V*(s) = maxₐ Σ P(s′|s,a)[R + γV*(s′)]', top: '15%', right: '10%', rotate: '0deg' },
+                  { text: '0x00F3: C_B(v) = Σ σ(s,t|v) / σ(s,t)', bottom: '20%', left: '15%', rotate: '0deg' },
+                  { text: '0x01A4: ∂Ω/∂t = ∫K(x,y)·φ(y)dΓ(y)', top: '60%', right: '20%', rotate: '0deg' },
+                  { text: '0x02B1: G = (V, E, w) | w: E → ℝ⁺', bottom: '40%', right: '30%', rotate: '0deg' },
                 ].map((f, i) => (
-                  <motion.div key={i} className="absolute text-[9px] font-mono text-[#4a9eff]" style={{ top: f.top, bottom: f.bottom, left: f.left, right: f.right, transform: `rotate(${f.rotate})` }}
-                    initial={{ opacity: 0 }} whileInView={{ opacity: 0.08 }} viewport={{ once: true }} transition={{ delay: i * 0.3 + 0.5 }}>
+                  <motion.div key={i} className="absolute text-[10px] font-mono text-[#d4a574]" style={{ top: f.top, bottom: f.bottom, left: f.left, right: f.right, transform: `rotate(${f.rotate})` }}
+                    initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.5 + 0.5 }}>
                     {f.text}
                   </motion.div>
                 ))}
               </div>
-            </div>
-
-            {/* Research annotation footer */}
-            <div className="flex items-center justify-center gap-4">
-              <div className="hawk-section-line w-32" />
-              <div className="text-center">
-                <p className="text-[9px] font-mono text-[#4a9eff]/10">∂Ω/∂t = ∫K(x,y)·φ(y)dΓ(y) — surface evolution operator</p>
-                <p className="text-[8px] font-mono text-[#d4a574]/8 mt-1">G = (V, E, w) | w: E → ℝ⁺ | ∀ path p: Σw(e) → min</p>
-              </div>
-              <div className="hawk-section-line w-32" style={{ background: 'linear-gradient(90deg, rgba(74,158,255,0.3), rgba(74,158,255,0.05), transparent)' }} />
             </div>
           </motion.div>
         </div>
