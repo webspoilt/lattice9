@@ -1,5 +1,3 @@
-Here’s a much more advanced, research-grade version of your README direction. It keeps your strongest ideas but makes the project feel like a real offensive intelligence system instead of a “cool recon tool.”
-
 # HAWK — Offensive Graph Intelligence Engine (v3.5)
 
 > **Status:** Experimental Research Prototype
