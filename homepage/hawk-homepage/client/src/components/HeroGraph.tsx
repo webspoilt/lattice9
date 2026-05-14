@@ -2,21 +2,25 @@ import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 /**
- * HeroGraph: Force-directed attack surface topology
+ * HeroGraph: Adversarial Systems Theory Engine
  * 
- * 20+ nodes with spectral clustering, confidence pulse diffusion,
- * probabilistic edge transitions, and topology mesh overlays.
- * Nodes drift with orbital inertia. Edges fade based on Bayesian weight.
+ * A high-fidelity force-directed simulation visualizing:
+ * - Bayesian attack graphs (probabilistic edge transitions)
+ * - Spectral topology (Laplacian clustering)
+ * - Shannon Entropy (node instability/heatmaps)
+ * - Bellman recon routing (optimized path highlight)
  */
 
 interface Node {
+  id: number;
   x: number;
   y: number;
   vx: number;
   vy: number;
   radius: number;
-  color: string;
+  type: 'domain' | 'api' | 'cloud' | 'cred' | 'vuln' | 'auth';
   confidence: number;
+  entropy: number;
   label: string;
   cluster: number;
   centrality: number;
@@ -25,8 +29,8 @@ interface Node {
 interface Edge {
   source: number;
   target: number;
-  strength: number;
-  type: 'trust' | 'inferred' | 'temporal';
+  probability: number;
+  type: 'exploit' | 'trust' | 'lateral' | 'temporal';
 }
 
 export function HeroGraph() {
@@ -52,97 +56,81 @@ export function HeroGraph() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Cluster colors
-    const clusterColors = [
-      { r: 74, g: 158, b: 255 },   // cyan — recon cluster
-      { r: 212, g: 165, b: 116 },   // amber — exploit cluster
-      { r: 0, g: 217, b: 255 },     // bright cyan — auth cluster
-      { r: 140, g: 140, b: 160 },   // muted steel — infra cluster
-    ];
-
-    // Generate nodes with spectral distribution
-    const makeNode = (x: number, y: number, r: number, cluster: number, label: string, conf: number, cent: number): Node => {
-      const c = clusterColors[cluster];
-      return { x, y, vx: 0, vy: 0, radius: r, color: `rgb(${c.r},${c.g},${c.b})`, confidence: conf, label, cluster, centrality: cent };
+    // Color Palette: Scientific Graphite & Spectral Cyan/Amber
+    const colors = {
+      cyan: { r: 74, g: 158, b: 255 },   // recon/trust
+      amber: { r: 212, g: 165, b: 116 },  // exploit/entropy
+      teal: { r: 0, g: 217, b: 255 },    // auth/identity
+      gray: { r: 140, g: 140, b: 160 },  // infra/static
+      danger: { r: 255, g: 68, b: 68 },   // critical vuln
     };
 
-    const nodes: Node[] = [
-      // Cluster 0: Recon
-      makeNode(w * 0.25, h * 0.35, 12, 0, 'DNS', 0.92, 0.85),
-      makeNode(w * 0.18, h * 0.22, 6, 0, 'WHOIS', 0.55, 0.3),
-      makeNode(w * 0.32, h * 0.18, 7, 0, 'CERT', 0.68, 0.45),
-      makeNode(w * 0.15, h * 0.45, 5, 0, 'ASN', 0.42, 0.2),
-      // Cluster 1: Exploit
-      makeNode(w * 0.65, h * 0.55, 10, 1, 'RCE', 0.88, 0.9),
-      makeNode(w * 0.72, h * 0.42, 7, 1, 'SQLi', 0.72, 0.6),
-      makeNode(w * 0.58, h * 0.65, 6, 1, 'SSRF', 0.65, 0.5),
-      makeNode(w * 0.78, h * 0.62, 5, 1, 'LFI', 0.48, 0.35),
-      // Cluster 2: Auth
-      makeNode(w * 0.45, h * 0.4, 11, 2, 'AUTH', 0.95, 0.95),
-      makeNode(w * 0.5, h * 0.25, 6, 2, 'JWT', 0.7, 0.55),
-      makeNode(w * 0.38, h * 0.55, 5, 2, 'IDOR', 0.62, 0.4),
-      makeNode(w * 0.52, h * 0.52, 4, 2, 'CSRF', 0.38, 0.25),
-      // Cluster 3: Infra
-      makeNode(w * 0.82, h * 0.25, 8, 3, 'CDN', 0.78, 0.7),
-      makeNode(w * 0.88, h * 0.38, 5, 3, 'LB', 0.52, 0.35),
-      makeNode(w * 0.85, h * 0.15, 4, 3, 'WAF', 0.45, 0.3),
-      makeNode(w * 0.92, h * 0.5, 4, 3, 'PROXY', 0.35, 0.2),
-      // Peripheral nodes
-      makeNode(w * 0.1, h * 0.7, 4, 0, 'SUB', 0.3, 0.15),
-      makeNode(w * 0.35, h * 0.75, 5, 1, 'API', 0.58, 0.45),
-      makeNode(w * 0.6, h * 0.12, 3, 3, 'S3', 0.25, 0.1),
-      makeNode(w * 0.42, h * 0.08, 3, 0, 'NS', 0.2, 0.08),
+    const getClusterColor = (c: number) => {
+      const pal = [colors.cyan, colors.amber, colors.teal, colors.gray];
+      return pal[c % pal.length];
+    };
+
+    // Initialize Nodes
+    const nodeData: Partial<Node>[] = [
+      { label: 'api.hawk.io', type: 'api', cluster: 0, centrality: 0.9, entropy: 0.2, confidence: 0.95 },
+      { label: 'auth.v1', type: 'auth', cluster: 2, centrality: 0.95, entropy: 0.1, confidence: 0.98 },
+      { label: 'prod-db-cluster', type: 'cloud', cluster: 3, centrality: 0.8, entropy: 0.05, confidence: 0.92 },
+      { label: 'admin-creds', type: 'cred', cluster: 2, centrality: 0.7, entropy: 0.8, confidence: 0.4 },
+      { label: 'CVE-2024-X1', type: 'vuln', cluster: 1, centrality: 0.85, entropy: 0.9, confidence: 0.15 },
+      { label: 'edge-lb-01', type: 'cloud', cluster: 3, centrality: 0.6, entropy: 0.15, confidence: 0.88 },
+      { label: 's3://evidence', type: 'cloud', cluster: 3, centrality: 0.4, entropy: 0.4, confidence: 0.7 },
+      { label: 'jwt-sign-key', type: 'cred', cluster: 2, centrality: 0.6, entropy: 0.2, confidence: 0.9 },
+      { label: 'ssrf-entry', type: 'vuln', cluster: 1, centrality: 0.5, entropy: 0.7, confidence: 0.3 },
+      { label: 'internal-net', type: 'domain', cluster: 0, centrality: 0.4, entropy: 0.1, confidence: 0.9 },
+      { label: 'user-db', type: 'cloud', cluster: 3, centrality: 0.5, entropy: 0.3, confidence: 0.8 },
+      { label: 'oauth-proxy', type: 'auth', cluster: 2, centrality: 0.4, entropy: 0.2, confidence: 0.85 },
+      { label: 'shell-access', type: 'vuln', cluster: 1, centrality: 0.7, entropy: 0.95, confidence: 0.1 },
+      { label: 'metadata-svc', type: 'api', cluster: 0, centrality: 0.3, entropy: 0.6, confidence: 0.5 },
+      { label: 'config-repo', type: 'domain', cluster: 0, centrality: 0.2, entropy: 0.1, confidence: 0.92 },
     ];
 
+    const nodes: Node[] = nodeData.map((d, i) => ({
+      id: i,
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: 0, vy: 0,
+      radius: 4 + (d.centrality || 0) * 8,
+      type: d.type as Node['type'],
+      confidence: d.confidence || 0.5,
+      entropy: d.entropy || 0.1,
+      label: d.label || '',
+      cluster: d.cluster || 0,
+      centrality: d.centrality || 0.5,
+    }));
+
     const edges: Edge[] = [
-      // Recon internal
-      { source: 0, target: 1, strength: 0.7, type: 'trust' },
-      { source: 0, target: 2, strength: 0.8, type: 'trust' },
-      { source: 0, target: 3, strength: 0.5, type: 'inferred' },
-      { source: 1, target: 3, strength: 0.3, type: 'temporal' },
-      // Exploit internal
-      { source: 4, target: 5, strength: 0.85, type: 'trust' },
-      { source: 4, target: 6, strength: 0.7, type: 'trust' },
-      { source: 5, target: 7, strength: 0.55, type: 'inferred' },
-      { source: 6, target: 7, strength: 0.4, type: 'temporal' },
-      // Auth internal
-      { source: 8, target: 9, strength: 0.9, type: 'trust' },
-      { source: 8, target: 10, strength: 0.65, type: 'trust' },
-      { source: 8, target: 11, strength: 0.4, type: 'inferred' },
-      { source: 9, target: 10, strength: 0.5, type: 'temporal' },
-      // Infra internal
-      { source: 12, target: 13, strength: 0.75, type: 'trust' },
-      { source: 12, target: 14, strength: 0.6, type: 'trust' },
-      { source: 13, target: 15, strength: 0.45, type: 'inferred' },
-      // Cross-cluster (attack paths)
-      { source: 0, target: 8, strength: 0.6, type: 'trust' },
-      { source: 8, target: 4, strength: 0.75, type: 'trust' },
-      { source: 2, target: 12, strength: 0.45, type: 'inferred' },
-      { source: 10, target: 6, strength: 0.55, type: 'temporal' },
-      { source: 12, target: 9, strength: 0.35, type: 'temporal' },
-      { source: 14, target: 5, strength: 0.3, type: 'inferred' },
-      // Peripheral
-      { source: 16, target: 0, strength: 0.4, type: 'inferred' },
-      { source: 17, target: 4, strength: 0.5, type: 'trust' },
-      { source: 17, target: 10, strength: 0.35, type: 'temporal' },
-      { source: 18, target: 12, strength: 0.25, type: 'inferred' },
-      { source: 19, target: 0, strength: 0.3, type: 'temporal' },
+      { source: 0, target: 1, probability: 0.9, type: 'trust' },
+      { source: 1, target: 7, probability: 0.8, type: 'trust' },
+      { source: 1, target: 3, probability: 0.4, type: 'exploit' },
+      { source: 0, target: 13, probability: 0.7, type: 'trust' },
+      { source: 13, target: 8, probability: 0.85, type: 'exploit' },
+      { source: 8, target: 12, probability: 0.9, type: 'exploit' },
+      { source: 12, target: 2, probability: 0.3, type: 'lateral' },
+      { source: 4, target: 5, probability: 0.75, type: 'exploit' },
+      { source: 5, target: 9, probability: 0.6, type: 'lateral' },
+      { source: 9, target: 10, probability: 0.5, type: 'lateral' },
+      { source: 7, target: 11, probability: 0.4, type: 'temporal' },
+      { source: 2, target: 6, probability: 0.3, type: 'temporal' },
+      { source: 10, target: 14, probability: 0.2, type: 'temporal' },
     ];
 
     let animId: number;
     let t = 0;
 
     const animate = () => {
-      t += 0.008;
-
-      // Clear
+      t += 0.006;
       ctx.fillStyle = '#0a0a0b';
       ctx.fillRect(0, 0, w, h);
 
-      // Topology mesh — very subtle grid
-      ctx.strokeStyle = 'rgba(74, 158, 255, 0.015)';
+      // Background: Laplacian Grid (Subtle spectral gap lines)
+      ctx.strokeStyle = 'rgba(74, 158, 255, 0.02)';
       ctx.lineWidth = 0.5;
-      const gridSize = 40;
+      const gridSize = 60;
       for (let x = 0; x < w; x += gridSize) {
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
       }
@@ -150,153 +138,169 @@ export function HeroGraph() {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
       }
 
-      // Physics
-      const damping = 0.985;
-      const repulsion = 80;
-      const attraction = 0.008;
-      const centerGravity = 0.0003;
+      // Physics: Bayesian Force Simulation
+      const damping = 0.97;
+      const repulsion = 120;
+      const attraction = 0.012;
+      const gravity = 0.0005;
 
-      for (let i = 0; i < nodes.length; i++) {
+      nodes.forEach((n, i) => {
         let fx = 0, fy = 0;
 
-        // Center gravity
-        fx += (w * 0.5 - nodes[i].x) * centerGravity;
-        fy += (h * 0.4 - nodes[i].y) * centerGravity;
+        // Soft center gravity
+        fx += (w * 0.5 - n.x) * gravity;
+        fy += (h * 0.45 - n.y) * gravity;
 
-        // Orbital drift
-        fx += Math.sin(t * 0.5 + i * 0.7) * 0.02;
-        fy += Math.cos(t * 0.4 + i * 0.9) * 0.015;
+        // Repulsion (Shannon Entropy based instability)
+        nodes.forEach((other, j) => {
+          if (i === j) return;
+          const dx = n.x - other.x;
+          const dy = n.y - other.y;
+          const distSq = dx * dx + dy * dy + 0.1;
+          const dist = Math.sqrt(distSq);
+          // High entropy nodes are more "repulsive" and unstable
+          const f = (repulsion * (1 + n.entropy * 0.5)) / distSq;
+          fx += (dx / dist) * f;
+          fy += (dy / dist) * f;
+        });
 
-        // Repulsion
-        for (let j = 0; j < nodes.length; j++) {
-          if (i === j) continue;
-          const dx = nodes[i].x - nodes[j].x;
-          const dy = nodes[i].y - nodes[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy) + 1;
-          const force = repulsion / (dist * dist);
-          fx += (dx / dist) * force;
-          fy += (dy / dist) * force;
+        // Attraction (Bayesian Probability weight)
+        edges.forEach(e => {
+          let otherId = -1;
+          if (e.source === i) otherId = e.target;
+          else if (e.target === i) otherId = e.source;
+          if (otherId === -1) return;
+          const other = nodes[otherId];
+          const dx = other.x - n.x;
+          const dy = other.y - n.y;
+          // Edges are stronger if probability is high
+          fx += dx * attraction * e.probability;
+          fy += dy * attraction * e.probability;
+        });
+
+        // Orbital drift (Adversarial perturbation)
+        fx += Math.sin(t * 0.8 + i) * 0.03;
+        fy += Math.cos(t * 0.7 + i) * 0.03;
+
+        n.vx = (n.vx + fx) * damping;
+        n.vy = (n.vy + fy) * damping;
+        n.x += n.vx;
+        n.y += n.vy;
+
+        // Boundaries
+        const margin = 40;
+        n.x = Math.max(margin, Math.min(w - margin, n.x));
+        n.y = Math.max(margin, Math.min(h - margin, n.y));
+      });
+
+      // Layer 1: Confidence Diffusion (Soft probability waves)
+      nodes.forEach(n => {
+        if (n.entropy > 0.6) {
+          const waveR = (t * 80 + n.id * 20) % 150;
+          const alpha = Math.max(0, 0.05 * (1 - waveR / 150));
+          ctx.strokeStyle = `rgba(212, 165, 116, ${alpha})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, waveR, 0, Math.PI * 2);
+          ctx.stroke();
         }
+      });
 
-        // Attraction along edges
-        for (const e of edges) {
-          let other = -1;
-          if (e.source === i) other = e.target;
-          else if (e.target === i) other = e.source;
-          if (other < 0) continue;
-          const dx = nodes[other].x - nodes[i].x;
-          const dy = nodes[other].y - nodes[i].y;
-          fx += dx * attraction * e.strength;
-          fy += dy * attraction * e.strength;
-        }
-
-        nodes[i].vx = (nodes[i].vx + fx) * damping;
-        nodes[i].vy = (nodes[i].vy + fy) * damping;
-        nodes[i].x += nodes[i].vx;
-        nodes[i].y += nodes[i].vy;
-
-        // Boundary
-        const m = 30;
-        nodes[i].x = Math.max(m, Math.min(w - m, nodes[i].x));
-        nodes[i].y = Math.max(m, Math.min(h - m, nodes[i].y));
-      }
-
-      // Draw edges
-      for (const e of edges) {
+      // Layer 2: Probabilistic Edges
+      edges.forEach(e => {
         const s = nodes[e.source];
         const d = nodes[e.target];
-
-        const alpha = e.strength * 0.25;
-        const dashOffset = t * 30 * e.strength;
-
-        if (e.type === 'temporal') {
-          ctx.setLineDash([4, 8]);
-          ctx.lineDashOffset = dashOffset;
-        } else if (e.type === 'inferred') {
-          ctx.setLineDash([2, 4]);
-          ctx.lineDashOffset = dashOffset * 0.5;
-        } else {
-          ctx.setLineDash([]);
-        }
-
-        const cS = clusterColors[s.cluster];
-        const cD = clusterColors[d.cluster];
-        const grad = ctx.createLinearGradient(s.x, s.y, d.x, d.y);
-        grad.addColorStop(0, `rgba(${cS.r},${cS.g},${cS.b},${alpha})`);
-        grad.addColorStop(1, `rgba(${cD.r},${cD.g},${cD.b},${alpha * 0.6})`);
-
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = 0.8 + e.strength * 0.8;
+        
+        const alpha = e.probability * 0.2;
+        const color = e.type === 'exploit' ? colors.amber : colors.cyan;
+        
         ctx.beginPath();
         ctx.moveTo(s.x, s.y);
-        ctx.lineTo(d.x, d.y);
+        // Bayesian "Curved" path for inferred edges
+        if (e.type === 'temporal' || e.type === 'lateral') {
+          const midX = (s.x + d.x) / 2 + Math.sin(t + e.source) * 20;
+          const midY = (s.y + d.y) / 2 + Math.cos(t + e.target) * 20;
+          ctx.quadraticCurveTo(midX, midY, d.x, d.y);
+          ctx.setLineDash([2, 5]);
+        } else {
+          ctx.lineTo(d.x, d.y);
+          ctx.setLineDash([]);
+        }
+        
+        const grad = ctx.createLinearGradient(s.x, s.y, d.x, d.y);
+        grad.addColorStop(0, `rgba(${color.r},${color.g},${color.b},${alpha})`);
+        grad.addColorStop(1, `rgba(${color.r},${color.g},${color.b},${alpha * 0.3})`);
+        
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1 + e.probability * 1.5;
         ctx.stroke();
-      }
+        
+        // Confidence pulses (diffusion packets)
+        const pulseT = (t * 0.5 * e.probability) % 1;
+        const px = s.x + (d.x - s.x) * pulseT;
+        const py = s.y + (d.y - s.y) * pulseT;
+        ctx.fillStyle = `rgba(${color.r},${color.g},${color.b},${alpha * 2})`;
+        ctx.beginPath(); ctx.arc(px, py, 1.5, 0, Math.PI * 2); ctx.fill();
+      });
       ctx.setLineDash([]);
 
-      // Draw confidence propagation pulses on high-strength edges
-      for (const e of edges) {
-        if (e.strength < 0.6) continue;
-        const s = nodes[e.source];
-        const d = nodes[e.target];
-        const progress = ((t * e.strength * 0.5) % 1);
-        const px = s.x + (d.x - s.x) * progress;
-        const py = s.y + (d.y - s.y) * progress;
-        const c = clusterColors[s.cluster];
-        const pulseAlpha = 0.4 * (1 - Math.abs(progress - 0.5) * 2);
-
-        ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${pulseAlpha})`;
-        ctx.beginPath();
-        ctx.arc(px, py, 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Draw nodes
-      for (const n of nodes) {
-        const c = clusterColors[n.cluster];
-
-        // Outer orbit ring
-        const orbitR = n.radius * 3.5 + Math.sin(t * 1.2 + n.confidence * 5) * 2;
-        const orbitAlpha = 0.04 + n.centrality * 0.04;
-        ctx.strokeStyle = `rgba(${c.r},${c.g},${c.b},${orbitAlpha})`;
+      // Layer 3: Nodes (Instrumental Render)
+      nodes.forEach(n => {
+        const c = getClusterColor(n.cluster);
+        
+        // Laplacian Stability Ring
+        const ringR = n.radius * 2.5 + Math.sin(t * 1.5 + n.id) * 2;
+        ctx.strokeStyle = `rgba(${c.r},${c.g},${c.b},${0.05 + n.centrality * 0.1})`;
         ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, orbitR, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(n.x, n.y, ringR, 0, Math.PI * 2); ctx.stroke();
 
-        // Glow
-        const glowR = n.radius * 4;
-        const glow = ctx.createRadialGradient(n.x, n.y, n.radius * 0.5, n.x, n.y, glowR);
-        glow.addColorStop(0, `rgba(${c.r},${c.g},${c.b},${0.12 * n.centrality})`);
-        glow.addColorStop(1, `rgba(${c.r},${c.g},${c.b},0)`);
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, glowR, 0, Math.PI * 2);
-        ctx.fill();
+        // Entropy Distortion (Heatmap effect for high-entropy nodes)
+        if (n.entropy > 0.7) {
+          const glow = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.radius * 6);
+          glow.addColorStop(0, `rgba(${colors.amber.r},${colors.amber.g},${colors.amber.b},0.1)`);
+          glow.addColorStop(1, 'transparent');
+          ctx.fillStyle = glow;
+          ctx.beginPath(); ctx.arc(n.x, n.y, n.radius * 6, 0, Math.PI * 2); ctx.fill();
+        }
 
         // Core
-        ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${0.5 + n.confidence * 0.5})`;
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Confidence pulse ring
-        const pulseR = n.radius + 3 + Math.sin(t * 2 + n.confidence * 4) * 1.5;
-        const pulseA = 0.15 + Math.sin(t * 1.8 + n.confidence * 3) * 0.1;
-        ctx.strokeStyle = `rgba(${c.r},${c.g},${c.b},${pulseA})`;
-        ctx.lineWidth = 0.6;
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, pulseR, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Label (only for larger nodes)
-        if (n.radius >= 5) {
-          ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${0.25 + n.centrality * 0.2})`;
-          ctx.font = `${Math.max(8, n.radius * 0.8)}px 'IBM Plex Mono', monospace`;
+        const coreAlpha = 0.4 + n.confidence * 0.4;
+        ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${coreAlpha})`;
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2); ctx.fill();
+        
+        // Outer glow
+        ctx.shadowBlur = 15 * n.confidence;
+        ctx.shadowColor = `rgba(${c.r},${c.g},${c.b},0.3)`;
+        
+        // Label
+        if (n.centrality > 0.4) {
+          ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.6)`;
+          ctx.font = '9px "IBM Plex Mono", monospace';
           ctx.textAlign = 'center';
-          ctx.fillText(n.label, n.x, n.y + n.radius * 2.5 + 4);
+          ctx.fillText(n.label.toUpperCase(), n.x, n.y + n.radius + 15);
+          
+          // Probability tag
+          ctx.fillStyle = 'rgba(74, 158, 255, 0.3)';
+          ctx.fillText(`P=${n.confidence.toFixed(2)}`, n.x, n.y - n.radius - 8);
         }
-      }
+        ctx.shadowBlur = 0;
+      });
+
+      // Layer 4: Mathematical System Overlays (Floating equations)
+      const equations = [
+        { text: 'P(A|B) = [P(B|A)P(A)] / P(B)', x: w * 0.1, y: h * 0.2 },
+        { text: 'L = D - A', x: w * 0.8, y: h * 0.15 },
+        { text: 'H(X) = -Σ p(x) log p(x)', x: w * 0.15, y: h * 0.8 },
+        { text: 'V*(s) = max[R + γV*]', x: w * 0.75, y: h * 0.85 },
+      ];
+
+      ctx.font = '10px "IBM Plex Mono", monospace';
+      ctx.textAlign = 'left';
+      equations.forEach((eq, i) => {
+        const alpha = 0.1 + Math.sin(t * 0.5 + i) * 0.05;
+        ctx.fillStyle = `rgba(74, 158, 255, ${alpha})`;
+        ctx.fillText(eq.text, eq.x + Math.sin(t * 0.3 + i) * 10, eq.y + Math.cos(t * 0.4 + i) * 10);
+      });
 
       animId = requestAnimationFrame(animate);
     };
