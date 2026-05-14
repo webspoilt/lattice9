@@ -6,7 +6,7 @@
 
 ## 0. CORE IDENTITY: THE FAILURE OF MODERN RECONNAISSANCE
 
-Modern offensive reconnaissance pipelines are fundamentally broken. We have reached a state of **Data Exhaustion**. The industry has optimized for the breadth of tool output—more subdomains, more open ports, more CVE matches—at the cost of actual intelligence. 
+Modern offensive reconnaissance pipelines are fundamentally broken. We have reached a state of **Data Exhaustion**. The industry has optimized for the breadth of tool output—more subdomains, more open ports, more CVE matches—at the cost of actual intelligence.
 
 Raw findings are not intelligence. Intelligence is the result of **Decision Compression**.
 
@@ -20,7 +20,7 @@ Current pipelines rely on **Tool Orchestration**—sequential execution of scann
 
 ### The HAWK Thesis
 
-HAWK shifts the paradigm from tool orchestration to **Infrastructure Reasoning**. We treat an attack surface not as a target list, but as an **Evolving Probabilistic System**. 
+HAWK shifts the paradigm from tool orchestration to **Infrastructure Reasoning**. We treat an attack surface not as a target list, but as an **Evolving Probabilistic System**.
 
 HAWK is not attempting to automate hacking. It is an operational environment designed to reduce operator cognitive load by compressing massive observation sets into **High-Confidence Exploit Narratives**. It treats every finding as a probabilistic hypothesis until evidence convergence occurs across the spectral topology of the target.
 
@@ -65,7 +65,7 @@ We measure the efficiency of our recon pipeline using **Shannon Entropy**:
 
 $$H(X) = -\sum_{i=1}^{n} P(x_i) \log_2 P(x_i)$$
 
-The goal of the Recon Layer is the **Minimization of Graph Entropy**. 
+The goal of the Recon Layer is the **Minimization of Graph Entropy**.
 
 - **Response Instability**: If a host's responses vary over time, the node's entropy increases. This creates **Probabilistic Turbulence** in the interface, signaling to the operator that the underlying data is unreliable or transitioning.
 - **Anomalous Discovery**: Low-entropy infrastructure segments that suddenly exhibit high-information signals (new ports, changed headers) are flagged as "State Drift Anomalies."
@@ -144,7 +144,7 @@ The "Epistemic Core" of the platform:
 HAWK is designed for the **Skeptical Operator**. We avoid "hallucinated findings" by adhering to a strict **Evidence-First** protocol.
 
 - **Explainability**: Every $P(H|E)$ calculation can be traced back to the specific observations that generated it.
-- **Hypothesis Testing**: HAWK treats every finding as a probabilistic hypothesis until evidence convergence occurs. 
+- **Hypothesis Testing**: HAWK treats every finding as a probabilistic hypothesis until evidence convergence occurs.
 - **Reasoning Transparency**: The interface visualizes the "Confidence Field" so the operator knows exactly where the system is guessing and where it is certain.
 
 ---
