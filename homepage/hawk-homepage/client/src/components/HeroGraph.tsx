@@ -82,7 +82,9 @@ export function HeroGraph() {
       { source: '10', target: '14', probability: 0.2, type: 'temporal' },
     ];
 
-    return { nodes, links };
+    const bellmanPath = ['0', '13', '8', '12', '2'];
+
+    return { nodes, links, bellmanPath };
   }, []);
 
   const colors = {
@@ -203,6 +205,51 @@ export function HeroGraph() {
           const py = s.y + (d.y - s.y) * pulseT;
           ctx.fillStyle = color;
           ctx.beginPath(); ctx.arc(px, py, 1.5 / globalScale, 0, Math.PI * 2); ctx.fill();
+        }}
+
+        // Layer 5: Bellman Trajectory Optimization (RL Ghost Agent)
+        onRenderFramePre={(ctx, globalScale) => {
+          if (!data.bellmanPath || !data.nodes) return;
+          const pathIds = data.bellmanPath;
+          const pathNodes = pathIds.map(id => data.nodes.find(n => n.id === id)).filter(n => n && n.x !== undefined) as any[];
+          
+          if (pathNodes.length < 2) return;
+
+          // Draw optimal path glow
+          ctx.beginPath();
+          ctx.strokeStyle = colors.teal;
+          ctx.globalAlpha = 0.05 + Math.sin(time * 2) * 0.05;
+          ctx.lineWidth = 3 / globalScale;
+          pathNodes.forEach((n, i) => {
+            if (i === 0) ctx.moveTo(n.x, n.y);
+            else ctx.lineTo(n.x, n.y);
+          });
+          ctx.stroke();
+          ctx.globalAlpha = 1.0;
+
+          // Ghost Agent Agent
+          const speed = 0.4;
+          const agentT = (time * speed) % (pathNodes.length - 1);
+          const segmentIdx = Math.floor(agentT);
+          const segmentT = agentT % 1;
+          const n1 = pathNodes[segmentIdx];
+          const n2 = pathNodes[segmentIdx + 1];
+          
+          if (n1 && n2) {
+            const ax = n1.x + (n2.x - n1.x) * segmentT;
+            const ay = n1.y + (n2.y - n1.y) * segmentT;
+            
+            ctx.fillStyle = colors.teal;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = colors.teal;
+            ctx.beginPath(); ctx.arc(ax, ay, 2 / globalScale, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // Label with fade
+            ctx.font = `${5 / globalScale}px "IBM Plex Mono"`;
+            ctx.fillStyle = `rgba(0, 217, 255, ${0.4 + Math.sin(time * 5) * 0.2})`;
+            ctx.fillText('OPTIMAL_TRAJECTORY_AGENT', ax + 8 / globalScale, ay);
+          }
         }}
         
         onNodeHover={setHoverNode}

@@ -71,6 +71,7 @@ function Field() {
 
   useFrame((state) => {
     uniforms.time.value = state.clock.getElapsedTime();
+    uniforms.resolution.value.set(state.size.width, state.size.height);
   });
 
   return (

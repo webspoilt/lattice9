@@ -74,6 +74,22 @@ function LatentTopology({ color }: { color: string }) {
   );
 }
 
+function TrajectoryPath({ color }: { color: string }) {
+  return (
+    <svg viewBox="0 0 64 48" className="w-full h-full">
+      <path d="M 5 40 Q 32 5 59 40" stroke={color} strokeWidth="0.5" fill="none" strokeOpacity="0.3" />
+      {Array.from({ length: 3 }).map((_, i) => (
+        <motion.circle key={i} r={1.5} fill={color}
+          animate={{ cx: [5, 32, 59], cy: [40, 5, 40], opacity: [0, 1, 0] }}
+          transition={{ duration: 3, delay: i * 1, repeat: Infinity, ease: 'linear' }}
+        />
+      ))}
+      <circle cx="5" cy="40" r="2" fill={color} fillOpacity="0.1" stroke={color} strokeWidth="0.2" />
+      <circle cx="59" cy="40" r="2" fill={color} fillOpacity="0.1" stroke={color} strokeWidth="0.2" />
+    </svg>
+  );
+}
+
 function Metric({ label, value, unit, color = '#4a9eff' }: { label: string; value: string; unit?: string; color?: string }) {
   return (
     <div className="flex flex-col gap-0.5">
@@ -156,7 +172,7 @@ export function CoreSections() {
     },
     {
       id: 'BRE-04', title: 'Bellman Recon Engine', subtitle: 'Optimized trajectory routing for recon yield',
-      viz: <LatentTopology color="#00d9ff" />,
+      viz: <TrajectoryPath color="#00d9ff" />,
       metrics: [
         { label: 'State Space', value: '1.2M', color: '#00d9ff' },
         { label: 'γ Discount', value: '0.95', color: '#00d9ff' },
