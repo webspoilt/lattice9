@@ -5,6 +5,7 @@ import { HeroGraph } from '@/components/HeroGraph';
 import { MathAnnotations } from '@/components/MathAnnotations';
 import { TelemetryBar } from '@/components/TelemetryBar';
 import { CoreSections } from '@/components/CoreSections';
+import { PretextLog } from '@/components/PretextLog';
 
 export default function Home() {
   const stagger = {
