@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Node.js Frontend & tRPC Backend
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=mysql://hawk:hawk_secret@db:3306/hawk
+      - JWT_SECRET=${JWT_SECRET:-sovereign_secret_key}
+      - HAWK_ENGINE_KEY=${HAWK_ENGINE_KEY:-sovereign-hawk-secret-2026}
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    depends_on:
+      - db
+    networks:
+      - hawk-net
+
+  # Python Security Engine
+  engine:
+    build: 
+      context: ./server-py
+    ports:
+      - "8000:8000"
+    environment:
+      - HAWK_ENGINE_KEY=${HAWK_ENGINE_KEY:-sovereign-hawk-secret-2026}
+    networks:
+      - hawk-net
+
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      - MYSQL_DATABASE=hawk
+      - MYSQL_USER=hawk
+      - MYSQL_PASSWORD=hawk_secret
+      - MYSQL_ROOT_PASSWORD=root_secret
+    ports:
+      - "3307:3306"
+    networks:
+      - hawk-net
+
+networks:
+  hawk-net:
+    driver: bridge

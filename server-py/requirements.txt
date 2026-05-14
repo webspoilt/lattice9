@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+httpx
+scrapling
+dnspython
+beautifulsoup4
+pydantic
+python-dotenv
+networkx
+numpy
+scipy
+cryptography
+python-multipart
