@@ -4,7 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 
 // Modular Routers
-import { targetsRouter } from "./routers/targets";
+import { engagementsRouter } from "./routers/engagements";
 import { reconRouter } from "./routers/recon";
 import { vulnerabilityRouter } from "./routers/vulnerability";
 import { reportsRouter } from "./routers/reports";
@@ -24,7 +24,7 @@ export const appRouter = router({
     }),
   }),
   
-  targets: targetsRouter,
+  engagements: engagementsRouter,
   recon: reconRouter,
   vulnerability: vulnerabilityRouter,
   reports: reportsRouter,

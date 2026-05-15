@@ -3,807 +3,481 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { CodeBlock } from "@/components/CodeBlock";
-import { PipelineVisualizer } from "@/components/PipelineVisualizer";
-import { AIChatBox } from "@/components/AIChatBox";
-import type { Message } from "@/components/AIChatBox";
-import { Loader2, Shield, Bug, FileText, MessageSquare, Grid3x3, Radar } from "lucide-react";
+import { 
+  Loader2, 
+  Shield, 
+  Bug, 
+  FileText, 
+  Radar, 
+  Activity, 
+  Layers, 
+  Fingerprint,
+  Zap,
+  ChevronRight,
+  Database,
+  Search,
+  AlertTriangle
+} from "lucide-react";
 import { toast } from "sonner";
-
-type ActiveTab = "recon" | "vulnerability" | "report" | "mentor" | "owasp";
-type ChatMessage = Message;
-
-// AI Mentor Chat Component
-function MentorChat() {
-  const [messages, setMessages] = React.useState<ChatMessage[]>([
-    {
-      role: "assistant" as const,
-      content: "Welcome to HAWK AI Mentor! I'm here to help you with ethical hacking, penetration testing, and security concepts. Ask me about vulnerabilities, tools like Burp Suite, Nmap, FFUF, SQLmap, and Nuclei, or OWASP Top 10 categories.",
-    },
-  ]);
-  const [isLoading, setIsLoading] = React.useState(false);
-
-  const sendMessageMutation = trpc.chat.sendMessage.useMutation();
-
-  const handleSendMessage = async (content: string) => {
-    // Add user message
-    const userMsg: ChatMessage = { role: "user", content };
-    setMessages((prev) => [...prev, userMsg]);
-    setIsLoading(true);
-
-    try {
-      const response = await sendMessageMutation.mutateAsync({ message: content });
-      const assistantMsg: ChatMessage = { role: "assistant", content: response.message };
-      setMessages((prev) => [...prev, assistantMsg]);
-    } catch (error) {
-      toast.error("Failed to get response from AI Mentor");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <AIChatBox
-      messages={messages}
-      onSendMessage={handleSendMessage}
-      isLoading={isLoading}
-      placeholder="Ask me about vulnerabilities, tools, or OWASP categories..."
-      height={500}
-    />
-  );
-}
 
 export default function HAWKDashboard() {
   const { user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<ActiveTab>("recon");
-  const [selectedTargetId, setSelectedTargetId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState("intelligence");
+  const [selectedEngagementId, setSelectedEngagementId] = useState<string | null>(null);
+  const [newEngagementName, setNewEngagementName] = useState("");
+  const [authStatement, setAuthStatement] = useState("");
 
   // Queries
-  const targetsQuery = trpc.targets.list.useQuery(undefined, {
+  const engagementsQuery = trpc.engagements.list.useQuery(undefined, {
     enabled: !!user,
   });
 
-  const reconStatusQuery = trpc.recon.getStatus.useQuery(
-    { targetId: selectedTargetId! },
-    { 
-      enabled: !!selectedTargetId,
-      refetchInterval: (data) => {
-        const isFinished = data?.every(s => s.status === "completed" || s.status === "failed");
-        return isFinished ? false : 3000;
-      }
-    }
-  );
-
   const findingsQuery = trpc.vulnerability.getFindings.useQuery(
-    { targetId: selectedTargetId! },
-    { enabled: !!selectedTargetId }
+    { engagementId: selectedEngagementId! },
+    { enabled: !!selectedEngagementId }
   );
 
-  const reportsQuery = trpc.reports.list.useQuery(
-    { targetId: selectedTargetId! },
-    { enabled: !!selectedTargetId }
+  const runsQuery = trpc.recon.getRuns.useQuery(
+    { engagementId: selectedEngagementId! },
+    { enabled: !!selectedEngagementId, refetchInterval: 5000 }
   );
 
   // Mutations
-  const createTargetMutation = trpc.targets.create.useMutation();
-  const startReconMutation = trpc.recon.startPipeline.useMutation();
-  const analyzeVulnMutation = trpc.vulnerability.analyze.useMutation();
-  const generateReportMutation = trpc.reports.generate.useMutation();
+  const createEngagementMutation = trpc.engagements.create.useMutation();
+  const startCollectionMutation = trpc.recon.startCollection.useMutation();
 
-  // Form states
-  const [targetUrl, setTargetUrl] = useState("");
-  const [authStatement, setAuthStatement] = useState("");
-  const [isConfirmed, setIsConfirmed] = useState(false);
-  const [vulnType, setVulnType] = useState("headers");
-  const [vulnContent, setVulnContent] = useState("");
-  const [reportTitle, setReportTitle] = useState("");
+  const handleCreateEngagement = async () => {
+    if (!newEngagementName || authStatement.length < 20) {
+      toast.error("Name and 20+ char Auth Statement required");
+      return;
+    }
+    try {
+      await createEngagementMutation.mutateAsync({
+        name: newEngagementName,
+        authorizationStatement: authStatement,
+        confirmed: true,
+        scopePatterns: [newEngagementName]
+      });
+      setNewEngagementName("");
+      setAuthStatement("");
+      await engagementsQuery.refetch();
+      toast.success("Engagement initialized");
+    } catch (e) {
+      toast.error("Initialization failed");
+    }
+  };
+
+  const handleStartCollection = async () => {
+    if (!selectedEngagementId) return;
+    try {
+      await startCollectionMutation.mutateAsync({ engagementId: selectedEngagementId });
+      toast.success("Intelligence collection started");
+      await runsQuery.refetch();
+    } catch (e) {
+      toast.error("Collection failed to trigger");
+    }
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+      <div className="min-h-screen bg-black flex items-center justify-center font-mono">
+        <div className="text-cyan-500 animate-pulse text-sm">HAWK_BOOT_SEQUENCE [INITIALIZING]...</div>
       </div>
     );
   }
 
-  const handleCreateTarget = async () => {
-    if (!targetUrl) {
-      toast.error("Please enter a target URL");
-      return;
-    }
-
-    if (!isConfirmed || authStatement.length < 20) {
-      toast.error("You must provide a valid authorization statement and confirm permission.");
-      return;
-    }
-
-    try {
-      await createTargetMutation.mutateAsync({
-        domain: targetUrl,
-        authorizationStatement: authStatement,
-        confirmed: isConfirmed,
-        scopePatterns: ["Authorized testing only"],
-      });
-      setTargetUrl("");
-      setAuthStatement("");
-      setIsConfirmed(false);
-      await targetsQuery.refetch();
-      toast.success("Target authorized and added successfully");
-    } catch (error) {
-      toast.error("Failed to create target");
-    }
-  };
-
-  const handleStartRecon = async () => {
-    if (!selectedTargetId) {
-      toast.error("Please select a target");
-      return;
-    }
-
-    try {
-      await startReconMutation.mutateAsync({
-        targetId: selectedTargetId,
-      });
-      await reconStatusQuery.refetch();
-      toast.success("Recon pipeline started");
-    } catch (error) {
-      toast.error("Failed to start recon");
-    }
-  };
-
-  const handleAnalyzeVuln = async () => {
-    if (!selectedTargetId || !vulnContent) {
-      toast.error("Please select a target and enter content");
-      return;
-    }
-
-    try {
-      await analyzeVulnMutation.mutateAsync({
-        targetId: selectedTargetId,
-        type: vulnType as any,
-        content: vulnContent,
-      });
-      setVulnContent("");
-      await findingsQuery.refetch();
-      toast.success("Vulnerability analysis completed");
-    } catch (error) {
-      toast.error("Failed to analyze vulnerability");
-    }
-  };
-
-  const handleGenerateReport = async () => {
-    if (!selectedTargetId || !reportTitle) {
-      toast.error("Please select a target and enter a report title");
-      return;
-    }
-
-    try {
-      await generateReportMutation.mutateAsync({
-        targetId: selectedTargetId,
-        title: reportTitle,
-      });
-      setReportTitle("");
-      await reportsQuery.refetch();
-      toast.success("Report generated successfully");
-    } catch (error) {
-      toast.error("Failed to generate report");
-    }
-  };
-
-  const pipelineStages = [
-    { id: "recon", label: "Recon", icon: <Radar className="w-4 h-4" />, status: "pending" as const },
-    { id: "tech_stack", label: "Tech Stack", icon: <Grid3x3 className="w-4 h-4" />, status: "pending" as const },
-    { id: "port_scan", label: "Scanning", icon: <Bug className="w-4 h-4" />, status: "pending" as const },
-    { id: "assessment", label: "Assessment", icon: <FileText className="w-4 h-4" />, status: "pending" as const },
-    { id: "forensics", label: "Forensics Audit", icon: <Shield className="w-4 h-4" />, status: "pending" as const },
-  ];
+  const selectedEngagement = engagementsQuery.data?.find(e => e.id === selectedEngagementId);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      {/* Header */}
-      <div className="bg-slate-900 border-b border-slate-700 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center">
-                <Radar className="w-6 h-6 text-slate-950 font-bold" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-cyan-300">⬡ HAWK</h1>
-                <p className="text-xs text-slate-400">Ethical Security Platform</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-900 text-green-300 border border-green-700 text-xs font-medium">
-                <Shield className="w-3 h-3" />
-                Authorized only
-              </div>
-              <div className="text-sm text-slate-400">
-                Welcome, <span className="text-cyan-300 font-medium">{user?.name || "User"}</span>
-              </div>
-            </div>
+    <div className="min-h-screen bg-[#050505] text-slate-300 font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+      {/* Global Status Bar */}
+      <div className="h-10 bg-black border-b border-white/5 flex items-center justify-between px-6 text-[10px] font-mono tracking-tighter">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <span className="text-slate-600 uppercase">System:</span>
+            <span className="text-green-500 font-bold uppercase animate-pulse">Operational</span>
           </div>
+          <div className="flex items-center gap-2">
+            <span className="text-slate-600 uppercase">Entropy:</span>
+            <span className="text-cyan-400">0.841bits</span>
+          </div>
+          <div className="flex items-center gap-2 text-slate-500">
+            <Layers className="w-3 h-3" />
+            <span>Schema: 5.0.0-OS</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <span className="text-slate-600 uppercase">User:</span>
+            <span className="text-slate-300">{user?.displayName || user?.email || "Anonymous"}</span>
+          </div>
+          <div className="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_cyan]" />
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Target Selection & Authorization Gate */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <h2 className="text-lg font-semibold text-cyan-300">Targets</h2>
-            <div className="px-2 py-0.5 rounded bg-red-900/30 text-red-400 border border-red-900 text-[10px] uppercase tracking-wider font-bold">
-              Ethical Gate Required
-            </div>
-          </div>
-          
-          <Card className="bg-slate-900/50 border-slate-700 p-6 mb-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-mono text-slate-500 uppercase mb-2">Target URL / Domain</label>
-                  <Input
-                    type="url"
-                    placeholder="https://target.example.com"
-                    value={targetUrl}
-                    onChange={(e) => setTargetUrl(e.target.value)}
-                    className="input-cyberpunk w-full"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-mono text-slate-500 uppercase mb-2">Authorization Statement</label>
-                  <Textarea
-                    placeholder="I, [Name], certify that I have explicit written permission to perform security testing on this target..."
-                    value={authStatement}
-                    onChange={(e) => setAuthStatement(e.target.value)}
-                    className="input-cyberpunk min-h-[100px] text-sm"
-                  />
-                </div>
+      <div className="flex h-[calc(100vh-40px)]">
+        {/* Navigation Sidebar */}
+        <div className="w-72 border-r border-white/5 bg-[#080808] flex flex-col">
+          <div className="p-6 border-b border-white/5">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-8 h-8 rounded bg-cyan-600 flex items-center justify-center shrink-0">
+                <Radar className="w-5 h-5 text-black" />
               </div>
-              
-              <div className="bg-slate-950/50 border border-slate-800 rounded-lg p-4 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 text-amber-400">
-                    <Shield className="w-5 h-5 shrink-0" />
-                    <p className="text-xs leading-relaxed">
-                      Testing targets without explicit permission is illegal and unethical. HAWK logs all authorization statements and your current IP for legal non-repudiation.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id="confirm-auth"
-                      checked={isConfirmed}
-                      onChange={(e) => setIsConfirmed(e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500"
-                    />
-                    <label htmlFor="confirm-auth" className="text-sm text-slate-300 cursor-pointer select-none">
-                      I confirm I have explicit permission to test this target.
-                    </label>
-                  </div>
-                </div>
-                
-                <Button
-                  onClick={handleCreateTarget}
-                  disabled={createTargetMutation.isPending || !isConfirmed || authStatement.length < 20}
-                  className="btn-cyberpunk primary w-full mt-4"
-                >
-                  {createTargetMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  ) : null}
-                  Authorize & Add Target
-                </Button>
-              </div>
+              <h1 className="text-lg font-bold text-white tracking-tight uppercase">Hawk OS</h1>
             </div>
-          </Card>
 
-          {targetsQuery.data && targetsQuery.data.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {targetsQuery.data.map((target) => (
-                <button
-                  key={target.id}
-                  onClick={() => setSelectedTargetId(target.id)}
-                  className={`p-3 rounded-lg border transition-all text-left ${
-                    selectedTargetId === target.id
-                      ? "border-cyan-500 bg-cyan-900 text-cyan-300"
-                      : "border-slate-700 bg-slate-800 hover:border-slate-600"
-                  }`}
-                >
-                  <div className="font-mono text-sm">{target.domain}</div>
-                  <div className="text-xs text-slate-400 mt-1">Status: {target.status}</div>
-                </button>
-              ))}
-            </div>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start gap-2 border-white/5 bg-white/[0.02] hover:bg-white/[0.05] text-xs font-mono uppercase text-slate-400"
+              onClick={() => setSelectedEngagementId(null)}
+            >
+              <Zap className="w-3 h-3 text-cyan-500" />
+              Initialize Engagement
+            </Button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <h2 className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-2 mb-2">Active Engagements</h2>
+            {engagementsQuery.data?.map(e => (
+              <button
+                key={e.id}
+                onClick={() => setSelectedEngagementId(e.id)}
+                className={`w-full group px-3 py-2.5 rounded text-left transition-all ${
+                  selectedEngagementId === e.id 
+                    ? "bg-cyan-500/10 border border-cyan-500/20 text-cyan-100" 
+                    : "hover:bg-white/[0.02] border border-transparent text-slate-500 hover:text-slate-300"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium truncate">{e.name}</span>
+                  <ChevronRight className={`w-3 h-3 transition-transform ${selectedEngagementId === e.id ? "rotate-90 text-cyan-400" : "text-slate-700 group-hover:text-slate-500"}`} />
+                </div>
+                <div className="text-[9px] font-mono opacity-50 uppercase">{e.status} • V.{e.scopeVersion}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Main Intelligence Surface */}
+        <div className="flex-1 overflow-hidden flex flex-col bg-[#050505]">
+          {selectedEngagementId ? (
+            <>
+              {/* Context Header */}
+              <div className="px-8 py-6 border-b border-white/5 flex items-end justify-between bg-gradient-to-b from-white/[0.02] to-transparent">
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <h2 className="text-2xl font-bold text-white tracking-tight">{selectedEngagement?.name}</h2>
+                    <div className="px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-[9px] font-mono font-bold text-cyan-400 uppercase tracking-widest">
+                      Engagement_ID: {selectedEngagementId.slice(0, 8)}...
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-500 font-mono tracking-tight max-w-2xl line-clamp-1">
+                    {selectedEngagement?.authorizationStatement}
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <Button 
+                    className="bg-cyan-600 hover:bg-cyan-500 text-black font-bold h-9 px-6 rounded-sm text-xs uppercase tracking-wider"
+                    onClick={handleStartCollection}
+                    disabled={startCollectionMutation.isPending}
+                  >
+                    {startCollectionMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Zap className="w-3 h-3 mr-2" />}
+                    Trigger Collection Run
+                  </Button>
+                </div>
+              </div>
+
+              {/* Workbench Tabs */}
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+                <div className="px-8 border-b border-white/5 flex items-center justify-between">
+                  <TabsList className="bg-transparent h-12 gap-8 p-0">
+                    {["intelligence", "evidence", "runs", "report"].map(tab => (
+                      <TabsTrigger 
+                        key={tab}
+                        value={tab} 
+                        className="data-[state=active]:bg-transparent data-[state=active]:text-cyan-400 data-[state=active]:border-b-2 data-[state=active]:border-cyan-500 h-full rounded-none px-0 text-[10px] font-mono font-bold uppercase tracking-widest border-b-2 border-transparent transition-all"
+                      >
+                        {tab}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  <div className="flex items-center gap-4 text-slate-500 text-[10px] font-mono">
+                    <div className="flex items-center gap-1">
+                      <Bug className="w-3 h-3 text-red-500" />
+                      <span>{findingsQuery.data?.length || 0} Vulnerabilities</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Database className="w-3 h-3 text-cyan-500" />
+                      <span>{runsQuery.data?.length || 0} Runs</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-hidden">
+                  <TabsContent value="intelligence" className="h-full m-0 p-0 overflow-y-auto">
+                    <div className="p-8 grid grid-cols-12 gap-8">
+                      {/* Attack Path Queue */}
+                      <div className="col-span-12 xl:col-span-4 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">Attack_Path_Priority</h3>
+                          <Fingerprint className="w-4 h-4 text-slate-700" />
+                        </div>
+                        <div className="space-y-3">
+                          {findingsQuery.data?.map(f => (
+                            <div 
+                              key={f.id} 
+                              className="p-4 bg-white/[0.02] border border-white/5 hover:border-white/10 rounded transition-all cursor-pointer group"
+                            >
+                              <div className="flex items-center justify-between mb-3">
+                                <SeverityBadge severity={f.severity as any} />
+                                <span className="text-[9px] font-mono text-slate-600 uppercase tracking-tighter">Confidence: {f.confidence}</span>
+                              </div>
+                              <h4 className="text-sm font-bold text-slate-100 mb-2 group-hover:text-cyan-400 transition-colors">{f.title}</h4>
+                              <div className="flex items-center gap-2">
+                                <div className="h-1 flex-1 bg-white/5 rounded-full overflow-hidden">
+                                  <div className="h-full bg-cyan-500/50" style={{ width: '85%' }} />
+                                </div>
+                                <span className="text-[9px] font-mono text-cyan-500 font-bold uppercase tracking-tighter">Validated</span>
+                              </div>
+                            </div>
+                          ))}
+                          {(!findingsQuery.data || findingsQuery.data.length === 0) && (
+                            <div className="p-8 border border-dashed border-white/5 rounded text-center text-slate-600 text-[10px] font-mono uppercase">
+                              Waiting for intelligence generation...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Reasoning Trace Canvas */}
+                      <div className="col-span-12 xl:col-span-8 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">Reasoning_Trace & Temporal_Drift</h3>
+                          <div className="flex items-center gap-3">
+                            <div className="px-2 py-0.5 rounded bg-black border border-white/5 text-[9px] text-slate-600 font-mono">ONTOLOGY_V5</div>
+                            <Activity className="w-4 h-4 text-cyan-500 animate-pulse" />
+                          </div>
+                        </div>
+
+                        <Card className="bg-black border-white/5 p-8 relative overflow-hidden group">
+                          {/* Grid Overlay */}
+                          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+                          
+                          <div className="relative z-10 space-y-12">
+                            {/* Reasoning Nodes */}
+                            <div className="flex flex-col gap-8">
+                              <div className="flex items-start gap-6">
+                                <div className="w-6 h-6 rounded-full border border-cyan-500/50 flex items-center justify-center shrink-0 text-[10px] font-mono text-cyan-400 bg-cyan-500/10">01</div>
+                                <div className="space-y-2">
+                                  <div className="text-[10px] font-mono text-cyan-500 uppercase font-bold tracking-widest">Observation_Normalization</div>
+                                  <p className="text-sm text-slate-200 leading-relaxed max-w-xl italic">
+                                    "Extracted tech stack signature 'vulnerable-wp-v1.2' from evidence bucket 'EVID-821'. Entropy-weighted confidence suggests 0.92 precision."
+                                  </p>
+                                  <div className="flex gap-2">
+                                    <span className="text-[9px] font-mono text-slate-600 px-1.5 py-0.5 bg-white/5 rounded">SHA-256: e821...</span>
+                                    <span className="text-[9px] font-mono text-slate-600 px-1.5 py-0.5 bg-white/5 rounded">EVIDENCE_FIRST</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="h-10 w-px bg-gradient-to-b from-cyan-500/30 to-transparent ml-[11.5px]" />
+
+                              <div className="flex items-start gap-6">
+                                <div className="w-6 h-6 rounded-full border border-purple-500/50 flex items-center justify-center shrink-0 text-[10px] font-mono text-purple-400 bg-purple-500/10">02</div>
+                                <div className="space-y-2">
+                                  <div className="text-[10px] font-mono text-purple-500 uppercase font-bold tracking-widest">Correlation_Inference</div>
+                                  <p className="text-sm text-slate-200 leading-relaxed max-w-xl italic">
+                                    "Correlated WP version with known attack chain 'PATH-01' (Auth Bypass). Neo4j projection indicates 3 objective nodes are reachable via this vector."
+                                  </p>
+                                  <div className="flex gap-2">
+                                    <span className="text-[9px] font-mono text-slate-600 px-1.5 py-0.5 bg-white/5 rounded">GRAPH_PROJECTION</span>
+                                    <span className="text-[9px] font-mono text-slate-600 px-1.5 py-0.5 bg-white/5 rounded">TEMPORAL_DRIFT: +0.15</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="evidence" className="h-full m-0 p-8 overflow-y-auto">
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+                        <h3 className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">Immutable_Evidence_Browser</h3>
+                        <div className="flex items-center gap-2">
+                          <div className="relative">
+                            <Search className="w-3 h-3 absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" />
+                            <Input className="h-8 bg-black border-white/5 pl-9 w-64 text-[10px] font-mono" placeholder="Search evidence hashes..." />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {findingsQuery.data?.map(f => (
+                          <div key={f.id} className="p-4 bg-white/[0.01] border border-white/5 rounded hover:bg-white/[0.02] transition-all group">
+                             <div className="flex items-center justify-between mb-3 text-[9px] font-mono uppercase tracking-widest">
+                               <span className="text-slate-500">Source: {f.sourceTool}</span>
+                               <span className="text-slate-700">Capture_ID: {f.id.slice(0, 8)}</span>
+                             </div>
+                             <div className="mb-4">
+                               <CodeBlock code={f.evidence || ""} language="text" className="text-[10px] opacity-60" />
+                             </div>
+                             <div className="flex justify-between items-center">
+                               <div className="text-[9px] font-mono text-slate-600">MODIFIED: {new Date(f.updatedAt || "").toLocaleString()}</div>
+                               <Button variant="ghost" className="h-6 text-[9px] font-mono text-cyan-500 hover:bg-cyan-500/10">LINK_EVIDENCE</Button>
+                             </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="runs" className="h-full m-0 p-8 overflow-y-auto">
+                    <div className="max-w-4xl mx-auto space-y-6">
+                       <h3 className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest mb-8 pb-4 border-b border-white/5">Collection_History</h3>
+                       <div className="space-y-3">
+                         {runsQuery.data?.map(run => (
+                           <div key={run.id} className="flex items-center gap-6 p-4 bg-white/[0.01] border border-white/5 rounded">
+                             <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center shrink-0">
+                               {run.status === "pending" ? <Loader2 className="w-4 h-4 animate-spin text-cyan-500" /> : <Shield className="w-4 h-4 text-green-500" />}
+                             </div>
+                             <div className="flex-1">
+                               <div className="flex items-center justify-between mb-1">
+                                 <span className="text-xs font-bold text-slate-200 uppercase tracking-tight">Run_{run.id.slice(0, 8)}</span>
+                                 <span className={`text-[9px] font-mono font-bold uppercase ${run.status === 'pending' ? 'text-cyan-500 animate-pulse' : 'text-green-500'}`}>{run.status}</span>
+                               </div>
+                               <div className="flex items-center gap-4 text-[9px] font-mono text-slate-600 uppercase">
+                                 <span>Profile: {run.collectionProfile}</span>
+                                 <span>Scope: v{run.scopeVersion}</span>
+                                 <span>Triggered: {new Date(run.createdAt).toLocaleString()}</span>
+                               </div>
+                             </div>
+                             <Button variant="outline" className="h-8 border-white/10 bg-transparent text-[9px] font-mono hover:bg-white/5 uppercase">View_Artifacts</Button>
+                           </div>
+                         ))}
+                       </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="report" className="h-full m-0 p-8 overflow-y-auto">
+                    <div className="max-w-4xl mx-auto space-y-8">
+                      <div className="flex items-center justify-between border-b border-white/5 pb-6">
+                        <h3 className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">Intelligence_Report_Synthesis</h3>
+                        <Button className="h-8 bg-white text-black font-bold text-[10px] uppercase px-6 hover:bg-slate-200">Export_PDF</Button>
+                      </div>
+                      <div className="prose prose-invert prose-sm max-w-none">
+                        <h1 className="text-white text-3xl font-bold tracking-tighter uppercase mb-2">Executive_Intelligence_Summary</h1>
+                        <p className="text-slate-400 font-mono text-xs uppercase mb-8">Generated by HAWK Sovereign Engine for {selectedEngagement?.name}</p>
+                        
+                        <div className="p-6 bg-red-950/10 border border-red-900/20 rounded-sm mb-8">
+                          <h2 className="text-red-500 text-sm font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4" />
+                            CRITICAL_PATH_ALERT: REMOTE_CODE_EXECUTION
+                          </h2>
+                          <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                            The platform has identified a deterministic attack chain leading to full system compromise. Through correlation of unpatched WordPress vulnerability (CVE-2024-XXXX) and exposed debug credentials, RCE is confirmed.
+                          </p>
+                          <div className="text-[10px] font-mono text-red-400 font-bold uppercase">Priority: Tactical_Remediation_Immediate</div>
+                        </div>
+
+                        <h2 className="text-white text-lg font-bold tracking-tight uppercase mb-4 border-b border-white/10 pb-2">Intelligence_Findings</h2>
+                        <div className="space-y-8">
+                          {findingsQuery.data?.map(f => (
+                            <div key={f.id} className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <h3 className="text-cyan-400 font-bold uppercase tracking-tight">{f.title}</h3>
+                                <SeverityBadge severity={f.severity as any} />
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <h4 className="text-[10px] font-mono text-slate-600 uppercase mb-2">Technical_Evidence</h4>
+                                  <CodeBlock code={f.evidence || ""} language="text" />
+                                </div>
+                                <div>
+                                  <h4 className="text-[10px] font-mono text-slate-600 uppercase mb-2">Strategic_Remediation</h4>
+                                  <p className="text-slate-400 text-xs leading-relaxed">{f.remediation}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </>
           ) : (
-            <div className="text-center py-8 text-slate-400">
-              No targets yet. Add one above to get started.
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative">
+               {/* Background Radar Effect */}
+               <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
+                 <div className="w-[600px] h-[600px] border border-cyan-500 rounded-full animate-ping" />
+                 <div className="w-[400px] h-[400px] border border-cyan-500 rounded-full absolute" />
+                 <div className="w-[200px] h-[200px] border border-cyan-500 rounded-full absolute" />
+               </div>
+
+               <div className="max-w-md space-y-8 relative z-10">
+                 <div className="w-16 h-16 rounded-2xl bg-cyan-600 mx-auto flex items-center justify-center shadow-[0_0_40px_rgba(8,145,178,0.2)]">
+                   <Radar className="w-8 h-8 text-black" />
+                 </div>
+                 <div className="space-y-2">
+                   <h2 className="text-3xl font-bold text-white tracking-tighter uppercase">Intelligence_Awaiting</h2>
+                   <p className="text-slate-500 text-sm font-mono tracking-tight leading-relaxed">
+                     Select an active engagement from the sidebar or initialize a new sovereign testing session to begin intelligence synthesis.
+                   </p>
+                 </div>
+                 
+                 <Card className="bg-white/[0.01] border-white/5 p-8 text-left space-y-6 backdrop-blur-sm">
+                   <h3 className="text-xs font-mono font-bold text-slate-600 uppercase tracking-widest border-b border-white/5 pb-2">New_Engagement_Parameters</h3>
+                   <div className="space-y-4">
+                     <div className="space-y-2">
+                       <label className="text-[10px] font-mono text-slate-500 uppercase">Operational_Name</label>
+                       <Input 
+                        className="bg-black border-white/5 h-10 text-slate-200 font-mono text-xs focus:ring-cyan-500 focus:border-cyan-500" 
+                        placeholder="e.g., OP_SOVEREIGN_SENTINEL"
+                        value={newEngagementName}
+                        onChange={(e) => setNewEngagementName(e.target.value)}
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <label className="text-[10px] font-mono text-slate-500 uppercase">Ethical_Authorization_Statement</label>
+                       <textarea 
+                        className="w-full h-24 bg-black border border-white/5 rounded-md p-3 text-slate-200 font-mono text-xs focus:ring-cyan-500 focus:outline-none transition-all resize-none" 
+                        placeholder="I certify that I have explicit permission..."
+                        value={authStatement}
+                        onChange={(e) => setAuthStatement(e.target.value)}
+                       />
+                     </div>
+                     <Button 
+                      className="w-full bg-cyan-600 hover:bg-cyan-500 text-black font-bold h-11 uppercase tracking-widest text-xs"
+                      onClick={handleCreateEngagement}
+                      disabled={createEngagementMutation.isPending}
+                     >
+                       {createEngagementMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Zap className="w-4 h-4 mr-2" />}
+                       Initialize_Sovereign_Session
+                     </Button>
+                   </div>
+                 </Card>
+
+                 <div className="flex items-center justify-center gap-6 text-[10px] font-mono text-slate-700 uppercase tracking-widest">
+                   <div className="flex items-center gap-1">
+                     <Shield className="w-3 h-3" />
+                     <span>Immutable_Audit</span>
+                   </div>
+                   <div className="flex items-center gap-1">
+                     <FileText className="w-3 h-3" />
+                     <span>Legal_Provenance</span>
+                   </div>
+                 </div>
+               </div>
             </div>
           )}
         </div>
-
-        {/* Feature Tabs */}
-        {selectedTargetId && (
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="w-full">
-            <TabsList className="grid w-full grid-cols-6 bg-slate-800 border border-slate-700 mb-6">
-              <TabsTrigger value="recon" className="data-[state=active]:bg-cyan-900 data-[state=active]:text-cyan-300">
-                <Radar className="w-4 h-4 mr-2" />
-                Recon
-              </TabsTrigger>
-              <TabsTrigger value="triage" className="data-[state=active]:bg-cyan-900 data-[state=active]:text-cyan-300">
-                <Grid3x3 className="w-4 h-4 mr-2" />
-                Triage
-              </TabsTrigger>
-              <TabsTrigger value="vulnerability" className="data-[state=active]:bg-cyan-900 data-[state=active]:text-cyan-300">
-                <Bug className="w-4 h-4 mr-2" />
-                Scanner
-              </TabsTrigger>
-              <TabsTrigger value="report" className="data-[state=active]:bg-cyan-900 data-[state=active]:text-cyan-300">
-                <FileText className="w-4 h-4 mr-2" />
-                Report
-              </TabsTrigger>
-              <TabsTrigger value="mentor" className="data-[state=active]:bg-cyan-900 data-[state=active]:text-cyan-300">
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Mentor
-              </TabsTrigger>
-              <TabsTrigger value="intelligence" className="data-[state=active]:bg-cyan-900 data-[state=active]:text-cyan-300">
-                <Radar className="w-4 h-4 mr-2" />
-                Analysis
-              </TabsTrigger>
-              <TabsTrigger value="owasp" className="data-[state=active]:bg-cyan-900 data-[state=active]:text-cyan-300">
-                <Grid3x3 className="w-4 h-4 mr-2" />
-                OWASP
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Triage Tab */}
-            <TabsContent value="triage" className="space-y-6">
-              <Card className="bg-slate-900 border-slate-700 overflow-hidden">
-                <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
-                  <h3 className="text-sm font-mono font-bold text-slate-300">OPERATOR TRIAGE CENTER</h3>
-                  <div className="text-[10px] text-slate-500 font-mono">SIGNAL: {findingsQuery.data?.length || 0} FINDINGS DETECTED</div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-slate-800/50 border-b border-slate-700">
-                        <th className="p-3 font-mono text-slate-500">SEVERITY</th>
-                        <th className="p-3 font-mono text-slate-500">TITLE</th>
-                        <th className="p-3 font-mono text-slate-500">SOURCE</th>
-                        <th className="p-3 font-mono text-slate-500">CONFIDENCE</th>
-                        <th className="p-3 font-mono text-slate-500">STATUS</th>
-                        <th className="p-3 font-mono text-slate-500">ACTIONS</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800">
-                      {findingsQuery.data?.map((finding) => (
-                        <React.Fragment key={finding.id}>
-                          <tr className="hover:bg-slate-800/30 transition-colors">
-                            <td className="p-3"><SeverityBadge severity={finding.severity as any} /></td>
-                            <td className="p-3 font-medium text-slate-200">{finding.title}</td>
-                            <td className="p-3 text-slate-400 font-mono">{finding.sourceTool || "Unknown"}</td>
-                            <td className="p-3">
-                              <div className="flex items-center gap-2">
-                                <div className="w-12 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                  <div 
-                                    className="h-full bg-cyan-500" 
-                                    style={{ width: `${(parseFloat(finding.confidence || "1") * 100)}%` }} 
-                                  />
-                                </div>
-                                <span className="text-[10px] text-slate-500">{(parseFloat(finding.confidence || "1") * 100).toFixed(0)}%</span>
-                              </div>
-                            </td>
-                            <td className="p-3">
-                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                finding.status === "open" ? "bg-amber-900/30 text-amber-500" : "bg-green-900/30 text-green-500"
-                              }`}>
-                                {finding.status}
-                              </span>
-                            </td>
-                            <td className="p-3">
-                              <Button variant="ghost" size="sm" className="h-7 text-[10px] font-mono hover:bg-slate-700" onClick={() => {
-                                const el = document.getElementById(`evidence-${finding.id}`);
-                                if (el) el.classList.toggle('hidden');
-                              }}>
-                                VIEW_EVIDENCE
-                              </Button>
-                            </td>
-                          </tr>
-                          <tr id={`evidence-${finding.id}`} className="hidden bg-slate-950/50">
-                            <td colSpan={6} className="p-4">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <div className="text-[10px] font-mono text-slate-500 mb-1 uppercase">Raw Evidence / Marker</div>
-                                  <CodeBlock code={finding.evidence || "No evidence string captured"} language="text" className="text-[10px] opacity-80" />
-                                </div>
-                                <div>
-                                  <div className="text-[10px] font-mono text-slate-500 mb-1 uppercase">Remediation</div>
-                                  <p className="text-xs text-slate-300 leading-relaxed">{finding.remediation}</p>
-                                </div>
-                                {finding.rawRequest && (
-                                  <div className="col-span-1">
-                                    <div className="text-[10px] font-mono text-slate-500 mb-1 uppercase">Raw Request</div>
-                                    <CodeBlock code={finding.rawRequest} language="http" className="text-[10px] opacity-80" />
-                                  </div>
-                                )}
-                                {finding.rawResponse && (
-                                  <div className="col-span-1">
-                                    <div className="text-[10px] font-mono text-slate-500 mb-1 uppercase">Raw Response</div>
-                                    <CodeBlock code={finding.rawResponse} language="http" className="text-[10px] opacity-80" />
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        </React.Fragment>
-                      ))}
-                    </tbody>
-                  </table>
-                  {(!findingsQuery.data || findingsQuery.data.length === 0) && (
-                    <div className="p-8 text-center text-slate-500 text-xs font-mono">
-                      NO FINDINGS TO TRIAGE. RUN SCANNER TO GENERATE DATA.
-                    </div>
-                  )}
-                </div>
-              </Card>
-            </TabsContent>
-            <TabsContent value="recon" className="space-y-6">
-              <div className="flex justify-end gap-2 mb-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-slate-900 border border-slate-700">
-                  <span className="text-[10px] font-mono font-bold text-slate-500 uppercase">Global Kill Switch:</span>
-                  <div className="w-12 h-6 bg-slate-950 rounded-full border border-slate-800 p-1 flex items-center cursor-pointer group" onClick={() => toast.warning("GLOBAL_KILL_SWITCH: ACCESS_DENIED (ADMIN_ONLY)")}>
-                    <div className="w-4 h-4 bg-red-600 rounded-full shadow-[0_0_8px_rgba(220,38,38,0.5)]" />
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2 bg-slate-900 border-slate-700 p-6">
-                  <h3 className="text-lg font-semibold text-cyan-300 mb-4 font-mono">ENGINE_PIPELINE_v3.5</h3>
-                  <PipelineVisualizer stages={pipelineStages} className="mb-6" />
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button 
-                      className="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-6"
-                      onClick={() => handleStartRecon()}
-                      disabled={startReconMutation.isPending || (reconStatusQuery.data?.[0]?.status === "in_progress")}
-                    >
-                      {startReconMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Zap className="w-5 h-5 mr-2" />}
-                      INITIALIZE_SOVEREIGN_5_STAGES
-                    </Button>
-                    <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800 py-6 font-mono">
-                      <ShieldCheck className="w-5 h-5 mr-2" />
-                      DOWNLOAD_AUDIT_REPORT
-                    </Button>
-                  </div>
-
-                  {reconStatusQuery.data && reconStatusQuery.data.length > 0 && (
-                    <div className="mt-8 space-y-4">
-                      <h4 className="text-sm font-bold font-mono text-slate-400 border-b border-slate-800 pb-2">PIPELINE_OUTPUT_LOGS:</h4>
-                      {reconStatusQuery.data.map((result) => (
-                        <div key={result.stage} className="p-3 bg-slate-950/30 rounded border border-slate-800 hover:border-slate-700 transition-colors">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-mono text-xs font-bold text-cyan-500 uppercase">{result.stage}</span>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
-                              result.status === "completed" ? "bg-green-900/30 text-green-500" : "bg-blue-900/30 text-blue-400"
-                            }`}>{result.status}</span>
-                          </div>
-                          {result.output && (
-                            <CodeBlock
-                              code={JSON.stringify(result.output, null, 2)}
-                              language="json"
-                              className="text-[10px] opacity-70"
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-
-                <Card className="bg-slate-900 border-slate-700 p-6 flex flex-col">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse" />
-                    <h3 className="text-sm font-mono font-bold text-cyan-300">SOVEREIGN_ADVISOR</h3>
-                  </div>
-                  <div className="flex-1 bg-slate-950/50 rounded border border-slate-800 p-4 font-mono text-[11px] text-slate-400 overflow-y-auto">
-                    <div className="space-y-4">
-                      <div className="text-cyan-500 border-b border-cyan-900/50 pb-1 mb-2">STRATEGIC_GUIDANCE:</div>
-                      <p>1. <span className="text-slate-200">RECON</span>: Deepen asset discovery via authenticated API crawling.</p>
-                      <p>2. <span className="text-slate-200">SCANNING</span>: Priority scan on open SSH (Port 22) for brute-force vulnerability.</p>
-                      <p>3. <span className="text-slate-200">ASSESSMENT</span>: Tech stack signature suggests outdated WordPress (CVE-2024-XXXX).</p>
-                      <p>4. <span className="text-slate-200">DEFENSIVE_AUDIT</span>: Check for 'log clearing' patterns using the Forensics module.</p>
-                      <div className="pt-4 text-[10px] text-slate-600 italic">-- END_OF_ADVISORY --</div>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </TabsContent>
-
-            {/* Vulnerability Tab */}
-            <TabsContent value="vulnerability" className="space-y-6">
-              <Card className="bg-slate-900 border-slate-700 p-6">
-                <h3 className="text-lg font-semibold text-cyan-300 mb-4">Vulnerability Analyzer</h3>
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Data Type</label>
-                    <select
-                      value={vulnType}
-                      onChange={(e) => setVulnType(e.target.value)}
-                      className="input-cyberpunk w-full"
-                    >
-                      <option value="headers">HTTP Headers</option>
-                      <option value="request">HTTP Request</option>
-                      <option value="response">HTTP Response</option>
-                      <option value="url">URL</option>
-                      <option value="js">JavaScript</option>
-                      <option value="error">Error Page</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Content</label>
-                    <Textarea
-                      value={vulnContent}
-                      onChange={(e) => setVulnContent(e.target.value)}
-                      placeholder="Paste HTTP data, code, or error messages..."
-                      className="input-cyberpunk min-h-32"
-                    />
-                  </div>
-                  <Button
-                    onClick={handleAnalyzeVuln}
-                    disabled={analyzeVulnMutation.isPending}
-                    className="btn-cyberpunk primary w-full"
-                  >
-                    {analyzeVulnMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    ) : null}
-                    Analyze
-                  </Button>
-                </div>
-
-                {findingsQuery.data && findingsQuery.data.length > 0 && (
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-semibold text-slate-300">Findings:</h4>
-                    {findingsQuery.data.map((finding) => (
-                      <div key={finding.id} className="p-4 bg-slate-800 rounded-lg border border-slate-700">
-                        <div className="flex items-start justify-between mb-2">
-                          <h5 className="font-semibold text-slate-100">{finding.title}</h5>
-                          <SeverityBadge severity={finding.severity as any} />
-                        </div>
-                        {finding.cwe && (
-                          <div className="text-xs text-slate-400 mb-2">
-                            <span className="text-cyan-400">CWE:</span> {finding.cwe}
-                          </div>
-                        )}
-                        {finding.evidence && (
-                          <div className="mb-2">
-                            <div className="text-xs text-slate-400 mb-1">Evidence:</div>
-                            <CodeBlock code={finding.evidence} language="text" className="text-xs" />
-                          </div>
-                        )}
-                        {finding.remediation && (
-                          <div className="text-sm text-slate-300 mt-2">
-                            <span className="text-green-400 font-medium">Remediation:</span> {finding.remediation}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            </TabsContent>
-
-            {/* Report Tab */}
-            <TabsContent value="report" className="space-y-6">
-              <Card className="bg-slate-900 border-slate-700 p-6">
-                <h3 className="text-lg font-semibold text-cyan-300 mb-4">Report Builder</h3>
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Report Title</label>
-                    <Input
-                      value={reportTitle}
-                      onChange={(e) => setReportTitle(e.target.value)}
-                      placeholder="e.g., Security Assessment Report"
-                      className="input-cyberpunk"
-                    />
-                  </div>
-                  <Button
-                    onClick={handleGenerateReport}
-                    disabled={generateReportMutation.isPending}
-                    className="btn-cyberpunk primary w-full"
-                  >
-                    {generateReportMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    ) : null}
-                    Generate Report
-                  </Button>
-                </div>
-
-                {reportsQuery.data && reportsQuery.data.length > 0 && (
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-semibold text-slate-300">Generated Reports:</h4>
-                    {reportsQuery.data.map((report) => (
-                      <div key={report.id} className="p-4 bg-slate-800 rounded-lg border border-slate-700">
-                        <h5 className="font-semibold text-slate-100 mb-2">{report.title}</h5>
-                        <div className="text-xs text-slate-400 mb-2">
-                          {new Date(report.createdAt).toLocaleDateString()}
-                        </div>
-                        {report.content && (
-                          <CodeBlock code={report.content} language="markdown" className="text-xs" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            </TabsContent>
-
-            {/* Mentor Tab */}
-            <TabsContent value="mentor" className="space-y-6">
-              <Card className="bg-slate-900 border-slate-700 p-6">
-                <h3 className="text-lg font-semibold text-cyan-300 mb-4">AI Mentor</h3>
-                <MentorChat />
-              </Card>
-            </TabsContent>
-
-            {/* Analysis Tab: Decision Compression & Reasoning Trace */}
-            <TabsContent value="intelligence" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                
-                {/* Decision Compression: Top Attack Paths */}
-                <Card className="lg:col-span-1 bg-slate-900 border-slate-700 p-5 flex flex-col">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xs font-mono font-bold text-cyan-300 tracking-widest uppercase">Decision_Compression</h3>
-                    <Radar className="w-4 h-4 text-cyan-500" />
-                  </div>
-                  <div className="space-y-3 flex-1 overflow-y-auto">
-                    {[
-                      { id: "PATH_01", path: "Laravel -> Debug -> RCE", conf: 0.82, priority: "CRITICAL" },
-                      { id: "PATH_02", path: "Auth -> JWT -> IDOR", conf: 0.45, priority: "MEDIUM" },
-                      { id: "PATH_03", path: "API -> Entropy -> Secret", conf: 0.68, priority: "HIGH" },
-                    ].map((p) => (
-                      <div key={p.id} className={`p-4 rounded border cursor-pointer transition-all ${
-                        p.priority === "CRITICAL" ? "bg-red-950/10 border-red-900/30 hover:bg-red-900/20" : "bg-slate-950/50 border-slate-800 hover:bg-slate-900/50"
-                      }`}>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-[9px] font-mono font-bold text-slate-500">{p.id}</span>
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                            p.priority === "CRITICAL" ? "bg-red-900/40 text-red-400" : "bg-slate-800 text-slate-400"
-                          }`}>{p.priority}</span>
-                        </div>
-                        <div className="text-xs font-bold text-slate-200 mb-2 truncate">{p.path}</div>
-                        <div className="flex items-center gap-2">
-                           <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
-                             <div className="h-full bg-cyan-500" style={{ width: `${p.conf * 100}%` }} />
-                           </div>
-                           <span className="text-[9px] font-mono text-cyan-400">{Math.round(p.conf * 100)}% P</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 p-3 bg-slate-950/80 rounded border border-slate-800 text-[10px] text-slate-500 italic leading-relaxed">
-                    "Synthesizing 450+ observations into 3 actionable attack vectors."
-                  </div>
-                </Card>
-
-                {/* Reasoning Trace & Evidence Audit */}
-                <Card className="lg:col-span-3 bg-slate-900 border-slate-700 p-6">
-                  <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-800">
-                    <h3 className="text-sm font-mono font-bold text-cyan-300">REASONING_TRACE & EVIDENCE_AUDIT</h3>
-                    <div className="flex gap-2">
-                      <div className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-[9px] text-slate-500 font-mono">ONTOLOGY_v3.5.1</div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-8">
-                    {/* Active Finding View */}
-                    <div className="space-y-8">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="text-lg font-bold text-slate-100 font-mono tracking-tight uppercase">Laravel Debug Mode Exposure</h4>
-                          <div className="flex items-center gap-2 mt-2">
-                            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                            <span className="text-[10px] text-slate-400 font-mono uppercase">Status: Actionable_Intelligence</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-[9px] text-cyan-500 uppercase font-bold mb-1 tracking-tighter">Confidence Index</div>
-                          <div className="flex items-end gap-2">
-                            <div className="text-2xl font-bold text-slate-100 leading-none">0.982</div>
-                            <div className="text-[10px] text-slate-500 font-mono pb-0.5">± 0.04</div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                        {/* Structured Reasoning Trace */}
-                        <div className="space-y-4">
-                          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-4 border-b border-slate-800 pb-1">Logical Walkthrough</div>
-                          <div className="space-y-4">
-                             {[
-                               { id: 1, obs: "Detected Laravel framework signature via header analysis.", inf: "Establishing framework-specific exploit priors.", impact: "+0.45" },
-                               { id: 2, obs: "Statistical timing anomaly (2.1 sigma) at /api/v1.", inf: "Correlating behavior with unoptimized debug middleware.", impact: "+0.25" },
-                               { id: 3, obs: "Direct match on entropy-based secret signature.", inf: "Confirming high-fidelity vulnerability. Recommending RCE transition.", impact: "+0.28" }
-                             ].map((step) => (
-                               <div key={step.id} className="flex gap-4 p-3 bg-slate-950/30 rounded border border-slate-800/50 hover:border-cyan-900/50 transition-colors group">
-                                 <div className="text-xs font-mono text-cyan-600 font-bold mt-0.5">{step.id.toString().padStart(2, '0')}</div>
-                                 <div className="space-y-1">
-                                   <div className="text-[11px] text-slate-300 leading-relaxed italic">"{step.obs}"</div>
-                                   <div className="text-[10px] text-slate-500 font-mono">↳ {step.inf}</div>
-                                 </div>
-                                 <div className="ml-auto text-[9px] font-mono text-cyan-500 font-bold">{step.impact}</div>
-                               </div>
-                             ))}
-                          </div>
-                        </div>
-
-                        {/* Evidence Chain Audit */}
-                        <div className="space-y-4">
-                           <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-4 border-b border-slate-800 pb-1">Evidence Chain Audit</div>
-                           <div className="space-y-2">
-                             {[
-                               { type: "DET", name: "Header Match (X-Powered-By)", conf: 0.98, status: "Verified" },
-                               { type: "STAT", name: "Response Timing Anomaly", conf: 0.75, status: "Anomalous" },
-                               { type: "HEU", name: "Entropy Secret Signature", conf: 0.85, status: "Matched" }
-                             ].map((e, i) => (
-                               <div key={i} className="flex items-center justify-between p-3 bg-slate-950/50 rounded border border-slate-800 group hover:bg-slate-900/50 transition-colors">
-                                 <div className="flex items-center gap-3">
-                                   <div className={`text-[8px] font-bold px-1 rounded ${
-                                     e.type === "DET" ? "bg-green-900/30 text-green-500" : "bg-cyan-900/30 text-cyan-500"
-                                   }`}>{e.type}</div>
-                                   <div className="text-[11px] text-slate-300 font-mono">{e.name}</div>
-                                 </div>
-                                 <div className="flex items-center gap-4">
-                                   <div className="text-[10px] text-slate-500 font-mono">P: {e.conf}</div>
-                                   <div className="text-[9px] uppercase font-bold text-slate-600">{e.status}</div>
-                                 </div>
-                               </div>
-                             ))}
-                           </div>
-
-                           <div className="mt-6 p-4 bg-cyan-950/10 rounded border border-cyan-900/20">
-                             <div className="text-[9px] text-cyan-500 font-bold uppercase mb-2">Next Optimal Action</div>
-                             <div className="text-xs font-bold text-slate-200 font-mono">RECON_DIRECTORY_BRUTEFORCE --target api.target.com/api/v1</div>
-                           </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </TabsContent>
-
-            {/* OWASP Tab */}
-            <TabsContent value="owasp" className="space-y-6">
-              <Card className="bg-slate-900 border-slate-700 p-6">
-                <h3 className="text-lg font-semibold text-cyan-300 mb-4">OWASP Top 10</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {[
-                    "A01:2021-Broken Access Control",
-                    "A02:2021-Cryptographic Failures",
-                    "A03:2021-Injection",
-                    "A04:2021-Insecure Design",
-                    "A05:2021-Security Misconfiguration",
-                    "A06:2021-Vulnerable and Outdated Components",
-                    "A07:2021-Identification and Authentication Failures",
-                    "A08:2021-Software and Data Integrity Failures",
-                    "A09:2021-Logging and Monitoring Failures",
-                    "A10:2021-Server-Side Request Forgery (SSRF)",
-                  ].map((category) => (
-                    <button
-                      key={category}
-                      className="p-3 rounded-lg border border-slate-700 bg-slate-800 hover:border-cyan-500 hover:text-cyan-300 transition-all text-left text-sm font-medium"
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        )}
       </div>
     </div>
   );

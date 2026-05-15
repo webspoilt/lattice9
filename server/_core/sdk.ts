@@ -322,15 +322,16 @@ function buildCronUser(
   userInfo: GetUserInfoWithJwtResponse
 ): AuthenticatedUser {
   const now = new Date();
+  const NIL_UUID = "00000000-0000-0000-0000-000000000000";
   return {
-    id: -1,
+    id: NIL_UUID,
+    tenantId: NIL_UUID, // Cron tasks operate in a virtual system tenant
     openId: userInfo.openId,
-    name: userInfo.name || "Manus Scheduled Task",
+    displayName: userInfo.name || "Hawk System Task",
     email: null,
     loginMethod: null,
     role: "user",
     createdAt: now,
-    updatedAt: now,
     lastSignedIn: now,
     taskUid: userInfo.taskUid ?? undefined,
     isCron: true,

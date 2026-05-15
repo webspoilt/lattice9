@@ -7,12 +7,22 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=mysql://hawk:hawk_secret@db:3306/hawk
+      - DATABASE_URL=postgresql://hawk:hawk_secret@db:5432/hawk
+      - REDIS_URL=redis://redis:6379
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=hawk_admin
+      - MINIO_SECRET_KEY=hawk_secret_storage
+      - NEO4J_URI=bolt://graphdb:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=hawk_graph_secret
       - JWT_SECRET=${JWT_SECRET:-sovereign_secret_key}
       - HAWK_ENGINE_KEY=${HAWK_ENGINE_KEY:-sovereign-hawk-secret-2026}
       - OLLAMA_HOST=http://host.docker.internal:11434
     depends_on:
       - db
+      - redis
+      - graphdb
+      - minio
     networks:
       - hawk-net
 
@@ -23,24 +33,78 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - DATABASE_URL=postgresql://hawk:hawk_secret@db:5432/hawk
+      - REDIS_URL=redis://redis:6379
+      - NEO4J_URI=bolt://graphdb:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=hawk_graph_secret
       - HAWK_ENGINE_KEY=${HAWK_ENGINE_KEY:-sovereign-hawk-secret-2026}
+    depends_on:
+      - db
+      - redis
+      - graphdb
     networks:
       - hawk-net
 
-  # MySQL Database
+  # PostgreSQL Operational Source of Truth
   db:
-    image: mysql:8.0
-    command: --default-authentication-plugin=mysql_native_password
+    image: postgres:16-alpine
     restart: always
     environment:
-      - MYSQL_DATABASE=hawk
-      - MYSQL_USER=hawk
-      - MYSQL_PASSWORD=hawk_secret
-      - MYSQL_ROOT_PASSWORD=root_secret
+      - POSTGRES_DB=hawk
+      - POSTGRES_USER=hawk
+      - POSTGRES_PASSWORD=hawk_secret
     ports:
-      - "3307:3306"
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - hawk-net
+
+  # Neo4j Graph Intelligence
+  graphdb:
+    image: neo4j:5.12-community
+    restart: always
+    environment:
+      - NEO4J_AUTH=neo4j/hawk_graph_secret
+      - NEO4J_PLUGINS=["apoc"]
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+    networks:
+      - hawk-net
+
+  # Redis Streams & Cache
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - hawk-net
+
+  # MinIO Object Storage (Raw Evidence)
+  minio:
+    image: minio/minio:latest
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=hawk_admin
+      - MINIO_ROOT_PASSWORD=hawk_secret_storage
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - hawk-net
+
+volumes:
+  postgres_data:
+  neo4j_data:
+  minio_data:
 
 networks:
   hawk-net:

@@ -2,12 +2,28 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Radar, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { HeroGraph } from '@/components/HeroGraph';
+import { IntelligenceNavigator } from '@/components/IntelligenceNavigator';
 import { TelemetryBar } from '@/components/TelemetryBar';
 import { CoreSections } from '@/components/CoreSections';
 import { PretextLog } from '@/components/PretextLog';
 import { BackgroundField } from '@/components/BackgroundField';
 import { AdversarialSlopeGraph } from '@/components/AdversarialSlopeGraph';
+
+const MOCK_INTELLIGENCE = {
+  entities: [
+    { id: '1', label: 'prod-api.hawk.io', type: 'asset' },
+    { id: '2', label: 'admin-console', type: 'asset' },
+    { id: '3', label: 'svc_deployer', type: 'identity' },
+    { id: '4', label: 'CVE-2024-JWT-BYPASS', type: 'vuln' },
+    { id: '5', label: 'SSO-Gateway', type: 'service' },
+  ],
+  inferences: [
+    { sourceId: '1', targetEntityId: '5', type: 'contains' },
+    { sourceId: '5', targetEntityId: '4', type: 'exploits' },
+    { sourceId: '4', targetEntityId: '3', type: 'identifies' },
+    { sourceId: '3', targetEntityId: '2', type: 'auths' },
+  ]
+};
 
 export default function Home() {
   const [globalEntropy, setGlobalEntropy] = useState(0.2);
@@ -67,10 +83,44 @@ export default function Home() {
       </nav>
 
       {/* Hero: Active Intelligence Environment */}
-      <section className="relative pt-14 min-h-screen flex flex-col overflow-hidden">
-        <div className="absolute inset-0 w-full h-full opacity-80"><HeroGraph /></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0b] via-[#0a0a0b]/20 to-transparent pointer-events-none" />
-        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[#0a0a0b] to-transparent pointer-events-none" />
+      <section className="relative pt-24 min-h-screen flex flex-col overflow-hidden bg-[#050507]">
+        <div className="absolute inset-0 z-0 opacity-20"><BackgroundField entropy={globalEntropy} /></div>
+        
+        <div className="container relative z-10 py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+            <div className="lg:col-span-5 space-y-10">
+              <motion.div className="space-y-6" variants={stagger} initial="hidden" animate="visible">
+                <motion.div className="flex items-center gap-3" variants={fadeUp}>
+                  <div className="h-px w-12 bg-[#4a9eff]/30" />
+                  <span className="text-[10px] font-mono text-[#4a9eff] tracking-[0.4em] uppercase">Intelligence_Reasoning_Active</span>
+                </motion.div>
+                
+                <motion.h1 className="text-5xl lg:text-7xl font-bold leading-[0.95] tracking-tighter lowercase" style={{ fontFamily: "'IBM Plex Mono', monospace" }} variants={fadeUp}>
+                  Reasoning <br />
+                  <span className="text-[#4a9eff]">Over</span> <br />
+                  Orchestration.
+                </motion.h1>
+
+                <motion.p className="text-base leading-relaxed text-[#666] max-w-md font-light" variants={fadeUp}>
+                  HAWK generates normalized attack surface graphs using probabilistic inference. We solve for exploitability by deriving truth from high-entropy adversarial noise.
+                </motion.p>
+
+                <motion.div className="flex items-center gap-4 pt-4" variants={fadeUp}>
+                  <Button className="bg-[#4a9eff] text-[#0a0a0b] hover:bg-[#3d8ce6] gap-2 text-xs font-mono tracking-wider h-11 px-6">
+                    Initialize Engine <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button variant="outline" className="border-[#2a2a2d] text-[#888] hover:bg-[#151517] text-xs font-mono tracking-wider h-11 px-6">Documentation</Button>
+                </motion.div>
+              </motion.div>
+            </div>
+
+            <div className="lg:col-span-7">
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1] }}>
+                <IntelligenceNavigator data={MOCK_INTELLIGENCE} />
+              </motion.div>
+            </div>
+          </div>
+        </div>
 
         {/* Side annotations */}
         <div className="absolute left-4 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4 pointer-events-none">
@@ -245,7 +295,10 @@ export default function Home() {
                 <div className="h-px w-6 bg-[#4a9eff]/30" />
                 <span className="text-[9px] font-mono text-[#4a9eff] tracking-[0.3em] uppercase">SYSTEM.DUMP</span>
               </div>
-              <h2 className="text-xl font-bold tracking-tight text-[#888]" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>OPERATIONAL_LOG_v4.1</h2>
+              <h2 className="text-xl font-bold tracking-tight text-[#888]" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>REASONING_TRACE_v4.1</h2>
+              <p className="text-xs text-[#555] font-mono leading-relaxed max-w-sm">
+                Every inference is backed by an evidence chain. HAWK propagates confidence through the graph to minimize false positives.
+              </p>
             </motion.div>
 
             <div className="relative min-h-[600px] border border-[#1e1e20] bg-[#000000] p-8 overflow-hidden shadow-2xl">

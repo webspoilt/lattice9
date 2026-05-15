@@ -1,6 +1,9 @@
 import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
 import * as schema from "../drizzle/schema";
+
+const { Pool } = pg;
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -8,7 +11,8 @@ if (!databaseUrl) {
   console.warn("[Database] DATABASE_URL is not set. Database features will be unavailable.");
 }
 
-export const db = databaseUrl ? drizzle(databaseUrl, { schema, mode: 'default' }) : null;
+const pool = databaseUrl ? new Pool({ connectionString: databaseUrl }) : null;
+export const db = pool ? drizzle(pool, { schema }) : null;
 
 // User Helpers
 export async function getUserByOpenId(openId: string) {
@@ -17,122 +21,108 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function upsertUser(user: typeof schema.users.$inferInsert) {
+export async function upsertUser(userData: {
+  openId: string;
+  name?: string | null;
+  email?: string | null;
+  loginMethod?: string | null;
+  lastSignedIn?: Date;
+}) {
   if (!db) return;
-  await db.insert(schema.users).values(user).onDuplicateKeyUpdate({ set: user });
+  
+  // 1. Ensure a default tenant exists
+  let tenant = await db.query.tenants.findFirst();
+  if (!tenant) {
+    const [newTenant] = await db.insert(schema.tenants).values({ name: "HAWK Sovereign" }).returning();
+    tenant = newTenant;
+  }
+
+  // 2. Map fields to schema
+  const dbUser = {
+    openId: userData.openId,
+    email: userData.email,
+    displayName: userData.name,
+    loginMethod: userData.loginMethod,
+    lastSignedIn: userData.lastSignedIn || new Date(),
+    tenantId: tenant.id,
+  };
+
+  const existing = await getUserByOpenId(userData.openId);
+  if (existing) {
+    await db.update(schema.users)
+      .set(dbUser)
+      .where(eq(schema.users.id, existing.id));
+  } else {
+    await db.insert(schema.users).values({
+      ...dbUser,
+      role: "user",
+    });
+  }
 }
 
-// Target Helpers
-export async function getTargetsByUserId(userId: number) {
+// Engagement Helpers (Replaces Targets)
+export async function getEngagementsByTenantId(tenantId: string) {
   if (!db) return [];
-  return db.select().from(schema.targets).where(eq(schema.targets.userId, userId));
+  return db.select().from(schema.engagements).where(eq(schema.engagements.tenantId, tenantId));
 }
 
-export async function getTargetById(targetId: number) {
+export async function getEngagementById(id: string) {
   if (!db) return undefined;
-  const result = await db.select().from(schema.targets).where(eq(schema.targets.id, targetId)).limit(1);
+  const result = await db.select().from(schema.engagements).where(eq(schema.engagements.id, id)).limit(1);
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function createTarget(userId: number, domain: string) {
+export async function createEngagement(userId: string, tenantId: string, name: string, authStatement: string) {
   if (!db) throw new Error("Database not available");
-  return db.insert(schema.targets).values({
-    userId,
-    domain,
-    status: "idle",
-  });
+  return db.insert(schema.engagements).values({
+    tenantId,
+    name,
+    status: "active",
+    authorizationStatement: authStatement,
+    authorizationHash: Buffer.from(authStatement).toString('hex'), // Placeholder hash
+    createdBy: userId,
+  }).returning();
 }
 
-// Scope Helpers
-export async function addTargetScope(targetId: number, pattern: string, type: "include" | "exclude") {
+// Evidence Helpers
+export async function createEvidence(data: typeof schema.evidenceItems.$inferInsert) {
   if (!db) throw new Error("Database not available");
-  return db.insert(schema.targetScopes).values({ targetId, pattern, type });
+  return db.insert(schema.evidenceItems).values(data).returning();
 }
 
-export async function getTargetScopes(targetId: number) {
+export async function getEvidenceByEngagementId(engagementId: string) {
   if (!db) return [];
-  return db.select().from(schema.targetScopes).where(eq(schema.targetScopes.targetId, targetId));
+  return db.select().from(schema.evidenceItems).where(eq(schema.evidenceItems.engagementId, engagementId));
 }
 
-// Permission Log Helpers
-export async function createPermissionLog(targetId: number, userId: number, statement: string, ipAddress?: string, userAgent?: string) {
+// Entity Helpers
+export async function createEntity(data: typeof schema.entities.$inferInsert) {
   if (!db) throw new Error("Database not available");
-  return db.insert(schema.ethicalPermissionLogs).values({
-    targetId,
-    userId,
-    statement,
-    ipAddress,
-    userAgent,
-  });
-}
-
-export async function getPermissionLogs(targetId: number) {
-  if (!db) return [];
-  return db.select().from(schema.ethicalPermissionLogs).where(eq(schema.ethicalPermissionLogs.targetId, targetId));
-}
-
-export async function getEthicalPermissionLog(targetId: number) {
-  if (!db) return undefined;
-  const result = await db.select().from(schema.ethicalPermissionLogs).where(eq(schema.ethicalPermissionLogs.targetId, targetId)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
-}
-
-// Recon Helpers
-export async function addSubdomain(targetId: number, subdomain: string, ipAddress?: string, source?: string) {
-  if (!db) throw new Error("Database not available");
-  return db.insert(schema.reconSubdomains).values({ targetId, subdomain, ipAddress, source });
-}
-
-export async function getSubdomains(targetId: number) {
-  if (!db) return [];
-  return db.select().from(schema.reconSubdomains).where(eq(schema.reconSubdomains.targetId, targetId));
-}
-
-export async function addTechStack(targetId: number, name: string, version?: string, category?: string) {
-  if (!db) throw new Error("Database not available");
-  return db.insert(schema.reconTechStack).values({ targetId, name, version, category });
-}
-
-export async function getTechStack(targetId: number) {
-  if (!db) return [];
-  return db.select().from(schema.reconTechStack).where(eq(schema.reconTechStack.targetId, targetId));
+  return db.insert(schema.entities).values(data).onConflictDoUpdate({
+    target: [schema.entities.engagementId, schema.entities.entityType, schema.entities.canonicalKey],
+    set: data,
+  }).returning();
 }
 
 // Finding Helpers
-export async function getFindingsByTargetId(targetId: number) {
-  if (!db) return [];
-  return db.select().from(schema.findings).where(eq(schema.findings.targetId, targetId));
-}
-
 export async function createFinding(data: typeof schema.findings.$inferInsert) {
   if (!db) throw new Error("Database not available");
-  return db.insert(schema.findings).values(data);
+  return db.insert(schema.findings).values(data).returning();
 }
 
-// Report Helpers
-export async function getReportsByTargetId(targetId: number) {
+export async function getFindingsByEngagementId(engagementId: string) {
   if (!db) return [];
-  return db.select().from(schema.reports).where(eq(schema.reports.targetId, targetId));
-}
-
-export async function createReport(data: typeof schema.reports.$inferInsert) {
-  if (!db) throw new Error("Database not available");
-  return db.insert(schema.reports).values(data);
-}
-
-export async function linkFindingToReport(reportId: number, findingId: number) {
-  if (!db) throw new Error("Database not available");
-  return db.insert(schema.reportFindings).values({ reportId, findingId });
+  return db.select().from(schema.findings).where(eq(schema.findings.engagementId, engagementId));
 }
 
 // Conversation Helpers
-export async function getConversationByUserId(userId: number) {
+export async function getConversationByUserId(userId: string) {
   if (!db) return undefined;
   const result = await db.select().from(schema.conversations).where(eq(schema.conversations.userId, userId)).limit(1);
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function createOrUpdateConversation(userId: number, messages: string) {
+export async function createOrUpdateConversation(userId: string, messages: string) {
   if (!db) throw new Error("Database not available");
   const existing = await getConversationByUserId(userId);
   if (existing) {
@@ -142,21 +132,35 @@ export async function createOrUpdateConversation(userId: number, messages: strin
 }
 
 // OWASP Knowledge Helpers
+export async function getAllOWASPKnowledge() {
+  if (!db) return [];
+  return db.select().from(schema.owaspKnowledge);
+}
+
 export async function getOWASPKnowledge(category: string) {
   if (!db) return undefined;
   const result = await db.select().from(schema.owaspKnowledge).where(eq(schema.owaspKnowledge.category, category)).limit(1);
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function getAllOWASPKnowledge() {
-  if (!db) return [];
-  return db.select().from(schema.owaspKnowledge);
+export async function createOWASPKnowledge(data: any) {
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(schema.owaspKnowledge).values(data).returning();
+  return result[0];
 }
 
-export async function createOWASPKnowledge(data: typeof schema.owaspKnowledge.$inferInsert) {
+// Report Helpers
+export async function getReportsByEngagementId(engagementId: string) {
+  if (!db) return [];
+  return db.select().from(schema.reports).where(eq(schema.reports.engagementId, engagementId));
+}
+
+export async function createReport(data: {
+  engagementId: string;
+  title: string;
+  content: string;
+  findingIds: string[];
+}) {
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(schema.owaspKnowledge).values(data);
-  const id = result[0].insertId as number;
-  const [knowledge] = await db.select().from(schema.owaspKnowledge).where(eq(schema.owaspKnowledge.id, id)).limit(1);
-  return knowledge;
+  return db.insert(schema.reports).values(data);
 }

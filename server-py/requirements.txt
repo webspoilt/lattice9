@@ -11,3 +11,6 @@ numpy
 scipy
 cryptography
 python-multipart
+neo4j
+asyncpg
+redis

@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import {
-  getTargetById,
-  getFindingsByTargetId,
-  getReportsByTargetId,
+  getEngagementById,
+  getFindingsByEngagementId,
+  getReportsByEngagementId,
   createReport,
 } from "../db";
 import { invokeLLM } from "../_core/llm";
@@ -12,18 +12,18 @@ export const reportsRouter = router({
   generate: protectedProcedure
     .input(
       z.object({
-        targetId: z.number(),
+        engagementId: z.string(),
         title: z.string(),
-        findingIds: z.array(z.number()).optional(),
+        findingIds: z.array(z.string()).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const target = await getTargetById(input.targetId);
-      if (!target || target.userId !== ctx.user.id) {
-        throw new Error("Target not found");
+      const engagement = await getEngagementById(input.engagementId);
+      if (!engagement || engagement.tenantId !== ctx.user.tenantId) {
+        throw new Error("Engagement not found");
       }
 
-      const findings = await getFindingsByTargetId(input.targetId);
+      const findings = await getFindingsByEngagementId(input.engagementId);
       const selectedFindings = input.findingIds
         ? findings.filter((f) => input.findingIds!.includes(f.id))
         : findings;
@@ -35,7 +35,7 @@ export const reportsRouter = router({
         )
         .join("\n\n");
 
-      const reportPrompt = `Generate a professional bug bounty report for ${target.domain}.
+      const reportPrompt = `Generate a professional bug bounty report for engagement ${engagement.name}.
       
 Findings:
 ${findingsText}
@@ -59,10 +59,10 @@ Format as markdown with sections: Summary, Findings, Impact, Recommendations, CV
       const content = response.choices[0]?.message.content as string || "";
 
       await createReport({
-        targetId: input.targetId,
+        engagementId: input.engagementId,
         title: input.title,
         content,
-        findingIds: JSON.stringify(input.findingIds || []),
+        findingIds: input.findingIds || [],
       });
 
       return {
@@ -75,13 +75,13 @@ Format as markdown with sections: Summary, Findings, Impact, Recommendations, CV
     }),
 
   list: protectedProcedure
-    .input(z.object({ targetId: z.number() }))
+    .input(z.object({ engagementId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const target = await getTargetById(input.targetId);
-      if (!target || target.userId !== ctx.user.id) {
-        throw new Error("Target not found");
+      const engagement = await getEngagementById(input.engagementId);
+      if (!engagement || engagement.tenantId !== ctx.user.tenantId) {
+        throw new Error("Engagement not found");
       }
 
-      return getReportsByTargetId(input.targetId);
+      return getReportsByEngagementId(input.engagementId);
     }),
 });

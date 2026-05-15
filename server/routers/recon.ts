@@ -1,91 +1,57 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import {
-  getTargetById,
-  addSubdomain,
-  addTechStack,
-  getSubdomains,
-  getTechStack,
-} from "../db";
-import { invokeLLM } from "../_core/llm";
+  collectionRuns,
+} from "../../drizzle/schema";
+import { eq, desc } from "drizzle-orm";
+import { db, getEngagementById } from "../db";
 import axios from "axios";
 
-const ENGINE_URL = "http://localhost:8000";
+const ENGINE_URL = process.env.ENGINE_URL || "http://localhost:8000";
 const ENGINE_KEY = process.env.HAWK_ENGINE_KEY || "sovereign-hawk-secret-2026";
 
 export const reconRouter = router({
-  startPipeline: protectedProcedure
-    .input(z.object({ targetId: z.number() }))
+  startCollection: protectedProcedure
+    .input(z.object({ engagementId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const target = await getTargetById(input.targetId);
-      if (!target || target.userId !== ctx.user.id) {
-        throw new Error("Target not found");
+      const engagement = await getEngagementById(input.engagementId);
+      if (!engagement || engagement.tenantId !== ctx.user.tenantId) {
+        throw new Error("Engagement not found or unauthorized");
       }
 
-      // 1. Trigger the Sovereign Pipeline (Background)
+      if (!db) throw new Error("Database not available");
+
+      // 1. Create the Collection Run record
+      const [run] = await db.insert(collectionRuns).values({
+        engagementId: input.engagementId,
+        requestedBy: ctx.user.id,
+        collectionProfile: "full_offensive",
+        scopeVersion: engagement.scopeVersion,
+        status: "pending",
+      }).returning();
+
+      // 2. Trigger the Python Intelligence Engine
       try {
-        const response = await axios.post(`${ENGINE_URL}/recon/pipeline`, {
-          domain: target.domain,
-          target_id: input.targetId,
+        await axios.post(`${ENGINE_URL}/analyze/${input.engagementId}`, {
+          run_id: run.id,
+          profile: "full_offensive",
         }, {
           headers: { "X-HAWK-Key": ENGINE_KEY }
         });
-
-        if (response.data.status !== "accepted") {
-          throw new Error("Sovereign Engine rejected the request");
-        }
       } catch (e: any) {
-        throw new Error(`Failed to start Sovereign Engine: ${e.message}`);
+        await db.update(collectionRuns).set({ status: "failed" }).where(eq(collectionRuns.id, run.id));
+        throw new Error(`Failed to start Intelligence Engine: ${e.message}`);
       }
 
-      return { success: true, message: "Pipeline started in background" };
+      return { runId: run.id };
     }),
 
-  getStatus: protectedProcedure
-    .input(z.object({ targetId: z.number() }))
+  getRuns: protectedProcedure
+    .input(z.object({ engagementId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const target = await getTargetById(input.targetId);
-      if (!target || target.userId !== ctx.user.id) {
-        throw new Error("Target not found");
-      }
-
-      try {
-        const response = await axios.get(`${ENGINE_URL}/jobs/${input.targetId}`, {
-          headers: { "X-HAWK-Key": ENGINE_KEY }
-        });
-
-        const job = response.data;
-        
-        return [
-          { stage: "recon", status: job.dns && Object.keys(job.dns).length > 0 ? "completed" : (job.status === "failed" ? "failed" : "pending"), output: job.dns },
-          { stage: "tech_stack", status: job.tech_stack?.length > 0 ? "completed" : (job.status === "failed" ? "failed" : "pending"), output: job.tech_stack },
-          { stage: "port_scan", status: job.ports?.length > 0 ? "completed" : (job.status === "failed" ? "failed" : "pending"), output: job.ports },
-          { stage: "assessment", status: job.vulnerabilities?.length > 0 ? "completed" : (job.status === "failed" ? "failed" : "pending"), output: job.vulnerabilities },
-          { stage: "forensics", status: job.forensics?.length > 0 ? "completed" : (job.status === "failed" ? "failed" : "pending"), output: job.forensics },
-        ];
-      } catch (e) {
-        return [
-          { stage: "dns_recon", status: "pending", output: null },
-          { stage: "tech_stack", status: "pending", output: null },
-          { stage: "port_scan", status: "pending", output: null },
-        ];
-      }
-    }),
-
-  getResults: protectedProcedure
-    .input(z.object({ targetId: z.number() }))
-    .query(async ({ ctx, input }) => {
-      const target = await getTargetById(input.targetId);
-      if (!target || target.userId !== ctx.user.id) {
-        throw new Error("Target not found");
-      }
-
-      const subdomains = await getSubdomains(input.targetId);
-      const tech = await getTechStack(input.targetId);
-
-      return {
-        subdomains,
-        techStack: tech,
-      };
+      if (!db) return [];
+      return db.select().from(collectionRuns)
+        .where(eq(collectionRuns.engagementId, input.engagementId))
+        .orderBy(desc(collectionRuns.createdAt));
     }),
 });
