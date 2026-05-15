@@ -23,26 +23,26 @@ export const IntelligenceNavigator: React.FC<{ data: any }> = ({ data }) => {
       id: e.id,
       label: e.label,
       type: e.type,
-      val: e.type === EntityType.VULNERABILITY ? 10 : 5,
-      color: e.type === EntityType.VULNERABILITY ? '#ff4a4a' : '#4a9eff'
+      val: e.type === 'vulnerability' ? 10 : 5,
+      color: e.type === 'vulnerability' ? '#ff4a4a' : '#6366f1'
     })) || [];
 
     const links = data?.inferences?.map((i: any) => ({
       source: i.sourceId,
       target: i.targetEntityId,
       label: i.type,
-      color: 'rgba(74, 158, 255, 0.2)'
+      color: 'rgba(99, 102, 241, 0.2)'
     })) || [];
 
     return { nodes, links };
   }, [data]);
 
   return (
-    <div className="relative w-full h-[600px] bg-[#050505] border border-[#111] rounded-lg overflow-hidden">
+    <div className="relative w-full h-[600px] bg-[#050505] border border-[#111] rounded-none overflow-hidden">
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-        <div className="text-[10px] font-mono text-[#555] tracking-widest uppercase">Intelligence_Navigator_v4</div>
+        <div className="text-[10px] font-mono text-[#555] tracking-widest uppercase">Intelligence_Navigator_v5.0.0</div>
         <div className="flex gap-4">
-          <LegendItem label="Asset" color="#4a9eff" />
+          <LegendItem label="Asset" color="#6366f1" />
           <LegendItem label="Identity" color="#00ffcc" />
           <LegendItem label="Vuln" color="#ff4a4a" />
         </div>

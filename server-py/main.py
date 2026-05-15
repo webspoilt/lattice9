@@ -11,16 +11,17 @@ import asyncpg
 import redis
 
 # Configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://hawk:hawk_secret@db:5432/hawk")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://lattice9:l9_secret@db:5432/lattice9")
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://graphdb:7687")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "hawk_graph_secret")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "l9_graph_secret")
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
+LATTICE9_ENGINE_KEY = os.getenv("LATTICE9_ENGINE_KEY", "sovereign-l9-secret-2026")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("hawk-engine")
+logger = logging.getLogger("lattice9-graph-engine")
 
-app = FastAPI(title="HAWK Intelligence Engine", version="5.0.0")
+app = FastAPI(title="Lattice9 Graph Engine", version="5.0.0")
 
 class IntelligenceEngine:
     """
@@ -62,10 +63,19 @@ class AnalysisRequest(BaseModel):
     profile: str = "full_offensive"
 
 @app.post("/analyze/{engagement_id}")
-async def analyze_engagement(engagement_id: str, request: AnalysisRequest, tasks: BackgroundTasks):
+async def analyze_engagement(
+    engagement_id: str, 
+    request: AnalysisRequest, 
+    tasks: BackgroundTasks,
+    x_lattice9_key: Optional[str] = Header(None)
+):
     """
     Primary endpoint for triggering intelligence reasoning.
     """
+    if x_lattice9_key != LATTICE9_ENGINE_KEY:
+        logger.warning(f"Unauthorized analysis attempt for {engagement_id}")
+        raise HTTPException(status_code=401, detail="Unauthorized: Invalid LATTICE9_ENGINE_KEY")
+
     logger.info(f"Received analysis request for {engagement_id} (Run: {request.run_id})")
     
     # 1. Enqueue correlation and reasoning tasks
@@ -82,7 +92,7 @@ async def analyze_engagement(engagement_id: str, request: AnalysisRequest, tasks
 async def health():
     return {
         "status": "operational",
-        "engine": "HAWK-OS-V5",
+        "engine": "Lattice9-OS-V5",
         "schema_version": "5.0.0"
     }
 

@@ -50,13 +50,13 @@ const fragmentShader = `
       uv.x += distortion;
     }
 
-    vec3 graphite = vec3(0.02, 0.02, 0.025);
-    vec3 tungsten = vec3(0.04, 0.05, 0.06);
-    vec3 cyan = vec3(0.29, 0.62, 1.0) * (0.02 + globalEntropy * 0.05);
+    vec3 graphite = vec3(0.01, 0.01, 0.012);
+    vec3 tungsten = vec3(0.03, 0.04, 0.05);
+    vec3 indigo = vec3(0.39, 0.40, 0.95) * (0.02 + globalEntropy * 0.05);
     
     float intensity = pow(combined, 4.0 - globalEntropy * 2.0);
     vec3 finalColor = mix(graphite, tungsten, combined);
-    finalColor += cyan * intensity;
+    finalColor += indigo * intensity;
     
     // Grain increases with entropy
     finalColor += (hash(uv + time) - 0.5) * (0.005 + globalEntropy * 0.01);

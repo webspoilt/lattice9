@@ -1,4 +1,4 @@
-# HAWK Pentest Platform — TODO
+# Lattice9 Offensive Intelligence OS — TODO
 
 ## Database & Schema
 - [x] Create targets table (domain, status, scope, authorized_date)
@@ -76,7 +76,7 @@
 - [ ] Ethical enforcement validation
 
 ## Sovereign Hardening (The Roast Response)
-- [x] Fix HAWKDashboard syntax errors and contract drift
+- [x] Fix Lattice9Console syntax errors and contract drift
 - [x] Add SSRF protection to Python engine (RFC1918 block)
 - [x] Add API Key auth between Node and Python
 - [x] Fix Scrapling import and service lookup errors

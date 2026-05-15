@@ -327,7 +327,7 @@ function buildCronUser(
     id: NIL_UUID,
     tenantId: NIL_UUID, // Cron tasks operate in a virtual system tenant
     openId: userInfo.openId,
-    displayName: userInfo.name || "Hawk System Task",
+    displayName: userInfo.name || "Lattice9 System Task",
     email: null,
     loginMethod: null,
     role: "user",

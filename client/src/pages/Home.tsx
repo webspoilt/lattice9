@@ -30,8 +30,8 @@ export default function Home() {
                 <Radar className="w-10 h-10 text-cyan-400 animate-pulse" />
               </div>
               <div className="text-left">
-                <h1 className="text-5xl font-black text-white tracking-tighter">⬡ HAWK</h1>
-                <p className="text-cyan-500 font-mono text-sm tracking-[0.2em] uppercase">Sovereign Pentest Platform</p>
+                <h1 className="text-5xl font-black text-white tracking-tighter">⬡ LATTICE9</h1>
+                <p className="text-indigo-500 font-mono text-sm tracking-[0.2em] uppercase">Offensive Intelligence OS</p>
               </div>
             </div>
 
@@ -40,7 +40,7 @@ export default function Home() {
             </h2>
             
             <p className="text-lg text-slate-400 max-w-2xl leading-relaxed">
-              Move beyond simulated reconnaissance. HAWK combines local AI reasoning with deterministic security tooling and enforced ethical authorization.
+              Move beyond simulated reconnaissance. Lattice9 combines local graph-native reasoning with deterministic offensive intelligence and enforced ethical authorization.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -81,10 +81,10 @@ export default function Home() {
             <div className="w-3 h-3 rounded-full bg-red-500/50"></div>
             <div className="w-3 h-3 rounded-full bg-amber-500/50"></div>
             <div className="w-3 h-3 rounded-full bg-green-500/50"></div>
-            <div className="ml-4 text-[10px] font-mono text-slate-500">hawk_session_active --target:staging.internal</div>
+            <div className="ml-4 text-[10px] font-mono text-slate-500">l9_session_active --target:infra.lattice9.io</div>
           </div>
           <div className="bg-black border-x border-b border-slate-800 p-8 font-mono text-sm space-y-2 shadow-2xl">
-            <div className="text-cyan-500">hawk@sovereign:~$ <span className="text-white">initialize_recon --target example.com</span></div>
+            <div className="text-indigo-500">operator@lattice9:~$ <span className="text-white">initialize_reasoning --target example.com</span></div>
             <div className="text-slate-500">[INFO] Loading Security Engine v0.1.0...</div>
             <div className="text-slate-500">[INFO] Verifying Ethical Authorization Log... [OK]</div>
             <div className="text-slate-500">[RECON] Running DNS Lookup via FastAPI...</div>
@@ -110,7 +110,7 @@ export default function Home() {
               <h3 className="text-3xl font-bold text-white tracking-tight">The Pentester's Manifesto</h3>
               <div className="space-y-4 text-slate-400 leading-relaxed">
                 <p>
-                  Most security platforms are just "Concept Cars"—fancy interfaces wrapped around simulated logic. HAWK is built on three uncompromising pillars:
+                  Most security platforms are just "Concept Cars"—fancy interfaces wrapped around simulated logic. Lattice9 is built on three uncompromising pillars:
                 </p>
                 <div className="space-y-4 pt-4">
                   <div className="flex gap-4">
@@ -167,7 +167,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="py-12 border-t border-slate-900 text-center text-slate-600 text-sm">
-        <p>© 2026 HAWK Sovereign Security Platform. All rights reserved.</p>
+        <p>© 2026 Lattice9: Offensive Intelligence Operating System. All rights reserved.</p>
       </footer>
     </div>
   );

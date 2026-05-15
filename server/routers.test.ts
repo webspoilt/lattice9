@@ -29,7 +29,7 @@ function createAuthContext(userId: number = 1): TrpcContext {
   };
 }
 
-describe("HAWK Platform Routers", () => {
+describe("Lattice9 Platform Routers", () => {
   describe("targets router", () => {
     it("should list targets for authenticated user", async () => {
       const ctx = createAuthContext();

@@ -33,7 +33,7 @@ export async function upsertUser(userData: {
   // 1. Ensure a default tenant exists
   let tenant = await db.query.tenants.findFirst();
   if (!tenant) {
-    const [newTenant] = await db.insert(schema.tenants).values({ name: "HAWK Sovereign" }).returning();
+    const [newTenant] = await db.insert(schema.tenants).values({ name: "Lattice9 Sovereign" }).returning();
     tenant = newTenant;
   }
 

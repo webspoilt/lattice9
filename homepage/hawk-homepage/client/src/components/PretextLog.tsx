@@ -10,7 +10,7 @@ interface PretextLogProps {
   className?: string;
 }
 
-export function PretextLog({ content, width = 600, color = '#4a9eff', className = '' }: PretextLogProps) {
+export function PretextLog({ content, width = 600, color = '#6366f1', className = '' }: PretextLogProps) {
   const [lines, setLines] = useState<string[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -53,7 +53,7 @@ export function PretextLog({ content, width = 600, color = '#4a9eff', className 
         return (
           <span 
             className="inline-block py-1 opacity-90 transition-opacity hover:opacity-100" 
-            style={{ color: '#4a9eff' }}
+            style={{ color: '#6366f1' }}
             dangerouslySetInnerHTML={{ __html: html }} 
           />
         );

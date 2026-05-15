@@ -66,7 +66,7 @@ export function ScopeConfirmationDialog({
               </div>
 
               <div className="p-3 bg-red-950 rounded-lg border border-red-800 text-xs text-red-200">
-                <strong>⚠️ Warning:</strong> Unauthorized security testing is illegal. HAWK is designed for authorized testing only.
+                <strong>⚠️ Warning:</strong> Unauthorized security testing is illegal. Lattice9 is designed for authorized testing only.
               </div>
             </div>
           </AlertDialogDescription>

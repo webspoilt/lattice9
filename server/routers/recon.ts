@@ -8,7 +8,7 @@ import { db, getEngagementById } from "../db";
 import axios from "axios";
 
 const ENGINE_URL = process.env.ENGINE_URL || "http://localhost:8000";
-const ENGINE_KEY = process.env.HAWK_ENGINE_KEY || "sovereign-hawk-secret-2026";
+const ENGINE_KEY = process.env.LATTICE9_ENGINE_KEY || "sovereign-l9-secret-2026";
 
 export const reconRouter = router({
   startCollection: protectedProcedure
@@ -36,7 +36,7 @@ export const reconRouter = router({
           run_id: run.id,
           profile: "full_offensive",
         }, {
-          headers: { "X-HAWK-Key": ENGINE_KEY }
+          headers: { "X-Lattice9-Key": ENGINE_KEY }
         });
       } catch (e: any) {
         await db.update(collectionRuns).set({ status: "failed" }).where(eq(collectionRuns.id, run.id));

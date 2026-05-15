@@ -1,10 +1,10 @@
-# HAWK Offensive Intelligence Operating System Architecture
+# Lattice9 Offensive Intelligence Operating System Architecture
 
-> Target architecture for converting HAWK from an AI-assisted pentest dashboard into a stateful offensive intelligence engine.
+> Target architecture for converting Lattice9 from an AI-assisted pentest dashboard into a stateful offensive intelligence engine.
 
 ## Executive Position
 
-HAWK should own one deep capability first: **temporal attack-chain inference**.
+Lattice9 should own one deep capability first: **temporal attack-chain inference**.
 
 That capability means the platform continuously turns authorized collection evidence into normalized entities, typed relationships, temporal graph state, and ranked attack paths with reproducible reasoning traces. The UI, scanners, LLM features, reports, and automations exist only to support that capability.
 
@@ -50,8 +50,8 @@ The current repository has useful scaffolding, but the ownership model is wrong 
 - `drizzle/schema.ts` uses MySQL tables that store targets, recon lists, findings, reports, conversations, and thin graph entities. This must migrate to PostgreSQL and separate observations, normalized entities, evidence, temporal state, and decisions.
 - `server-py/main.py` contains an in-memory NetworkX placeholder. This must become a stateless reasoning worker backed by PostgreSQL, Neo4j, Redis, and object storage.
 - `server/routers/vulnerability.ts` allows LLM-generated findings to be persisted as findings. This must be replaced with deterministic candidate generation, evidence requirements, and validation state transitions.
-- `client/src/pages/HAWKDashboard.tsx` mixes target creation, scanner status, fake attack paths, an AI mentor, reports, and OWASP content. This should become a dense analyst workbench centered on attack paths, evidence lineage, temporal drift, and graph relationships.
-- `docker-compose.yml` runs app, engine, and MySQL only. Target state needs PostgreSQL, Neo4j or ArangoDB, Redis, and object storage.
+- `client/src/pages/Lattice9Console.tsx` mixes target creation, scanner status, fake attack paths, an AI advisor, reports, and OWASP content. This should become a dense analyst workbench centered on attack paths, evidence lineage, temporal drift, and graph relationships.
+- `docker-compose.yml` runs app, engine, and storage services. Target state needs PostgreSQL, Neo4j, Redis, and object storage.
 
 The redesign below treats the existing Node/tRPC app as the initial API shell, the Python service as the reasoning and collection worker runtime, and the current React app as a workbench to be rebuilt around operational workflows.
 
@@ -1553,7 +1553,7 @@ sequenceDiagram
 
 ### Threat Actors
 
-- External attacker targeting HAWK.
+- External attacker targeting Lattice9.
 - Malicious or careless tenant user.
 - Compromised operator account.
 - Poisoned target content attempting parser or prompt injection.
@@ -1791,12 +1791,12 @@ flowchart LR
 | `server/routers/recon.ts` | Replace direct engine calls with collection run creation and Redis queue dispatch |
 | `server-py/main.py` | Replace in-memory graph with worker services reading PostgreSQL/Neo4j and writing deterministic results |
 | `shared/intelligence.ts` | Expand into versioned schema contracts for entities, relationships, evidence, paths, and validation |
-| `client/src/pages/HAWKDashboard.tsx` | Replace all-in-one dashboard with workbench routes: assets, graph, paths, evidence, drift, validation |
+| `client/src/pages/Lattice9Dashboard.tsx` | Replace all-in-one dashboard with workbench routes: assets, graph, paths, evidence, drift, validation |
 | `client/src/index.css` | Remove cyberpunk/glow defaults; implement dense operational styling |
 
 ## Acceptance Criteria
 
-HAWK is no longer an AI wrapper when:
+Lattice9 is no longer an AI wrapper when:
 
 - A persisted finding cannot exist without evidence.
 - A persisted attack path cannot exist without graph relationships and a reasoning trace.

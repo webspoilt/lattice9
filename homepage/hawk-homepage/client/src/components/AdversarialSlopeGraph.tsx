@@ -13,7 +13,7 @@ interface DataPoint {
 }
 
 const colors = {
-  blue: '#4a9eff',
+  blue: '#6366f1',
   teal: '#00d9ff',
   amber: '#d4a574',
   red: '#ff4444',
@@ -65,10 +65,10 @@ export function AdversarialSlopeGraph() {
   const getY = (v: number) => height - padding - (v * (height - 2 * padding));
 
   return (
-    <div className="relative w-full max-w-2xl mx-auto p-8 bg-[#0a0a0b] border border-[#1e1e20] rounded-lg shadow-2xl overflow-hidden">
+    <div className="relative w-full max-w-2xl mx-auto p-8 bg-[#0a0a0b] border border-[#1e1e20] rounded-none shadow-2xl overflow-hidden">
       <div className="absolute top-4 left-4 flex items-center gap-2">
-        <div className="w-1.5 h-1.5 rounded-full bg-[#4a9eff] animate-pulse" />
-        <span className="telemetry-text text-[#555] text-[10px]">PREDICTIVE_SLOPE_ANALYSIS_v2.0</span>
+        <div className="w-1.5 h-1.5 rounded-none bg-indigo-500 animate-pulse" />
+        <span className="telemetry-text text-[#555] text-[10px]">PREDICTIVE_SLOPE_ANALYSIS_v5.0.0</span>
       </div>
 
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible select-none">
@@ -126,7 +126,7 @@ export function AdversarialSlopeGraph() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="bg-[#0f0f10] border border-[#4a9eff]/30 px-4 py-2 rounded-sm backdrop-blur-md shadow-lg"
+              className="bg-[#0f0f10] border border-indigo-500/30 px-4 py-2 rounded-none backdrop-blur-md shadow-lg"
               dangerouslySetInnerHTML={{ 
                 __html: katex.renderToString(data.find(d => d.id === hoverId)?.equation || '', { displayMode: true }) 
               }}
@@ -138,11 +138,11 @@ export function AdversarialSlopeGraph() {
       <div className="mt-4 border-t border-[#1e1e20] pt-4 flex justify-between items-center px-2">
         <div className="flex gap-4">
           <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.teal }} />
+            <div className="w-2 h-2 rounded-none" style={{ backgroundColor: colors.teal }} />
             <span className="telemetry-text text-[9px] text-[#666]">POSITIVE_YIELD</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.amber }} />
+            <div className="w-2 h-2 rounded-none" style={{ backgroundColor: colors.amber }} />
             <span className="telemetry-text text-[9px] text-[#666]">STABILIZATION</span>
           </div>
         </div>
@@ -150,7 +150,7 @@ export function AdversarialSlopeGraph() {
           <span className="telemetry-text text-[9px] text-[#444]">CALCULATING_DERIVATIVES...</span>
           <div className="w-12 h-1 bg-[#1e1e20] relative overflow-hidden">
             <motion.div 
-              className="absolute inset-y-0 left-0 bg-[#4a9eff]"
+              className="absolute inset-y-0 left-0 bg-indigo-500"
               animate={{ x: [-48, 48] }}
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             />

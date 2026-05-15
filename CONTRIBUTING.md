@@ -1,6 +1,6 @@
-# Contributing to HAWK
+# Contributing to Lattice9
 
-Thank you for your interest in contributing to HAWK! We welcome contributions from the security community to help improve the engine's intelligence and recon capabilities.
+Thank you for your interest in contributing to Lattice9! We welcome contributions from the security community to help improve the engine's intelligence and recon capabilities.
 
 ## Code of Conduct
 
@@ -9,7 +9,7 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 ## How to Contribute
 
 ### Reporting Bugs
-- Check the [Issue Tracker](https://github.com/webspoilt/hawk-pentest-platform/issues) to see if the bug has already been reported.
+- Check the [Issue Tracker](https://github.com/webspoilt/lattice9/issues) to see if the bug has already been reported.
 - If not, open a new issue with a clear title, description, and steps to reproduce.
 
 ### Suggesting Features

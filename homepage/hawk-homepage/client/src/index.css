@@ -43,77 +43,77 @@
 }
 
 :root {
-  /* Scientific Instrumentalism Design System */
+  /* Scientific Instrumentalism Design System - Lattice9 */
   /* Primary: Dark graphite and tungsten for computational depth */
-  --primary: #4a9eff; /* Muted cyan for accents */
+  --primary: #6366f1; /* Indigo for accents */
   --primary-foreground: #0f0f0f; /* Deep graphite */
-  --sidebar-primary: #4a9eff;
+  --sidebar-primary: #6366f1;
   --sidebar-primary-foreground: #0f0f0f;
-  --chart-1: #4a9eff; /* Spectral cyan */
-  --chart-2: #00d9ff; /* Brighter cyan for data */
+  --chart-1: #6366f1; /* Spectral indigo */
+  --chart-2: #4f46e5; /* Deeper indigo for data */
   --chart-3: #d4a574; /* Amber for confidence */
   --chart-4: #2d2d2d; /* Tungsten */
   --chart-5: #1a1a1a; /* Deep graphite */
-  --radius: 0.5rem; /* Tighter radius for precision */
-  --background: #0f0f0f; /* Deep graphite */
+  --radius: 0px; /* Zero radius for tactical precision */
+  --background: #0a0a0b; /* Deep operation black */
   --foreground: #e8e8e8; /* Light gray for contrast */
-  --card: #1a1a1a; /* Slightly lighter graphite */
+  --card: #0e0e10; /* Slightly lighter graphite */
   --card-foreground: #e8e8e8;
-  --popover: #1a1a1a;
+  --popover: #0e0e10;
   --popover-foreground: #e8e8e8;
-  --secondary: #2d2d2d; /* Tungsten */
+  --secondary: #1e1e20; /* Tungsten */
   --secondary-foreground: #e8e8e8;
-  --muted: #3a3a3a; /* Muted graphite */
-  --muted-foreground: #a8a8a8; /* Muted text */
-  --accent: #4a9eff; /* Spectral cyan */
+  --muted: #1e1e20; /* Muted graphite */
+  --muted-foreground: #666666; /* Muted text */
+  --accent: #6366f1; /* Spectral indigo */
   --accent-foreground: #0f0f0f;
-  --destructive: #ff4444; /* Subtle red for alerts */
+  --destructive: #c44040; /* Subtle red for alerts */
   --destructive-foreground: #0f0f0f;
-  --border: #2d2d2d; /* Tungsten borders */
-  --input: #1a1a1a; /* Dark input backgrounds */
-  --ring: #4a9eff; /* Cyan focus ring */
-  --sidebar: #0f0f0f;
+  --border: #1e1e20; /* Tungsten borders */
+  --input: #0e0e10; /* Dark input backgrounds */
+  --ring: #6366f1; /* Indigo focus ring */
+  --sidebar: #0a0a0b;
   --sidebar-foreground: #e8e8e8;
-  --sidebar-accent: #4a9eff;
+  --sidebar-accent: #6366f1;
   --sidebar-accent-foreground: #0f0f0f;
-  --sidebar-border: #2d2d2d;
-  --sidebar-ring: #4a9eff;
+  --sidebar-border: #1e1e20;
+  --sidebar-ring: #6366f1;
 }
 
 .dark {
   /* Dark theme (same as root for Scientific Instrumentalism) */
-  --primary: #4a9eff;
+  --primary: #6366f1;
   --primary-foreground: #0f0f0f;
-  --sidebar-primary: #4a9eff;
+  --sidebar-primary: #6366f1;
   --sidebar-primary-foreground: #0f0f0f;
-  --background: #0f0f0f;
+  --background: #0a0a0b;
   --foreground: #e8e8e8;
-  --card: #1a1a1a;
+  --card: #0e0e10;
   --card-foreground: #e8e8e8;
-  --popover: #1a1a1a;
+  --popover: #0e0e10;
   --popover-foreground: #e8e8e8;
-  --secondary: #2d2d2d;
+  --secondary: #1e1e20;
   --secondary-foreground: #e8e8e8;
-  --muted: #3a3a3a;
-  --muted-foreground: #a8a8a8;
-  --accent: #4a9eff;
+  --muted: #1e1e20;
+  --muted-foreground: #666666;
+  --accent: #6366f1;
   --accent-foreground: #0f0f0f;
-  --destructive: #ff4444;
+  --destructive: #c44040;
   --destructive-foreground: #0f0f0f;
-  --border: #2d2d2d;
-  --input: #1a1a1a;
-  --ring: #4a9eff;
-  --chart-1: #4a9eff;
-  --chart-2: #00d9ff;
+  --border: #1e1e20;
+  --input: #0e0e10;
+  --ring: #6366f1;
+  --chart-1: #6366f1;
+  --chart-2: #4f46e5;
   --chart-3: #d4a574;
   --chart-4: #2d2d2d;
   --chart-5: #1a1a1a;
-  --sidebar: #0f0f0f;
+  --sidebar: #0a0a0b;
   --sidebar-foreground: #e8e8e8;
-  --sidebar-accent: #4a9eff;
+  --sidebar-accent: #6366f1;
   --sidebar-accent-foreground: #0f0f0f;
-  --sidebar-border: #2d2d2d;
-  --sidebar-ring: #4a9eff;
+  --sidebar-border: #1e1e20;
+  --sidebar-ring: #6366f1;
 }
 
 @layer base {
@@ -216,11 +216,11 @@
 
   /* Spectral gradient utilities */
   .gradient-spectral {
-    background: linear-gradient(135deg, #4a9eff 0%, #00d9ff 50%, #d4a574 100%);
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #d4a574 100%);
   }
 
   .gradient-spectral-reverse {
-    background: linear-gradient(135deg, #d4a574 0%, #00d9ff 50%, #4a9eff 100%);
+    background: linear-gradient(135deg, #d4a574 0%, #4f46e5 50%, #6366f1 100%);
   }
 
   /* Confidence pulse animation */
@@ -239,7 +239,7 @@
 
   /* Subtle glow effect for nodes */
   .glow-node {
-    box-shadow: 0 0 20px rgba(74, 158, 255, 0.3), 0 0 40px rgba(74, 158, 255, 0.1);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3), 0 0 40px rgba(99, 102, 241, 0.1);
   }
 
   .glow-node-amber {
@@ -248,7 +248,7 @@
 
   /* Mesh topology background pattern */
   .mesh-background {
-    background-image: linear-gradient(0deg, transparent 24%, rgba(74, 158, 255, 0.05) 25%, rgba(74, 158, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(74, 158, 255, 0.05) 75%, rgba(74, 158, 255, 0.05) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(74, 158, 255, 0.05) 25%, rgba(74, 158, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(74, 158, 255, 0.05) 75%, rgba(74, 158, 255, 0.05) 76%, transparent 77%, transparent);
+    background-image: linear-gradient(0deg, transparent 24%, rgba(99, 102, 241, 0.05) 25%, rgba(99, 102, 241, 0.05) 26%, transparent 27%, transparent 74%, rgba(99, 102, 241, 0.05) 75%, rgba(99, 102, 241, 0.05) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(99, 102, 241, 0.05) 25%, rgba(99, 102, 241, 0.05) 26%, transparent 27%, transparent 74%, rgba(99, 102, 241, 0.05) 75%, rgba(99, 102, 241, 0.05) 76%, transparent 77%, transparent);
     background-size: 50px 50px;
   }
 
@@ -301,42 +301,42 @@
     text-transform: uppercase;
   }
 
-  /* Hawk card */
-  .hawk-card {
-    background: linear-gradient(135deg, rgba(14, 17, 24, 0.9), rgba(21, 25, 33, 0.7));
-    border: 1px solid rgba(26, 31, 44, 0.6);
-    border-radius: 4px;
+  /* Lattice card */
+  .l9-card {
+    background: linear-gradient(135deg, rgba(14, 17, 24, 1), rgba(10, 10, 11, 0.9));
+    border: 1px solid #1e1e20;
+    border-radius: 0px;
     position: relative;
     overflow: hidden;
   }
-  .hawk-card::before {
+  .l9-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(74, 158, 255, 0.15), transparent);
+    background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.15), transparent);
   }
-  .hawk-card:hover {
-    border-color: rgba(74, 158, 255, 0.2);
+  .l9-card:hover {
+    border-color: rgba(99, 102, 241, 0.3);
   }
 
   /* Section line */
-  .hawk-section-line {
+  .l9-section-line {
     height: 1px;
-    background: linear-gradient(90deg, rgba(74, 158, 255, 0.3), rgba(74, 158, 255, 0.05), transparent);
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.3), rgba(99, 102, 241, 0.05), transparent);
   }
 
   /* Status dots */
-  .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
-  .status-active { background: #4a9eff; box-shadow: 0 0 6px rgba(74, 158, 255, 0.4); }
+  .status-dot { width: 6px; height: 6px; border-radius: 0px; display: inline-block; }
+  .status-active { background: #6366f1; box-shadow: 0 0 6px rgba(99, 102, 241, 0.4); }
   .status-warning { background: #d4a574; box-shadow: 0 0 6px rgba(212, 165, 116, 0.4); }
   .status-critical { background: #c44040; box-shadow: 0 0 6px rgba(196, 64, 64, 0.4); }
 
   /* Grid background */
-  .hawk-grid-bg {
+  .l9-grid-bg {
     background-image:
-      linear-gradient(rgba(26, 31, 44, 0.3) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(26, 31, 44, 0.3) 1px, transparent 1px);
+      linear-gradient(rgba(30, 30, 32, 0.3) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(30, 30, 32, 0.3) 1px, transparent 1px);
     background-size: 40px 40px;
   }
 
@@ -353,5 +353,5 @@
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #0a0a0b; }
-::-webkit-scrollbar-thumb { background: #1e1e20; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #1e1e20; border-radius: 0px; }
 ::-webkit-scrollbar-thumb:hover { background: #2a2a2d; }

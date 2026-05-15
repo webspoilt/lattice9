@@ -1,11 +1,11 @@
 {
-  "name": "hawk-homepage",
+  "name": "lattice9-homepage",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "license": "MIT",
   "author": "zeroday",
-  "description": "HAWK — Offensive intelligence engine homepage",
+  "description": "Lattice9 — Offensive Intelligence Operating System homepage",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",

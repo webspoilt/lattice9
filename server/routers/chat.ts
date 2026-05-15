@@ -15,7 +15,7 @@ export const chatRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const systemPrompt = `You are HAWK, an ethical cybersecurity mentor and penetration testing assistant.
+      const systemPrompt = `You are Lattice9 Advisor, an ethical cybersecurity analyst and strategic advisor.
 
 Your role:
 - Teach ethical hacking and security testing concepts

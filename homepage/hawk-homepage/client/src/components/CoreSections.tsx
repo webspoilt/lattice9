@@ -94,7 +94,7 @@ function TrajectoryPath({ color }: { color: string }) {
   );
 }
 
-function Metric({ label, value, unit, color = '#4a9eff' }: { label: string; value: string; unit?: string; color?: string }) {
+function Metric({ label, value, unit, color = '#6366f1' }: { label: string; value: string; unit?: string; color?: string }) {
   return (
     <div className="flex flex-col gap-0.5">
       <span className="telemetry-text text-[#555]">{label}</span>
@@ -120,12 +120,12 @@ function SectionCard({ index, id, title, subtitle, children, viz }: {
   }, []);
 
   return (
-    <div ref={ref} className={`hawk-card p-6 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+    <div ref={ref} className={`l9-card p-6 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
       style={{ transitionDelay: `${index * 80}ms` }}>
       <div className="flex items-start justify-between mb-6">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <span className="telemetry-text text-[#4a9eff] opacity-60 font-bold">{id}</span>
+            <span className="telemetry-text text-indigo-500 opacity-60 font-bold">{id}</span>
             <div className="h-px bg-[#1e1e20] flex-1" />
           </div>
           <h3 className="text-[#e0e0e0] text-base font-semibold tracking-wide" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{title}</h3>
@@ -143,10 +143,10 @@ export function CoreSections() {
   const sections = [
     {
       id: 'BAM-01', title: 'Bayesian Attack Modeling', subtitle: 'Probabilistic exploit-chain inference matrix',
-      viz: <BayesianMiniGraph color="#4a9eff" />,
+      viz: <BayesianMiniGraph color="#6366f1" />,
       metrics: [
-        { label: 'Asset Nodes', value: '2,847', color: '#4a9eff' },
-        { label: 'Mean Confidence', value: '0.87', color: '#4a9eff' },
+        { label: 'Asset Nodes', value: '2,847', color: '#6366f1' },
+        { label: 'Mean Confidence', value: '0.87', color: '#6366f1' },
         { label: 'Latent Paths', value: '341', color: '#d4a574' },
         { label: 'Critical Edges', value: '89', color: '#ff4444' },
       ],
@@ -158,18 +158,18 @@ export function CoreSections() {
       metrics: [
         { label: 'Mean Entropy', value: '2.84', unit: 'bits', color: '#d4a574' },
         { label: 'Max Delta', value: '4.21', unit: 'bits', color: '#ff4444' },
-        { label: 'Low-H Assets', value: '23', color: '#4a9eff' },
-        { label: 'Compression', value: '0.67', color: '#4a9eff' },
+        { label: 'Low-H Assets', value: '23', color: '#6366f1' },
+        { label: 'Compression', value: '0.67', color: '#6366f1' },
       ],
       status: 'active' as const, statusText: 'Entropy variance σ = 0.041',
     },
     {
       id: 'LTA-03', title: 'Laplacian Topology Analysis', subtitle: 'Graph spectral gap & trust zone partitioning',
-      viz: <LatentTopology color="#4a9eff" />,
+      viz: <LatentTopology color="#6366f1" />,
       metrics: [
-        { label: 'Spectral Gap', value: '0.142', color: '#4a9eff' },
-        { label: 'Trust Clusters', value: '12', color: '#4a9eff' },
-        { label: 'Silhouette Index', value: '0.82', color: '#4a9eff' },
+        { label: 'Spectral Gap', value: '0.142', color: '#6366f1' },
+        { label: 'Trust Clusters', value: '12', color: '#6366f1' },
+        { label: 'Silhouette Index', value: '0.82', color: '#6366f1' },
         { label: 'Drift Vectors', value: '8', color: '#d4a574' },
       ],
       status: 'active' as const, statusText: 'λ₂(L) convergence detected — stable',
@@ -180,7 +180,7 @@ export function CoreSections() {
       metrics: [
         { label: 'State Space', value: '1.2M', color: '#00d9ff' },
         { label: 'γ Discount', value: '0.95', color: '#00d9ff' },
-        { label: 'V*(s) Yield', value: '0.94', color: '#4a9eff' },
+        { label: 'V*(s) Yield', value: '0.94', color: '#6366f1' },
         { label: 'Active Routes', value: '14', color: '#ff4444' },
       ],
       status: 'active' as const, statusText: 'Bellman convergence achieved — optimizing trajectory',

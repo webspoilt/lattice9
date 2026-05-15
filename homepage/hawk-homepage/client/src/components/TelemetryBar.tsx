@@ -20,13 +20,13 @@ export function TelemetryBar() {
     <div
       className="fixed bottom-0 left-0 right-0 z-40 h-7 flex items-center overflow-hidden"
       style={{
-        background: 'linear-gradient(0deg, rgba(10,10,11,0.98), rgba(10,10,11,0.9))',
-        borderTop: '1px solid rgba(30,30,32,0.4)',
+        background: 'linear-gradient(0deg, rgba(10,10,11,1), rgba(10,10,11,0.95))',
+        borderTop: '1px solid #1e1e20',
       }}
     >
       <div className="flex items-center h-full px-3 border-r border-[#1e1e20] mr-2 flex-shrink-0">
-        <span className="status-dot status-active mr-2" />
-        <span className="telemetry-text text-[#555]">TELEMETRY</span>
+        <span className="w-1.5 h-1.5 bg-indigo-500 mr-2" />
+        <span className="telemetry-text text-[#555]">L9_TELEMETRY</span>
       </div>
       <div className="flex-1 overflow-hidden relative">
         <div className="animate-telemetry-scroll whitespace-nowrap flex">

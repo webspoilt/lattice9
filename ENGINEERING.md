@@ -1,8 +1,8 @@
-# HAWK: Engineering Principles & Adversarial Systems Theory
+# Lattice9: Engineering Principles & Adversarial Systems Theory
 
-As HAWK evolves from a "recon tool" into an **Offensive Intelligence Infrastructure**, the engineering challenges have shifted from simple data ingestion to the complex problems of **Reasoning Quality** and **Probabilistic Truth Propagation**.
+As Lattice9 evolves from a "recon tool" into an **Offensive Intelligence Infrastructure**, the engineering challenges have shifted from simple data ingestion to the complex problems of **Reasoning Quality** and **Probabilistic Truth Propagation**.
 
-This document outlines the core principles that prevent HAWK from collapsing into "complexity theater."
+This document outlines the core principles that prevent Lattice9 from collapsing into "complexity theater."
 
 ---
 
@@ -12,7 +12,7 @@ The value of an offensive intelligence platform is measured by its ability to re
 - **Constraint**: If an abstraction does not directly improve the operator's next action, it is noise and must be pruned.
 
 ## 2. Probabilistic Ontology Discipline
-HAWK treats every finding as a hypothesis. To prevent "probabilistic cascade instability," we enforce strict ontology discipline:
+Lattice9 treats every finding as a hypothesis. To prevent "probabilistic cascade instability," we enforce strict ontology discipline:
 - **Evidence Provenance**: Every Bayesian update must be traceable to a specific evidence source (Deterministic, Statistical, or Heuristic).
 - **Variance Propagation**: We do not just track "Confidence (P)"; we track **Uncertainty ($\sigma^2$)**. If the variance is too high, the finding is labeled as a "Heuristic Guess" and is gated behind manual verification.
 
@@ -41,4 +41,4 @@ We resist the urge to build "distributed cyber philosophy engines."
 
 ---
 
-*HAWK is no longer about running tools. It is about the quality of the reasoning.*
+*Lattice9 is no longer about running tools. It is about the quality of the reasoning.*

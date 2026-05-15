@@ -25,7 +25,7 @@ interface Node {
 }
 
 const colors = {
-  blue: '#4a9eff',
+  blue: '#6366f1',
   teal: '#00d9ff',
   amber: '#d4a574',
 };
@@ -39,21 +39,21 @@ export function HeroGraph() {
   // Initialize nodes at (0,0) with minor random jitter for a stable "explosion"
   const data = useMemo(() => {
     const nodes: Node[] = [
-      { id: '0', name: 'api.hawk.io', type: 'api', val: 12, confidence: 0.95, entropy: 0.1, cluster: 0, group: 'recon' },
-      { id: '1', name: 'auth.v1', type: 'auth', val: 15, confidence: 0.98, entropy: 0.05, cluster: 2, group: 'auth' },
-      { id: '2', name: 'prod-db-cluster', type: 'cloud', val: 10, confidence: 0.92, entropy: 0.08, cluster: 3, group: 'infra' },
-      { id: '3', name: 'admin-creds', type: 'cred', val: 8, confidence: 0.4, entropy: 0.8, cluster: 2, group: 'auth' },
-      { id: '4', name: 'CVE-2024-X1', type: 'vuln', val: 9, confidence: 0.15, entropy: 0.9, cluster: 1, group: 'exploit' },
-      { id: '5', name: 'edge-lb-01', type: 'cloud', val: 7, confidence: 0.88, entropy: 0.15, cluster: 3, group: 'infra' },
-      { id: '6', name: 's3://evidence', type: 'cloud', val: 6, confidence: 0.7, entropy: 0.4, cluster: 3, group: 'infra' },
-      { id: '7', name: 'jwt-sign-key', type: 'cred', val: 8, confidence: 0.9, entropy: 0.2, cluster: 2, group: 'auth' },
-      { id: '8', name: 'ssrf-entry', type: 'vuln', val: 7, confidence: 0.3, entropy: 0.7, cluster: 1, group: 'exploit' },
-      { id: '9', name: 'internal-net', type: 'domain', val: 6, confidence: 0.9, entropy: 0.1, cluster: 0, group: 'recon' },
-      { id: '10', name: 'user-db', type: 'cloud', val: 7, confidence: 0.8, entropy: 0.3, cluster: 3, group: 'infra' },
-      { id: '11', name: 'oauth-proxy', type: 'auth', val: 6, confidence: 0.85, entropy: 0.2, cluster: 2, group: 'auth' },
-      { id: '12', name: 'shell-access', type: 'vuln', val: 9, confidence: 0.1, entropy: 0.95, cluster: 1, group: 'exploit' },
-      { id: '13', name: 'metadata-svc', type: 'api', val: 5, confidence: 0.5, entropy: 0.6, cluster: 0, group: 'recon' },
-      { id: '14', name: 'config-repo', type: 'domain', val: 4, confidence: 0.92, entropy: 0.1, cluster: 0, group: 'recon' },
+      { id: '0', name: 'api.lattice9.io', type: 'api', val: 12, confidence: 0.95, entropy: 0.1, cluster: 0, group: 'recon' },
+      { id: '1', name: 'auth.v5', type: 'auth', val: 15, confidence: 0.98, entropy: 0.05, cluster: 2, group: 'auth' },
+      { id: '2', name: 'lattice-db-01', type: 'cloud', val: 10, confidence: 0.92, entropy: 0.08, cluster: 3, group: 'infra' },
+      { id: '3', name: 'os-intelligence', type: 'cred', val: 8, confidence: 0.4, entropy: 0.8, cluster: 2, group: 'auth' },
+      { id: '4', name: 'EXPLOIT-L9-X', type: 'vuln', val: 9, confidence: 0.15, entropy: 0.9, cluster: 1, group: 'exploit' },
+      { id: '5', name: 'l9-ingress-01', type: 'cloud', val: 7, confidence: 0.88, entropy: 0.15, cluster: 3, group: 'infra' },
+      { id: '6', name: 's3://l9-evidence', type: 'cloud', val: 6, confidence: 0.7, entropy: 0.4, cluster: 3, group: 'infra' },
+      { id: '7', name: 'l9-signing-key', type: 'cred', val: 8, confidence: 0.9, entropy: 0.2, cluster: 2, group: 'auth' },
+      { id: '8', name: 'graph-reasoning', type: 'vuln', val: 7, confidence: 0.3, entropy: 0.7, cluster: 1, group: 'exploit' },
+      { id: '9', name: 'internal-mesh', type: 'domain', val: 6, confidence: 0.9, entropy: 0.1, cluster: 0, group: 'recon' },
+      { id: '10', name: 'reasoning-svc', type: 'cloud', val: 7, confidence: 0.8, entropy: 0.3, cluster: 3, group: 'infra' },
+      { id: '11', name: 'advisor-agent', type: 'auth', val: 6, confidence: 0.85, entropy: 0.2, cluster: 2, group: 'auth' },
+      { id: '12', name: 'l9-intelligence', type: 'vuln', val: 9, confidence: 0.1, entropy: 0.95, cluster: 1, group: 'exploit' },
+      { id: '13', name: 'l9-collection', type: 'api', val: 5, confidence: 0.5, entropy: 0.6, cluster: 0, group: 'recon' },
+      { id: '14', name: 'l9-exposure', type: 'domain', val: 4, confidence: 0.92, entropy: 0.1, cluster: 0, group: 'recon' },
     ].map(n => ({
       ...n,
       x: (Math.random() - 0.5) * 5,
@@ -105,7 +105,7 @@ export function HeroGraph() {
     // Halos
     ctx.beginPath();
     ctx.arc(nx, ny, size * (1.3 + pulse * 0.2), 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(74, 158, 255, ${0.03 + pulse * 0.05})`;
+    ctx.fillStyle = `rgba(99, 102, 241, ${0.03 + pulse * 0.05})`;
     ctx.fill();
 
     // Orb
@@ -132,7 +132,7 @@ export function HeroGraph() {
         graphData={data}
         backgroundColor="rgba(0,0,0,0)"
         nodeRelSize={1}
-        linkColor={() => 'rgba(74, 158, 255, 0.04)'}
+        linkColor={() => 'rgba(99, 102, 241, 0.04)'}
         linkWidth={0.5}
         nodeCanvasObject={nodeCanvasObject}
         onNodeHover={setHoverNode}
@@ -142,10 +142,10 @@ export function HeroGraph() {
 
       {/* Floating Labels */}
       <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col gap-5 pointer-events-none z-10">
-        {['PROB', 'GRAPH', 'BAYES', 'ENTROPY'].map((l) => (
+        {['L9_OS', 'INTEL', 'GRAPH', 'REASON'].map((l) => (
           <div key={l} className="flex items-center gap-3 justify-end opacity-40">
             <span className="text-[10px] font-mono text-[#555] tracking-[0.4em] uppercase">{l}</span>
-            <div className="w-1 h-1 rounded-full bg-[#4a9eff]" />
+            <div className="w-1 h-1 rounded-none bg-[#6366f1]" />
           </div>
         ))}
       </div>

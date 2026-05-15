@@ -1,146 +1,79 @@
-# HAWK — Sovereign Offensive Intelligence OS (v5.0)
+# Lattice9 — Offensive Intelligence Operating System (v5.0)
 
-> **Status:** Production-Ready Intelligence Infrastructure
-> Built to solve cognitive exhaustion and evidence decay in offensive security.
+> **Status:** Production-Grade Offensive Intelligence Infrastructure  
+> **Identity:** Graph-Native Attack Surface Reasoning
 
----
-
-# HAWK
-
-Modern reconnaissance is fundamentally broken. Fragmentation, noise, and ephemeral states lead to "observational debris"—millions of lines of unvalidated garbage that operators are expected to manually compress.
-
-**HAWK v5.0** is the evolution of offensive security from *tool execution* toward *stateful infrastructure reasoning*.
-
-It is no longer just a scanner; it is a **Sovereign Offensive Intelligence Operating System** that treats reconnaissance as a persistent graph problem.
-
-Instead of asking "What vulnerabilities exist?", HAWK asks:
-- "What relationships matter?"
-- "What evidence converges?"
-- "What infrastructure behaves anomalously?"
-- "How has the attack surface mutated since the last run?"
+Lattice9 is a stateful, graph-driven intelligence engine designed for complex infrastructure analysis and attack-path synthesis. It moves beyond traditional vulnerability scanning into the realm of **Offensive Systems Observability**.
 
 ---
 
-# Core Philosophy: Decision Compression
+## 🏗️ Architecture
 
-The purpose of HAWK is not to generate more data. It is to compress massive observation sets into:
-- **High-Confidence Exploit Narratives**
-- **Infrastructure Relationships**
-- **Trust-Boundary Models**
-- **Probabilistic Attack Paths**
-- **Operator-Relevant Intelligence**
+Lattice9 is built on a high-density, stateful backend designed for reliability and evidence provenance.
 
----
-
-# 🏗️ Architectural Model (Sovereign OS)
-
-```ascii
-                    [ ENGAGEMENT ]
-                          |
-           +--------------+--------------+
-           |              |              |
-    [ SCOPE ENGINE ] [ AUTH GATE ] [ STATE MACHINE ]
-           |              |              |
-           +--------------+--------------+
-                          |
-                  [ COLLECTION RUNS ]
-                          |
-           +--------------+--------------+
-           |                             |
-    [ RECON LAYER ]               [ TOOL EXECUTORS ]
-           |                             |
-           +--------------+--------------+
-                          |
-                 [ EVIDENCE PROVENANCE ]
-               (SHA-256 Immutable Artifacts)
-                          |
-           +--------------+--------------+
-           |                             |
-   [ POSTGRES: STATE ]          [ NEO4J: GRAPH ]
-   (Normalized Entities)        (Temporal Reasoning)
-           |                             |
-           +--------------+--------------+
-                          |
-               [ ANALYST WORKBENCH ]
-             (Reasoning Traces & Diffs)
-```
+- **Lattice9 Core**: The centralized orchestration layer managing engagement lifecycles and state transitions.
+- **Graph Engine (Neo4j)**: A persistent graph layer that models infrastructure relationships, trust boundaries, and probabilistic attack paths.
+- **Intelligence Layer (PostgreSQL)**: Normalized entity storage with temporal tracking and versioned exposure snapshots.
+- **Evidence Vault (MinIO/S3)**: Immutable artifact storage ensuring every intelligence claim is backed by reproducible technical proof.
 
 ---
 
-# 🧠 Intelligence Engine
+## 🧠 Graph Intelligence & Reasoning
 
-### 1. Graph-Native Reasoning (Neo4j)
-Infrastructure is not a list; it is a relationship. Assets exist inside trust systems, shared auth domains, and deployment pipelines. HAWK uses **Neo4j** to compute:
-- **Graph Centrality**: Identifying chokepoint assets.
-- **Spectral Partitions**: Mapping infrastructure segmentation.
-- **Attack-Path Diffusion**: Probabilistically calculating how a single compromise spreads.
+Most reconnaissance pipelines treat infrastructure as flat lists. **Lattice9 treats infrastructure as a topology.**
 
-### 2. Bayesian Evidence Fusion
-A finding is a hypothesis. HAWK uses Bayesian propagation to determine the probability of an exploit:
-```math
-P(H|E)=\frac{P(E|H)\cdot P(H)}{P(E)}
-```
-Confidence decays or converges based on cross-tool evidence, headers, and behavioral fingerprints.
+### Attack-Path Synthesis
+Lattice9 uses graph-theoretic algorithms (Centrality, Spectral Partitioning) to identify chokepoints and lateral movement opportunities. By projecting attack chains onto a persistent graph, the engine can predict exploit diffusion across trust boundaries.
 
-### 3. Temporal Drift Tracking
-Infrastructure mutates. HAWK stores historical graph snapshots to identify:
-- **Attack Surface Mutation**: What new assets appeared?
-- **Entropy Spikes**: Which systems are behaving unstable compared to baseline?
-- **Evidence Decay**: When does a previously validated finding become stale?
+### Temporal Exposure Tracking
+Infrastructure is temporally unstable. Lattice9 captures periodic graph snapshots to monitor **Attack Surface Drift**. It identifies:
+- New asset emergence
+- Entropy spikes in service behavior
+- Trust boundary decay
+- Historical vulnerability diffing
 
 ---
 
-# 🖥️ The Analyst Workbench
+## 🛠️ Operational Workflows
 
-The HAWK Dashboard has been replaced by a high-density **Analyst Workbench** designed for adversarial systems observability.
+Lattice9 prioritizes **Decision Compression**. The objective is to reduce massive telemetry sets into actionable intelligence narratives.
 
-- **Reasoning Traces**: Every major inference answers *why* the engine believes a claim, mapping back to raw evidence.
-- **Immutable Evidence Browser**: Audit the SHA-256 hashed proof behind every vulnerability.
-- **Decision Compression Canvas**: Visual priority queue of attack paths ranked by graph centrality and feasibility.
+### Evidence Lineage
+The system maintains a strict chain of custody for all findings. A vulnerability is not an AI-synthesized claim; it is a hypothesis validated against immutable evidence artifacts (SHA-256 integrity).
 
----
-
-# 🚀 Infrastructure Requirements
-
-HAWK v5.0 is stateful. It requires:
-- **PostgreSQL**: Unified source of truth for normalized entities and findings.
-- **Neo4j**: Graph database for relational reasoning.
-- **Redis**: High-throughput task queueing and collection orchestration.
-- **MinIO/S3**: Immutable artifact storage for evidence provenance.
+### Analyst Workbench (Operator Console)
+The Lattice9 Operator Console provides a dense, tactical environment for intelligence analysis:
+- **Reasoning Traces**: Full logical audit trails for every engine conclusion.
+- **Topological Visualizations**: High-fidelity infrastructure maps.
+- **Temporal Diffs**: Analysis of attack surface evolution over time.
 
 ---
 
-# 🛠️ Running the OS
+## 🚀 Deployment
 
-### 1. Backend Infrastructure
+Lattice9 is designed for enterprise-grade self-hosting.
+
+### Infrastructure Stack
+- **PostgreSQL**: Normalized state storage.
+- **Neo4j**: Graph-native reasoning.
+- **Redis**: Collection orchestration and task queueing.
+- **Python Intelligence Worker**: Async reasoning engine.
+
+### Quick Start
 ```bash
 docker-compose up -d
-```
-
-### 2. Intelligence Engine
-```bash
-cd server-py
-pip install -r requirements.txt
-python main.py
-```
-
-### 3. Workbench Interface
-```bash
-pnpm install
-pnpm run dev
+cd server-py && pip install -r requirements.txt
+pnpm install && pnpm run dev
 ```
 
 ---
 
-# 📂 Project Roadmap
-- [x] v5.0: Stateful Graph-Native Architecture
-- [x] Analyst Workbench & Evidence Provenance
-- [ ] Autonomous Exploit Validation
-- [ ] Episodic Infrastructure Memory
-- [ ] Latent-Space Infrastructure Embeddings
+## 📂 Project Identity
+- **Lattice9 Graph Engine**: Probabilistic topology reasoning.
+- **Lattice9 Intelligence Layer**: Stateful entity normalization.
+- **Lattice9 Operator Console**: Tactical analyst environment.
 
 ---
 
 **License:** MIT  
-**Status:** Sovereign Offensive Intelligence OS  
-**Author:** Built for operators who care about ground truth over observational debris.
+**Author:** Built by security engineers for operators who prioritize signal over noise.

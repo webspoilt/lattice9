@@ -25,10 +25,10 @@ export const appRouter = router({
   }),
   
   engagements: engagementsRouter,
-  recon: reconRouter,
-  vulnerability: vulnerabilityRouter,
+  collection: reconRouter,
+  exposure: vulnerabilityRouter,
   reports: reportsRouter,
-  chat: chatRouter,
+  advisor: chatRouter,
   owasp: owaspRouter,
 });
 

@@ -1,5 +1,5 @@
 /**
- * HAWK Intelligence Normalized Schema
+ * Lattice9 Intelligence Normalized Schema
  * 
  * We move from "Tool Output" to "Intelligence Entities".
  * An IntelligenceEntity is an abstract object (e.g., a "Server") 

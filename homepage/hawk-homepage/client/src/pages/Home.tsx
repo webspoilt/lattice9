@@ -11,7 +11,7 @@ import { AdversarialSlopeGraph } from '@/components/AdversarialSlopeGraph';
 
 const MOCK_INTELLIGENCE = {
   entities: [
-    { id: '1', label: 'prod-api.hawk.io', type: 'asset' },
+    { id: '1', label: 'prod-api.lattice9.io', type: 'asset' },
     { id: '2', label: 'admin-console', type: 'asset' },
     { id: '3', label: 'svc_deployer', type: 'identity' },
     { id: '4', label: 'CVE-2024-JWT-BYPASS', type: 'vuln' },
@@ -29,7 +29,7 @@ export default function Home() {
   const [globalEntropy, setGlobalEntropy] = useState(0.2);
 
   useEffect(() => {
-    console.log("HAWK_INIT: Cybernetic Intelligence Interface active.");
+    console.log("LATTICE9_INIT: Offensive Intelligence Interface active.");
     
     // Simulate global entropy fluctuations
     const interval = setInterval(() => {
@@ -56,7 +56,7 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] text-[#e0e0e0] selection:bg-[#4a9eff]/20">
+    <div className="min-h-screen bg-[#0a0a0b] text-[#e0e0e0] selection:bg-indigo-500/20">
 
       {/* Background Spectral Field (Entropy Simulation) */}
       <BackgroundField entropy={globalEntropy} />
@@ -65,19 +65,19 @@ export default function Home() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#1e1e20] bg-[#0a0a0b]/80 backdrop-blur-md">
         <div className="container flex items-center justify-between h-14">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-sm bg-[#4a9eff] flex items-center justify-center">
+            <div className="w-7 h-7 rounded-none bg-indigo-600 flex items-center justify-center">
               <Radar className="w-4 h-4 text-[#0a0a0b]" />
             </div>
-            <span className="text-sm font-bold tracking-[0.15em] uppercase" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>HAWK</span>
-            <span className="hidden sm:inline text-[10px] font-mono text-[#444] ml-2 tracking-widest lowercase">system.intelligence_v4.1</span>
+            <span className="text-sm font-bold tracking-[0.15em] uppercase" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Lattice9</span>
+            <span className="hidden sm:inline text-[10px] font-mono text-[#444] ml-2 tracking-widest lowercase">system.intelligence_v5.0.0</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
             {['Topology', 'Entropy', 'Inference'].map((l) => (
-              <a key={l} href={`#${l.toLowerCase()}`} className="text-[10px] font-mono text-[#555] hover:text-[#4a9eff] transition-colors tracking-widest uppercase">{l}</a>
+              <a key={l} href={`#${l.toLowerCase()}`} className="text-[10px] font-mono text-[#555] hover:text-indigo-400 transition-colors tracking-widest uppercase">{l}</a>
             ))}
           </div>
-          <a href="https://github.com/webspoilt/hawk-pentest-platform" target="_blank" rel="noopener noreferrer">
-            <Button size="sm" className="bg-[#4a9eff] text-[#0a0a0b] hover:bg-[#3d8ce6] text-[10px] font-mono tracking-widest h-7 px-4 lowercase">deploy_node</Button>
+          <a href="https://github.com/webspoilt/lattice9" target="_blank" rel="noopener noreferrer">
+            <Button size="sm" className="bg-indigo-600 text-white hover:bg-indigo-500 text-[10px] font-mono tracking-widest h-7 px-4 rounded-none lowercase">deploy_node</Button>
           </a>
         </div>
       </nav>
@@ -91,32 +91,46 @@ export default function Home() {
             <div className="lg:col-span-5 space-y-10">
               <motion.div className="space-y-6" variants={stagger} initial="hidden" animate="visible">
                 <motion.div className="flex items-center gap-3" variants={fadeUp}>
-                  <div className="h-px w-12 bg-[#4a9eff]/30" />
-                  <span className="text-[10px] font-mono text-[#4a9eff] tracking-[0.4em] uppercase">Intelligence_Reasoning_Active</span>
+                  <div className="h-px w-12 bg-indigo-500/30" />
+                  <span className="text-[10px] font-mono text-indigo-400 tracking-[0.4em] uppercase">Intelligence_Reasoning_Active</span>
                 </motion.div>
                 
                 <motion.h1 className="text-5xl lg:text-7xl font-bold leading-[0.95] tracking-tighter lowercase" style={{ fontFamily: "'IBM Plex Mono', monospace" }} variants={fadeUp}>
                   Reasoning <br />
-                  <span className="text-[#4a9eff]">Over</span> <br />
+                  <span className="text-indigo-500">Over</span> <br />
                   Orchestration.
                 </motion.h1>
 
                 <motion.p className="text-base leading-relaxed text-[#666] max-w-md font-light" variants={fadeUp}>
-                  HAWK generates normalized attack surface graphs using probabilistic inference. We solve for exploitability by deriving truth from high-entropy adversarial noise.
+                  Lattice9 generates normalized attack surface graphs using probabilistic inference. We solve for exploitability by deriving truth from high-entropy adversarial noise.
                 </motion.p>
 
                 <motion.div className="flex items-center gap-4 pt-4" variants={fadeUp}>
-                  <Button className="bg-[#4a9eff] text-[#0a0a0b] hover:bg-[#3d8ce6] gap-2 text-xs font-mono tracking-wider h-11 px-6">
+                  <Button className="bg-indigo-600 text-white hover:bg-indigo-500 gap-2 text-xs font-mono tracking-wider h-11 px-6 rounded-none">
                     Initialize Engine <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
-                  <Button variant="outline" className="border-[#2a2a2d] text-[#888] hover:bg-[#151517] text-xs font-mono tracking-wider h-11 px-6">Documentation</Button>
+                  <Button variant="outline" className="border-[#2a2a2d] text-[#888] hover:bg-[#151517] text-xs font-mono tracking-wider h-11 px-6 rounded-none">Documentation</Button>
                 </motion.div>
               </motion.div>
             </div>
 
             <div className="lg:col-span-7">
               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1] }}>
-                <IntelligenceNavigator data={MOCK_INTELLIGENCE} />
+                <IntelligenceNavigator data={{
+                  entities: [
+                    { id: '1', label: 'prod-api.lattice9.io', type: 'asset' },
+                    { id: '2', label: 'admin-console', type: 'asset' },
+                    { id: '3', label: 'svc_deployer', type: 'identity' },
+                    { id: '4', label: 'CVE-2024-JWT-BYPASS', type: 'vuln' },
+                    { id: '5', label: 'SSO-Gateway', type: 'service' },
+                  ],
+                  inferences: [
+                    { sourceId: '1', targetEntityId: '5', type: 'contains' },
+                    { sourceId: '5', targetEntityId: '4', type: 'exploits' },
+                    { sourceId: '4', targetEntityId: '3', type: 'identifies' },
+                    { sourceId: '3', targetEntityId: '2', type: 'auths' },
+                  ]
+                }} />
               </motion.div>
             </div>
           </div>
@@ -124,22 +138,22 @@ export default function Home() {
 
         {/* Side annotations */}
         <div className="absolute left-4 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4 pointer-events-none">
-          <div className="telemetry-text text-[#2a2a2d]" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>ATTACK_SURFACE_TOPOLOGY_v3.5.1</div>
+          <div className="telemetry-text text-[#2a2a2d]" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>LATTICE9_SURFACE_TOPOLOGY_v5.0.0</div>
         </div>
         <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-3 pointer-events-none">
           {['PROB', 'GRAPH', 'BAYES', 'ENTROPY'].map((l, i) => (
             <div key={l} className="flex items-center gap-1.5 justify-end">
               <span className="telemetry-text text-[#2a2a2d]">{l}</span>
-              <div className="w-1 h-1 rounded-full" style={{ background: ['#4a9eff', '#4a9eff', '#d4a574', '#4a9eff'][i], opacity: 0.4 }} />
+              <div className="w-1 h-1 rounded-none" style={{ background: ['#6366f1', '#6366f1', '#d4a574', '#6366f1'][i], opacity: 0.4 }} />
             </div>
           ))}
         </div>
 
         {/* Node legend */}
         <div className="absolute bottom-16 left-6 hidden md:flex items-center gap-5 pointer-events-none z-10">
-          {[{ l: 'Recon', c: '#4a9eff' }, { l: 'Exploit', c: '#d4a574' }, { l: 'Auth', c: '#00d9ff' }, { l: 'Infra', c: '#8c8ca0' }].map((n) => (
+          {[{ l: 'Recon', c: '#6366f1' }, { l: 'Exploit', c: '#d4a574' }, { l: 'Auth', c: '#00d9ff' }, { l: 'Infra', c: '#8c8ca0' }].map((n) => (
             <div key={n.l} className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full" style={{ background: n.c, opacity: 0.6 }} />
+              <div className="w-2 h-2 rounded-none" style={{ background: n.c, opacity: 0.6 }} />
               <span className="telemetry-text text-[#555]">{n.l.toUpperCase()}</span>
             </div>
           ))}
@@ -151,31 +165,31 @@ export default function Home() {
             <motion.div className="max-w-xl space-y-10" variants={stagger} initial="hidden" animate="visible">
               <motion.div className="space-y-6" variants={fadeUp}>
                 <div className="flex items-center gap-3">
-                  <div className="h-px w-12 bg-[#4a9eff]/30" />
-                  <span className="text-[10px] font-mono text-[#4a9eff] tracking-[0.4em] uppercase">Adversarial Systems Theory</span>
+                  <div className="h-px w-12 bg-indigo-500/30" />
+                  <span className="text-[10px] font-mono text-indigo-400 tracking-[0.4em] uppercase">Adversarial Systems Theory</span>
                 </div>
                 <h1 className="text-[clamp(2.5rem,6vw,4rem)] font-bold leading-[1.05] tracking-tight text-[#f0f0f0] lowercase" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
                   Adversarial Intelligence <br />
-                  <span className="text-[#4a9eff]">Compression.</span>
+                  <span className="text-indigo-500">Compression.</span>
                 </h1>
                 <p className="text-base leading-relaxed text-[#666] max-w-lg lowercase font-light" style={{ fontFamily: "'Inter', sans-serif" }}>
                   A graph-native probabilistic reasoning engine for the automated discovery of adversarial system states. Solving for intelligence yield at the edge of computational observability.
                 </p>
               </motion.div>
               <motion.div className="flex items-center gap-4" variants={fadeUp}>
-                <a href="https://github.com/webspoilt/hawk-pentest-platform" target="_blank" rel="noopener noreferrer">
-                  <Button className="bg-[#4a9eff] text-[#0a0a0b] hover:bg-[#3d8ce6] gap-2 text-xs font-mono tracking-wider h-10 px-5">
+                <a href="https://github.com/webspoilt/lattice9" target="_blank" rel="noopener noreferrer">
+                  <Button className="bg-indigo-600 text-white hover:bg-indigo-500 gap-2 text-xs font-mono tracking-wider h-10 px-5 rounded-none">
                     View Repository <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </a>
                 <a href="#architecture">
-                  <Button variant="outline" className="border-[#2a2a2d] text-[#888] hover:bg-[#151517] hover:text-[#ccc] text-xs font-mono tracking-wider h-10 px-5">Architecture</Button>
+                  <Button variant="outline" className="border-[#2a2a2d] text-[#888] hover:bg-[#151517] hover:text-[#ccc] text-xs font-mono tracking-wider h-10 px-5 rounded-none">Architecture</Button>
                 </a>
               </motion.div>
               <motion.div className="flex items-center gap-6 pt-6 border-t border-[#1e1e20]" variants={fadeUp}>
                 {[{ l: 'Confidence', v: '0.982' }, { l: 'Variance', v: '±0.04' }, { l: 'Paths', v: '3' }, { l: 'Nodes', v: '15' }].map((m) => (
                   <div key={m.l} className="space-y-1">
-                    <div className="text-xs font-mono text-[#4a9eff] tracking-wider">{m.v}</div>
+                    <div className="text-xs font-mono text-indigo-400 tracking-wider">{m.v}</div>
                     <div className="text-[9px] font-mono text-[#555] uppercase tracking-[0.2em]">{m.l}</div>
                   </div>
                 ))}
@@ -194,15 +208,15 @@ export default function Home() {
           <motion.div className="space-y-16" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={stagger}>
             <motion.div className="max-w-lg space-y-4" variants={fadeUp}>
               <div className="flex items-center gap-3 mb-2">
-                <div className="h-px w-6 bg-[#4a9eff]/30" />
-                <span className="text-[9px] font-mono text-[#4a9eff] tracking-[0.3em] uppercase">Architecture</span>
+                <div className="h-px w-6 bg-indigo-500/30" />
+                <span className="text-[9px] font-mono text-indigo-400 tracking-[0.3em] uppercase">Architecture</span>
               </div>
               <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>How the engine reasons.</h2>
               <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
-                HAWK models every target as a graph G=(V,E). Intelligence flows through the topology via Bayesian inference and spectral partitioning.
+                Lattice9 models every target as a graph G=(V,E). Intelligence flows through the topology via Bayesian inference and spectral partitioning.
               </p>
             </motion.div>
-            <motion.div className="p-8 rounded border border-[#1e1e20] bg-[#0e0e10] overflow-x-auto shadow-inner" variants={fadeUp}>
+            <motion.div className="p-8 rounded-none border border-[#1e1e20] bg-[#0e0e10] overflow-x-auto shadow-inner" variants={fadeUp}>
               <pre className="text-[11px] font-mono text-[#555] leading-loose whitespace-pre">
 {`       [ TARGET_SYSTEM ]
            │
@@ -232,10 +246,10 @@ export default function Home() {
                 { s: '03', t: 'Graph Fusion', d: 'Map evidence onto the asset graph. Calculate centrality-weighted risk.' },
                 { s: '04', t: 'Decision Compression', d: 'Synthesize all intelligence into the top 3 attack paths.' },
               ].map((p, i) => (
-                <motion.div key={p.s} className="p-5 rounded border border-[#1e1e20] bg-[#0e0e10] hover:border-[#4a9eff]/20 transition-colors group"
+                <motion.div key={p.s} className="p-5 rounded-none border border-[#1e1e20] bg-[#0e0e10] hover:border-indigo-500/20 transition-colors group"
                   custom={i} variants={fadeIn(i)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                  <div className="text-[10px] font-mono text-[#4a9eff] tracking-[0.3em] mb-3">{p.s}</div>
-                  <h3 className="text-sm font-bold mb-2 group-hover:text-[#4a9eff] transition-colors" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{p.t}</h3>
+                  <div className="text-[10px] font-mono text-indigo-400 tracking-[0.3em] mb-3">{p.s}</div>
+                  <h3 className="text-sm font-bold mb-2 group-hover:text-indigo-400 transition-colors" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{p.t}</h3>
                   <p className="text-xs text-[#666] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>{p.d}</p>
                 </motion.div>
               ))}
@@ -255,23 +269,23 @@ export default function Home() {
           <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
             <motion.div className="space-y-6" variants={fadeUp}>
               <div className="flex items-center gap-3 mb-2">
-                <div className="h-px w-6 bg-[#4a9eff]/30" />
-                <span className="text-[9px] font-mono text-[#4a9eff] tracking-[0.3em] uppercase">PREDICTIVE_INFERENCE</span>
+                <div className="h-px w-6 bg-indigo-500/30" />
+                <span className="text-[9px] font-mono text-indigo-400 tracking-[0.3em] uppercase">PREDICTIVE_INFERENCE</span>
               </div>
               <h2 className="text-3xl font-bold tracking-tight" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Derivative Analysis.</h2>
               <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
-                HAWK calculates the rate of change across multiple adversarial metrics. By analyzing the slope of trust decay and recon yield, we can predict system compromise before it manifests in deterministic logs.
+                Lattice9 calculates the rate of change across multiple adversarial metrics. By analyzing the slope of trust decay and recon yield, we can predict system compromise before it manifests in deterministic logs.
               </p>
               <div className="space-y-4 pt-4">
                 <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded border border-[#1e1e20] bg-[#0e0e10] flex items-center justify-center text-[10px] text-[#4a9eff] font-mono">01</div>
+                  <div className="w-8 h-8 rounded-none border border-[#1e1e20] bg-[#0e0e10] flex items-center justify-center text-[10px] text-indigo-400 font-mono">01</div>
                   <div>
                     <h4 className="text-xs font-bold text-[#aaa] mb-1">Direct Slope Labeling</h4>
                     <p className="text-[10px] text-[#555]">Industry-standard visualization with immediate rate-of-change visibility.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded border border-[#1e1e20] bg-[#0e0e10] flex items-center justify-center text-[10px] text-[#4a9eff] font-mono">02</div>
+                  <div className="w-8 h-8 rounded-none border border-[#1e1e20] bg-[#0e0e10] flex items-center justify-center text-[10px] text-indigo-400 font-mono">02</div>
                   <div>
                     <h4 className="text-xs font-bold text-[#aaa] mb-1">KaTeX Formula Support</h4>
                     <p className="text-[10px] text-[#555]">High-fidelity mathematical typesetting for exact derivative expressions.</p>
@@ -292,18 +306,18 @@ export default function Home() {
           <motion.div className="space-y-16" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={stagger}>
             <motion.div className="max-w-lg space-y-4" variants={fadeUp}>
               <div className="flex items-center gap-3 mb-2">
-                <div className="h-px w-6 bg-[#4a9eff]/30" />
-                <span className="text-[9px] font-mono text-[#4a9eff] tracking-[0.3em] uppercase">SYSTEM.DUMP</span>
+                <div className="h-px w-6 bg-indigo-500/30" />
+                <span className="text-[9px] font-mono text-indigo-400 tracking-[0.3em] uppercase">SYSTEM.DUMP</span>
               </div>
-              <h2 className="text-xl font-bold tracking-tight text-[#888]" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>REASONING_TRACE_v4.1</h2>
+              <h2 className="text-xl font-bold tracking-tight text-[#888]" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>REASONING_TRACE_v5.0.0</h2>
               <p className="text-xs text-[#555] font-mono leading-relaxed max-w-sm">
-                Every inference is backed by an evidence chain. HAWK propagates confidence through the graph to minimize false positives.
+                Every inference is backed by an evidence chain. Lattice9 propagates confidence through the graph to minimize false positives.
               </p>
             </motion.div>
 
-            <div className="relative min-h-[600px] border border-[#1e1e20] bg-[#000000] p-8 overflow-hidden shadow-2xl">
+            <div className="relative min-h-[600px] border border-[#1e1e20] bg-[#000000] p-8 overflow-hidden shadow-2xl rounded-none">
               <PretextLog 
-                color="#4a9eff"
+                color="#6366f1"
                 className="opacity-80"
                 content={`[SYSTEM_INIT] Initializing adversarial systems theory engine... OK
 [STATUS] Project status: ESCAPING_CONTAINMENT
@@ -317,7 +331,7 @@ export default function Home() {
 
 [STREAM] Measuring Shannon Entropy across trust zones
       H(X) = −Σ p(xᵢ) log₂ p(xᵢ)
-      Alert: Transitive confidence cascade instability detected at 0x4A9EFF.
+      Alert: Transitive confidence cascade instability detected at 0x6366F1.
       Stabilizing ontology via Spectral Laplacian... OK.
 
 [EVOLUTION] Drift toward systems-level cyber observability
@@ -332,7 +346,7 @@ export default function Home() {
               <div className="absolute inset-0 pointer-events-none overflow-hidden mix-blend-screen opacity-30">
                 {[
                   { text: '0x00A1: INTELLIGENCE_COMPRESSION_RATIO = 333,333:1', top: '15%', right: '10%', rotate: '0deg' },
-                  { text: '0x00F3: ADVERSARIAL_SYSTEMS_THEORY_v4.1', bottom: '20%', left: '15%', rotate: '0deg' },
+                  { text: '0x00F3: ADVERSARIAL_SYSTEMS_THEORY_v5.0.0', bottom: '20%', left: '15%', rotate: '0deg' },
                   { text: '0x01A4: REASONING_QUALITY > RUNNING_TOOLS', top: '60%', right: '20%', rotate: '0deg' },
                   { text: '0x02B1: PROBABILISTIC_TRUTH_PROPAGATION', bottom: '40%', right: '30%', rotate: '0deg' },
                 ].map((f, i) => (
@@ -353,11 +367,11 @@ export default function Home() {
           <motion.div className="max-w-lg space-y-6" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
             <motion.div variants={fadeUp}>
               <h2 className="text-2xl font-bold tracking-tight mb-3" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Built for operators who care about ground truth.</h2>
-              <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>HAWK is an experimental intelligence organism. Open source, graph-native, and mathematically constrained.</p>
+              <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>Lattice9 is an experimental intelligence organism. Open source, graph-native, and mathematically constrained.</p>
             </motion.div>
             <motion.div className="flex gap-4" variants={fadeUp}>
-              <a href="https://github.com/webspoilt/hawk-pentest-platform" target="_blank" rel="noopener noreferrer">
-                <Button className="bg-[#4a9eff] text-[#0a0a0b] hover:bg-[#3d8ce6] gap-2 text-xs font-mono tracking-wider h-10 px-5">View on GitHub <ArrowRight className="w-3.5 h-3.5" /></Button>
+              <a href="https://github.com/webspoilt/lattice9" target="_blank" rel="noopener noreferrer">
+                <Button className="bg-indigo-600 text-white hover:bg-indigo-500 gap-2 text-xs font-mono tracking-wider h-10 px-5 rounded-none">View on GitHub <ArrowRight className="w-3.5 h-3.5" /></Button>
               </a>
             </motion.div>
           </motion.div>
@@ -369,13 +383,13 @@ export default function Home() {
         <div className="container">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-5 h-5 rounded-sm bg-[#4a9eff] flex items-center justify-center"><Radar className="w-3 h-3 text-[#0a0a0b]" /></div>
-              <span className="text-xs font-mono text-[#555]">HAWK — Offensive Intelligence Engine</span>
+              <div className="w-5 h-5 rounded-none bg-indigo-600 flex items-center justify-center"><Radar className="w-3 h-3 text-[#0a0a0b]" /></div>
+              <span className="text-xs font-mono text-[#555]">Lattice9 — Offensive Intelligence Engine</span>
             </div>
             <div className="flex items-center gap-6">
-              <a href="https://github.com/webspoilt/hawk-pentest-platform" className="text-[10px] font-mono text-[#555] hover:text-[#888] transition-colors tracking-wider uppercase">GitHub</a>
+              <a href="https://github.com/webspoilt/lattice9" className="text-[10px] font-mono text-[#555] hover:text-[#888] transition-colors tracking-wider uppercase">GitHub</a>
               <span className="text-[10px] font-mono text-[#333]">by zeroday</span>
-              <span className="text-[10px] font-mono text-[#333]">v4.1</span>
+              <span className="text-[10px] font-mono text-[#333]">v5.0.0</span>
             </div>
           </div>
         </div>

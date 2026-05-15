@@ -63,7 +63,7 @@ const MathItem = memo(({ annotation }: { annotation: MathAnnotation }) => {
       }}
       className="absolute whitespace-nowrap"
       style={{ 
-        color: annotation.color || '#4a9eff',
+        color: annotation.color || '#6366f1',
         textShadow: '0 0 10px rgba(0,0,0,0.5)',
         left: 0,
         top: 0,
