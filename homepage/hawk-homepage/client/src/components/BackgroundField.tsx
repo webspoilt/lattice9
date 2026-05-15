@@ -94,7 +94,17 @@ function Field({ entropy }: { entropy: number }) {
 export function BackgroundField({ entropy = 0.2 }: { entropy?: number }) {
   return (
     <div className="absolute inset-0 z-0">
-      <Canvas camera={{ position: [0, 0, 1] }}>
+      <Canvas 
+        camera={{ position: [0, 0, 1] }}
+        dpr={[1, 1.5]} // Limit DPR to 1.5 to save RAM/GPU on high-res displays
+        gl={{ 
+          antialias: false, // Background noise doesn't need antialiasing
+          powerPreference: "high-performance",
+          alpha: false, // No transparency needed for the background mesh container
+          stencil: false,
+          depth: false
+        }}
+      >
         <Field entropy={entropy} />
       </Canvas>
     </div>

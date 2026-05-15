@@ -15,6 +15,18 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
+    target: "esnext", // Leverage modern browser features for better performance
+    minify: "esbuild",
+    cssMinify: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-graphics': ['three', 'd3', 'react-force-graph-2d'],
+          'vendor-utils': ['framer-motion', 'katex'],
+        }
+      }
+    }
   },
   server: {
     port: 3000,

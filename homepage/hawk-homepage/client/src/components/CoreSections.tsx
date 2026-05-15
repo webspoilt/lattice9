@@ -48,8 +48,10 @@ function SpectralEntropy({ color }: { color: string }) {
     <svg viewBox="0 0 90 45" className="w-full h-full">
       {bars.map((v, i) => (
         <motion.rect 
-          key={i} x={5 + i * 8.5} y={40 - v * 35} width={4} height={v * 35} 
+          key={i} x={5 + i * 8.5} y={40 - v * 35} width={4} 
           fill={color} fillOpacity={0.1 + v * 0.3} rx={0.5}
+          style={{ willChange: 'height' }}
+          initial={{ height: v * 35 }}
           animate={{ height: [v * 35, (v * 0.8) * 35, v * 35] }}
           transition={{ duration: 2 + i, repeat: Infinity }}
         />
@@ -80,6 +82,8 @@ function TrajectoryPath({ color }: { color: string }) {
       <path d="M 5 40 Q 32 5 59 40" stroke={color} strokeWidth="0.5" fill="none" strokeOpacity="0.3" />
       {Array.from({ length: 3 }).map((_, i) => (
         <motion.circle key={i} r={1.5} fill={color}
+          style={{ willChange: 'cx, cy, opacity' }}
+          initial={{ cx: 5, cy: 40, opacity: 0 }}
           animate={{ cx: [5, 32, 59], cy: [40, 5, 40], opacity: [0, 1, 0] }}
           transition={{ duration: 3, delay: i * 1, repeat: Infinity, ease: 'linear' }}
         />

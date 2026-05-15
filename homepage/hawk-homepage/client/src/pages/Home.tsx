@@ -7,6 +7,7 @@ import { TelemetryBar } from '@/components/TelemetryBar';
 import { CoreSections } from '@/components/CoreSections';
 import { PretextLog } from '@/components/PretextLog';
 import { BackgroundField } from '@/components/BackgroundField';
+import { AdversarialSlopeGraph } from '@/components/AdversarialSlopeGraph';
 
 export default function Home() {
   const [globalEntropy, setGlobalEntropy] = useState(0.2);
@@ -197,6 +198,43 @@ export default function Home() {
       <div id="modules">
         <CoreSections />
       </div>
+
+      {/* Predictive Intelligence Section */}
+      <section id="intelligence" className="py-24 border-t border-[#1a1a1c] bg-[#0a0a0b]">
+        <div className="container">
+          <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
+            <motion.div className="space-y-6" variants={fadeUp}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-px w-6 bg-[#4a9eff]/30" />
+                <span className="text-[9px] font-mono text-[#4a9eff] tracking-[0.3em] uppercase">PREDICTIVE_INFERENCE</span>
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Derivative Analysis.</h2>
+              <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
+                HAWK calculates the rate of change across multiple adversarial metrics. By analyzing the slope of trust decay and recon yield, we can predict system compromise before it manifests in deterministic logs.
+              </p>
+              <div className="space-y-4 pt-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded border border-[#1e1e20] bg-[#0e0e10] flex items-center justify-center text-[10px] text-[#4a9eff] font-mono">01</div>
+                  <div>
+                    <h4 className="text-xs font-bold text-[#aaa] mb-1">Direct Slope Labeling</h4>
+                    <p className="text-[10px] text-[#555]">Industry-standard visualization with immediate rate-of-change visibility.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded border border-[#1e1e20] bg-[#0e0e10] flex items-center justify-center text-[10px] text-[#4a9eff] font-mono">02</div>
+                  <div>
+                    <h4 className="text-xs font-bold text-[#aaa] mb-1">KaTeX Formula Support</h4>
+                    <p className="text-[10px] text-[#555]">High-fidelity mathematical typesetting for exact derivative expressions.</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            <motion.div variants={fadeUp}>
+              <AdversarialSlopeGraph />
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
 
       {/* Operational Log */}
       <section id="research" className="py-24 border-t border-[#1a1a1c] relative overflow-hidden bg-[#050506]">

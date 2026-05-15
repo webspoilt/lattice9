@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -30,7 +30,7 @@ export function MathAnnotations({ annotations, containerRef }: MathAnnotationsPr
   );
 }
 
-function MathItem({ annotation }: { annotation: MathAnnotation }) {
+const MathItem = memo(({ annotation }: { annotation: MathAnnotation }) => {
   const [html, setHtml] = useState('');
 
   useEffect(() => {
@@ -51,20 +51,29 @@ function MathItem({ annotation }: { annotation: MathAnnotation }) {
       animate={{ 
         opacity: annotation.opacity, 
         scale: annotation.scale || 1,
-        x: annotation.x,
-        y: annotation.y 
+        x: [annotation.x, annotation.x + (Math.random() - 0.5) * 4, annotation.x],
+        y: [annotation.y, annotation.y + (Math.random() - 0.5) * 4, annotation.y] 
       }}
       exit={{ opacity: 0, scale: 0.8 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      transition={{ 
+        opacity: { duration: 0.5 },
+        scale: { duration: 0.5 },
+        x: { duration: 2 + Math.random(), repeat: Infinity, ease: "easeInOut" },
+        y: { duration: 2 + Math.random(), repeat: Infinity, ease: "easeInOut" }
+      }}
       className="absolute whitespace-nowrap"
       style={{ 
         color: annotation.color || '#4a9eff',
         textShadow: '0 0 10px rgba(0,0,0,0.5)',
         left: 0,
         top: 0,
-        transform: 'translate(-50%, -50%)' // Center on point
+        transform: 'translate(-50%, -50%) translateZ(0)', // GPU promotion
+        willChange: 'transform, opacity', // Hint to browser
+        backfaceVisibility: 'hidden', // Optimize layer compositing
       }}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
-}
+});
+
+MathItem.displayName = 'MathItem';
