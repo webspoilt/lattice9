@@ -65,6 +65,7 @@
     "pg": "^8.20.0",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
+    "react-force-graph-3d": "^1.29.1",
     "react-hook-form": "^7.64.0",
     "recharts": "^2.15.2",
     "redis": "^5.12.1",
@@ -73,6 +74,7 @@
     "superjson": "^1.13.3",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
+    "three": "^0.184.0",
     "vaul": "^1.1.2",
     "wouter": "^3.3.5",
     "zod": "^4.1.12"
@@ -89,6 +91,7 @@
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.1",
     "@types/react-dom": "^19.2.1",
+    "@types/three": "^0.184.1",
     "@vitejs/plugin-react": "^5.0.4",
     "autoprefixer": "^10.4.20",
     "drizzle-kit": "^0.31.4",

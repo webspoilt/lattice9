@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { CodeBlock } from "@/components/CodeBlock";
 import { Logo } from "@/components/Logo";
+import { CorrelationGraph3D } from "@/components/CorrelationGraph3D";
 import { 
   Loader2, 
   Shield, 
@@ -23,7 +24,8 @@ import {
   Search,
   AlertTriangle,
   Server,
-  Share2
+  Share2,
+  Cuboid
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -218,99 +220,84 @@ export default function Lattice9Console() {
                 </div>
 
                 <div className="flex-1 overflow-hidden">
-                  <TabsContent value="intelligence" className="h-full m-0 p-0 overflow-y-auto">
-                    <div className="p-8 grid grid-cols-12 gap-8">
-                      {/* Attack Path Queue */}
-                      <div className="col-span-12 xl:col-span-4 space-y-6">
+                  <TabsContent value="intelligence" className="h-full m-0 p-0 flex flex-col overflow-hidden">
+                    <div className="flex-1 flex overflow-hidden">
+                      {/* Attack Path Queue — left sidebar */}
+                      <div className="w-80 shrink-0 border-r border-white/5 overflow-y-auto p-5 space-y-4">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-[0.2em]">Graph_Correlation_Priority</h3>
+                          <h3 className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-[0.2em]">Correlation_Priority</h3>
                           <Fingerprint className="w-4 h-4 text-zinc-800" />
                         </div>
                         <div className="space-y-2">
                           {findingsQuery.data?.map(f => (
                             <div 
                               key={f.id} 
-                              className="p-4 bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 rounded-none transition-all cursor-pointer group"
+                              className="p-3 bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 transition-all cursor-pointer group"
                             >
-                              <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center justify-between mb-2">
                                 <SeverityBadge severity={f.severity as any} />
-                                <span className="text-[9px] font-mono text-zinc-600 uppercase">Conf: {f.confidence}</span>
+                                <span className="text-[8px] font-mono text-zinc-600 uppercase">Conf: {f.confidence}</span>
                               </div>
-                              <h4 className="text-xs font-bold text-zinc-200 mb-3 group-hover:text-indigo-400 transition-colors uppercase tracking-tight">{f.title}</h4>
-                              <div className="flex items-center gap-2">
-                                <div className="h-0.5 flex-1 bg-zinc-800 rounded-full overflow-hidden">
+                              <h4 className="text-[11px] font-bold text-zinc-200 leading-tight group-hover:text-indigo-400 transition-colors uppercase tracking-tight">{f.title}</h4>
+                              <div className="mt-2 flex items-center gap-2">
+                                <div className="h-0.5 flex-1 bg-zinc-800 overflow-hidden">
                                   <div className="h-full bg-indigo-500/40" style={{ width: '85%' }} />
                                 </div>
-                                <span className="text-[8px] font-mono text-zinc-600 font-bold uppercase tracking-widest">Validated</span>
+                                <span className="text-[7px] font-mono text-zinc-600 font-bold uppercase tracking-widest shrink-0">Validated</span>
                               </div>
                             </div>
                           ))}
                           {(!findingsQuery.data || findingsQuery.data.length === 0) && (
-                            <div className="p-12 border border-dashed border-white/5 rounded-none text-center text-zinc-700 text-[10px] font-mono uppercase tracking-widest">
+                            <div className="p-8 border border-dashed border-white/5 text-center text-zinc-700 text-[10px] font-mono uppercase tracking-widest">
                               Intelligence synthesis pending...
                             </div>
                           )}
                         </div>
                       </div>
 
-                      {/* Reasoning Trace Canvas */}
-                      <div className="col-span-12 xl:col-span-8 space-y-6">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-[0.2em]">Attack_Path_Reasoning & Temporal_Exposure</h3>
-                          <div className="flex items-center gap-3">
-                            <Activity className="w-3.5 h-3.5 text-indigo-500" />
-                          </div>
+                      {/* 3D Correlation Graph + Reasoning Trace — right area */}
+                      <div className="flex-1 flex flex-col overflow-hidden">
+                        {/* 3D Graph */}
+                        <div className="flex-1 min-h-0 relative">
+                          {selectedEngagementId && (
+                            <CorrelationGraph3D engagementId={selectedEngagementId} />
+                          )}
                         </div>
 
-                        <Card className="bg-[#0e0e10] border-white/5 p-8 relative overflow-hidden group rounded-none">
-                          <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-                          
-                          <div className="relative z-10 space-y-12">
+                        {/* Reasoning trace strip */}
+                        <div className="h-32 shrink-0 border-t border-white/5 bg-[#0e0e10] overflow-y-auto px-5 py-3">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Activity className="w-3 h-3 text-indigo-500" />
+                            <span className="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-[0.2em]">Reasoning_Trace</span>
+                          </div>
+                          <div className="flex gap-4 overflow-x-auto pb-2">
                             {findingsQuery.data && findingsQuery.data.length > 0 ? (
-                              findingsQuery.data.slice(0, 4).map((f, i) => (
-                                <div className="flex flex-col gap-8" key={f.id}>
-                                  <div className="flex items-start gap-6">
-                                    <div className="w-6 h-6 border border-zinc-700 flex items-center justify-center shrink-0 text-[10px] font-mono text-zinc-500 bg-zinc-900">
-                                      {String(i + 1).padStart(2, "0")}
+                              findingsQuery.data.slice(0, 6).map((f, i) => (
+                                <div key={f.id} className="flex items-start gap-3 shrink-0 min-w-[200px] max-w-[260px] p-2.5 bg-white/[0.01] border border-white/5">
+                                  <div className="w-4 h-4 border border-zinc-700 flex items-center justify-center shrink-0 text-[8px] font-mono text-zinc-500 bg-zinc-900">
+                                    {String(i + 1).padStart(2, "0")}
+                                  </div>
+                                  <div className="space-y-1 min-w-0">
+                                    <div className="text-[8px] font-mono text-indigo-500 uppercase font-bold tracking-[0.15em] truncate">
+                                      {f.sourceTool || "Observation"}_{f.severity}
                                     </div>
-                                    <div className="space-y-2 flex-1">
-                                      <div className="text-[10px] font-mono text-indigo-500 uppercase font-bold tracking-[0.2em]">
-                                        {f.sourceTool || "Observation"}_{f.severity}
-                                      </div>
-                                      <p className="text-[13px] text-zinc-300 leading-relaxed max-w-xl font-medium">
-                                        {f.evidence || f.title || "No evidence captured"}
-                                      </p>
-                                      <div className="flex gap-2 pt-1 flex-wrap">
-                                        <span className="text-[9px] font-mono text-zinc-600 px-1.5 py-0.5 border border-white/5 bg-white/[0.02]">
-                                          CWE: {f.cwe || "N/A"}
-                                        </span>
-                                        <span className="text-[9px] font-mono text-zinc-600 px-1.5 py-0.5 border border-white/5 bg-white/[0.02]">
-                                          CONF: {f.confidence}
-                                        </span>
-                                        <span className="text-[9px] font-mono text-zinc-600 px-1.5 py-0.5 border border-white/5 bg-white/[0.02]">
-                                          STATE: {f.validationState}
-                                        </span>
-                                      </div>
+                                    <p className="text-[10px] text-zinc-400 leading-relaxed line-clamp-2 font-medium">
+                                      {f.evidence || f.title || "No evidence captured"}
+                                    </p>
+                                    <div className="flex gap-1.5 pt-1 flex-wrap">
+                                      <span className="text-[7px] font-mono text-zinc-600 px-1 py-0.5 border border-white/5">CWE: {f.cwe || "N/A"}</span>
+                                      <span className="text-[7px] font-mono text-zinc-600 px-1 py-0.5 border border-white/5">CONF: {f.confidence}</span>
                                     </div>
                                   </div>
-                                  {i < Math.min(findingsQuery.data.length, 4) - 1 && (
-                                    <div className="h-8 w-px bg-zinc-800 ml-[11.5px]" />
-                                  )}
                                 </div>
                               ))
                             ) : (
-                              <div className="flex items-start gap-6">
-                                <div className="w-6 h-6 border border-zinc-700 flex items-center justify-center shrink-0 text-[10px] font-mono text-zinc-500 bg-zinc-900">01</div>
-                                <div className="space-y-2">
-                                  <div className="text-[10px] font-mono text-zinc-500 uppercase font-bold tracking-[0.2em]">Reasoning Trace</div>
-                                  <p className="text-[13px] text-zinc-500 leading-relaxed max-w-xl font-medium italic">
-                                    Initiate intelligence capture to populate reasoning trace...
-                                  </p>
-                                </div>
+                              <div className="flex items-center gap-3 text-zinc-700 text-[10px] font-mono italic">
+                                Initiate intelligence capture to populate reasoning trace...
                               </div>
                             )}
                           </div>
-                        </Card>
+                        </div>
                       </div>
                     </div>
                   </TabsContent>
