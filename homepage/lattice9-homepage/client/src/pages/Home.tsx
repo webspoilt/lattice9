@@ -56,10 +56,11 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] text-[#e0e0e0] selection:bg-indigo-500/20">
+    <div className="min-h-screen bg-[#0a0a0b] text-[#e0e0e0] selection:bg-indigo-500/20 relative">
 
-      {/* Background Spectral Field (Entropy Simulation) */}
+      {/* Background Layers */}
       <BackgroundField entropy={globalEntropy} />
+      <IntelligenceNavigator data={MOCK_INTELLIGENCE} className="opacity-30" />
 
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#1e1e20] bg-[#0a0a0b]/80 backdrop-blur-md">
@@ -83,54 +84,33 @@ export default function Home() {
       </nav>
 
       {/* Hero: Active Intelligence Environment */}
-      <section className="relative pt-24 min-h-screen flex flex-col overflow-hidden bg-[#050507]">
-        <div className="absolute inset-0 z-0 opacity-20"><BackgroundField entropy={globalEntropy} /></div>
+      <section className="relative pt-24 min-h-screen flex flex-col overflow-hidden bg-transparent">
         
-        <div className="container relative z-10 py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-            <div className="lg:col-span-5 space-y-10">
+        <div className="container relative z-10 py-12 flex-1 flex flex-col justify-center">
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-16 items-center text-center lg:text-left">
+            <div className="space-y-10 max-w-2xl mx-auto lg:mx-0">
               <motion.div className="space-y-6" variants={stagger} initial="hidden" animate="visible">
-                <motion.div className="flex items-center gap-3" variants={fadeUp}>
+                <motion.div className="flex items-center gap-3 justify-center lg:justify-start" variants={fadeUp}>
                   <div className="h-px w-12 bg-indigo-500/30" />
                   <span className="text-[10px] font-mono text-indigo-400 tracking-[0.4em] uppercase">Intelligence_Reasoning_Active</span>
                 </motion.div>
                 
-                <motion.h1 className="text-5xl lg:text-7xl font-bold leading-[0.95] tracking-tighter lowercase" style={{ fontFamily: "'IBM Plex Mono', monospace" }} variants={fadeUp}>
+                <motion.h1 className="text-6xl lg:text-8xl font-bold leading-[0.95] tracking-tighter lowercase" style={{ fontFamily: "'IBM Plex Mono', monospace" }} variants={fadeUp}>
                   Reasoning <br />
                   <span className="text-indigo-500">Over</span> <br />
                   Orchestration.
                 </motion.h1>
 
-                <motion.p className="text-base leading-relaxed text-[#666] max-w-md font-light" variants={fadeUp}>
+                <motion.p className="text-base lg:text-lg leading-relaxed text-[#666] max-w-md font-light mx-auto lg:mx-0" variants={fadeUp}>
                   Lattice9 generates normalized attack surface graphs using probabilistic inference. We solve for exploitability by deriving truth from high-entropy adversarial noise.
                 </motion.p>
 
-                <motion.div className="flex items-center gap-4 pt-4" variants={fadeUp}>
+                <motion.div className="flex items-center gap-4 pt-4 justify-center lg:justify-start" variants={fadeUp}>
                   <Button className="bg-indigo-600 text-white hover:bg-indigo-500 gap-2 text-xs font-mono tracking-wider h-11 px-6 rounded-none">
                     Initialize Engine <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                   <Button variant="outline" className="border-[#2a2a2d] text-[#888] hover:bg-[#151517] text-xs font-mono tracking-wider h-11 px-6 rounded-none">Documentation</Button>
                 </motion.div>
-              </motion.div>
-            </div>
-
-            <div className="lg:col-span-7">
-              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1] }}>
-                <IntelligenceNavigator data={{
-                  entities: [
-                    { id: '1', label: 'prod-api.lattice9.io', type: 'asset' },
-                    { id: '2', label: 'admin-console', type: 'asset' },
-                    { id: '3', label: 'svc_deployer', type: 'identity' },
-                    { id: '4', label: 'CVE-2024-JWT-BYPASS', type: 'vuln' },
-                    { id: '5', label: 'SSO-Gateway', type: 'service' },
-                  ],
-                  inferences: [
-                    { sourceId: '1', targetEntityId: '5', type: 'contains' },
-                    { sourceId: '5', targetEntityId: '4', type: 'exploits' },
-                    { sourceId: '4', targetEntityId: '3', type: 'identifies' },
-                    { sourceId: '3', targetEntityId: '2', type: 'auths' },
-                  ]
-                }} />
               </motion.div>
             </div>
           </div>
@@ -159,44 +139,6 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Hero content */}
-        <div className="relative z-10 flex-1 flex items-center">
-          <div className="container">
-            <motion.div className="max-w-xl space-y-10" variants={stagger} initial="hidden" animate="visible">
-              <motion.div className="space-y-6" variants={fadeUp}>
-                <div className="flex items-center gap-3">
-                  <div className="h-px w-12 bg-indigo-500/30" />
-                  <span className="text-[10px] font-mono text-indigo-400 tracking-[0.4em] uppercase">Adversarial Systems Theory</span>
-                </div>
-                <h1 className="text-[clamp(2.5rem,6vw,4rem)] font-bold leading-[1.05] tracking-tight text-[#f0f0f0] lowercase" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
-                  Adversarial Intelligence <br />
-                  <span className="text-indigo-500">Compression.</span>
-                </h1>
-                <p className="text-base leading-relaxed text-[#666] max-w-lg lowercase font-light" style={{ fontFamily: "'Inter', sans-serif" }}>
-                  A graph-native probabilistic reasoning engine for the automated discovery of adversarial system states. Solving for intelligence yield at the edge of computational observability.
-                </p>
-              </motion.div>
-              <motion.div className="flex items-center gap-4" variants={fadeUp}>
-                <a href="https://github.com/webspoilt/lattice9" target="_blank" rel="noopener noreferrer">
-                  <Button className="bg-indigo-600 text-white hover:bg-indigo-500 gap-2 text-xs font-mono tracking-wider h-10 px-5 rounded-none">
-                    View Repository <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
-                </a>
-                <a href="#architecture">
-                  <Button variant="outline" className="border-[#2a2a2d] text-[#888] hover:bg-[#151517] hover:text-[#ccc] text-xs font-mono tracking-wider h-10 px-5 rounded-none">Architecture</Button>
-                </a>
-              </motion.div>
-              <motion.div className="flex items-center gap-6 pt-6 border-t border-[#1e1e20]" variants={fadeUp}>
-                {[{ l: 'Confidence', v: '0.982' }, { l: 'Variance', v: '±0.04' }, { l: 'Paths', v: '3' }, { l: 'Nodes', v: '15' }].map((m) => (
-                  <div key={m.l} className="space-y-1">
-                    <div className="text-xs font-mono text-indigo-400 tracking-wider">{m.v}</div>
-                    <div className="text-[9px] font-mono text-[#555] uppercase tracking-[0.2em]">{m.l}</div>
-                  </div>
-                ))}
-              </motion.div>
-            </motion.div>
-          </div>
-        </div>
         <motion.div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10" animate={{ y: [0, 6, 0] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}>
           <ChevronDown className="w-4 h-4 text-[#444]" />
         </motion.div>

@@ -14,7 +14,7 @@ interface GraphData {
   links: any[];
 }
 
-export const IntelligenceNavigator: React.FC<{ data: any }> = ({ data }) => {
+export const IntelligenceNavigator: React.FC<{ data: any; className?: string }> = ({ data, className = "" }) => {
   const fgRef = useRef<any>(null);
 
   const graphData = useMemo(() => {
@@ -23,59 +23,78 @@ export const IntelligenceNavigator: React.FC<{ data: any }> = ({ data }) => {
       id: e.id,
       label: e.label,
       type: e.type,
-      val: e.type === 'vulnerability' ? 10 : 5,
-      color: e.type === 'vulnerability' ? '#ff4a4a' : '#6366f1'
+      val: e.type === 'vuln' ? 12 : 6,
+      color: e.type === 'vuln' ? '#d4a574' : '#6366f1',
+      entropy: Math.random() * 0.5 + 0.2
     })) || [];
 
     const links = data?.inferences?.map((i: any) => ({
       source: i.sourceId,
       target: i.targetEntityId,
       label: i.type,
-      color: 'rgba(99, 102, 241, 0.2)'
+      color: 'rgba(99, 102, 241, 0.05)'
     })) || [];
 
     return { nodes, links };
   }, [data]);
 
-  return (
-    <div className="relative w-full h-[600px] bg-[#050505] border border-[#111] rounded-none overflow-hidden">
-      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-        <div className="text-[10px] font-mono text-[#555] tracking-widest uppercase">Intelligence_Navigator_v5.0.0</div>
-        <div className="flex gap-4">
-          <LegendItem label="Asset" color="#6366f1" />
-          <LegendItem label="Identity" color="#00ffcc" />
-          <LegendItem label="Vuln" color="#ff4a4a" />
-        </div>
-      </div>
+  useEffect(() => {
+    const fg = fgRef.current;
+    if (fg) {
+      fg.d3Force('charge')?.strength(-150);
+      fg.d3Force('link')?.distance(100);
+      fg.d3AlphaTarget(0.01);
+    }
+  }, []);
 
+  return (
+    <div className={`absolute inset-0 z-0 overflow-hidden pointer-events-none ${className}`}>
       <ForceGraph2D
         ref={fgRef}
         graphData={graphData}
         backgroundColor="rgba(0,0,0,0)"
         nodeLabel="label"
         linkLabel="label"
+        enableNodeDrag={false}
+        enablePanInteraction={false}
+        enableZoomInteraction={false}
         nodeCanvasObject={(node: any, ctx, globalScale) => {
+          const time = performance.now() / 1000;
           const label = node.label;
-          const fontSize = 12 / globalScale;
-          ctx.font = `${fontSize}px "IBM Plex Mono"`;
+          const fontSize = 10 / globalScale;
+          const size = node.val || 5;
           
+          // Organic jitter
+          const jitter = node.entropy * 0.8;
+          const nx = node.x + (Math.random() - 0.5) * jitter;
+          const ny = node.y + (Math.random() - 0.5) * jitter;
+          
+          const pulse = Math.sin(time * 2 + (parseInt(node.id) || 0)) * 0.5 + 0.5;
+
+          // Draw halo
+          ctx.beginPath();
+          ctx.arc(nx, ny, size * (1.2 + pulse * 0.3), 0, 2 * Math.PI, false);
+          ctx.fillStyle = node.type === 'vuln' 
+            ? `rgba(212, 165, 116, ${0.05 + pulse * 0.1})` 
+            : `rgba(99, 102, 241, ${0.05 + pulse * 0.1})`;
+          ctx.fill();
+
           // Draw node
           ctx.beginPath();
-          ctx.arc(node.x, node.y, 4, 0, 2 * Math.PI, false);
+          ctx.arc(nx, ny, size, 0, 2 * Math.PI, false);
           ctx.fillStyle = node.color;
           ctx.fill();
 
           // Draw label
-          if (globalScale > 1.5) {
+          if (globalScale > 1.2) {
+            ctx.font = `${fontSize}px "IBM Plex Mono"`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = 'rgba(255,255,255,0.8)';
-            ctx.fillText(label, node.x, node.y + 10);
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.fillText(label, nx, ny + size + 8);
           }
         }}
       />
-      
-      {/* Evidence Panel overlay could go here */}
     </div>
   );
 };
