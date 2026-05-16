@@ -47,6 +47,7 @@ const MOCK_FINDINGS = [
 export default function Home() {
   const [globalEntropy, setGlobalEntropy] = useState(0.2);
   const [activeWorkspace, setActiveWorkspace] = useState('intelligence');
+  const [selectedFinding, setSelectedFinding] = useState<any>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -132,9 +133,13 @@ export default function Home() {
               <span className="op-label !text-[8px]">Operation Context</span>
             </div>
             {['L9-ALPHA', 'L9-BETA', 'DEV-ENV'].map(ctx => (
-              <button key={ctx} className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-mono text-muted-foreground hover:text-white hover:bg-white/5">
+              <button 
+                key={ctx} 
+                className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-mono text-muted-foreground hover:text-white hover:bg-white/5 group transition-all"
+                onClick={() => console.log(`Switching to context: ${ctx}`)}
+              >
                 {ctx}
-                <ChevronRight className="w-2.5 h-2.5 opacity-30" />
+                <ChevronRight className="w-2.5 h-2.5 opacity-30 group-hover:opacity-100 transition-opacity" />
               </button>
             ))}
           </nav>
@@ -157,9 +162,13 @@ export default function Home() {
           {/* Workspace Tabs / Tools */}
           <div className="h-8 border-b border-border bg-[#141417]/50 flex items-center px-4 justify-between">
             <div className="flex gap-4">
-              <span className="op-label text-primary">Intelligence Navigator</span>
-              <span className="op-label opacity-30">Projection: Mercator</span>
-              <span className="op-label opacity-30">Clustering: Spectral</span>
+              <span className="op-label text-primary capitalize">{activeWorkspace.replace('-', ' ')}</span>
+              {activeWorkspace === 'intelligence' && (
+                <>
+                  <span className="op-label opacity-30">Projection: Mercator</span>
+                  <span className="op-label opacity-30">Clustering: Spectral</span>
+                </>
+              )}
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
@@ -173,52 +182,123 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex-1 relative op-grid-pattern">
-            {/* Graph Visualization Workspace */}
-            <div className="absolute inset-0">
-              <ErrorBoundary>
-                <IntelligenceNavigator data={MOCK_INTELLIGENCE} />
-              </ErrorBoundary>
-            </div>
+          <div className="flex-1 relative op-grid-pattern overflow-hidden">
+            {activeWorkspace === 'intelligence' && (
+              <div className="absolute inset-0">
+                <ErrorBoundary>
+                  <IntelligenceNavigator data={MOCK_INTELLIGENCE} />
+                </ErrorBoundary>
+              </div>
+            )}
 
-            {/* Floatover UI Overlays */}
-            <div className="absolute top-4 left-4 w-64 space-y-4 pointer-events-none">
-              <motion.div initial="hidden" animate="visible" variants={fadeUp} className="op-panel shadow-2xl pointer-events-auto">
-                <div className="op-panel-header">
-                  <span className="op-title">Operational Summary</span>
-                  <Info className="w-3 h-3 text-muted-foreground" />
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="op-label text-muted-foreground">Total Assets</span>
-                    <span className="op-value text-white">412</span>
+            {activeWorkspace === 'assets' && (
+              <div className="p-8 h-full overflow-y-auto">
+                <motion.div initial="hidden" animate="visible" variants={fadeUp} className="op-panel">
+                  <div className="op-panel-header">
+                    <span className="op-title">Infrastructure Assets</span>
+                    <Database className="w-3 h-3 text-muted-foreground" />
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="op-label text-muted-foreground">Exposure Paths</span>
-                    <span className="op-value text-accent">14 Active</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="op-label text-muted-foreground">Reasoning Engine</span>
-                    <span className="op-badge op-badge-primary">Enabled</span>
-                  </div>
-                </div>
-              </motion.div>
+                  <table className="op-table">
+                    <thead>
+                      <tr>
+                        <th>Identifier</th>
+                        <th>Classification</th>
+                        <th>Sensitivity</th>
+                        <th>Network Zone</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {MOCK_INTELLIGENCE.entities.map(e => (
+                        <tr key={e.id} className="hover:bg-white/5 transition-colors cursor-pointer">
+                          <td className="op-text-mono !text-primary">{e.label}</td>
+                          <td className="uppercase opacity-60">{e.type}</td>
+                          <td>
+                            <span className={`op-badge ${e.type === 'vuln' ? 'op-badge-destructive' : 'op-badge-muted'}`}>
+                              {e.type === 'vuln' ? 'HIGH' : 'LOW'}
+                            </span>
+                          </td>
+                          <td className="op-text-mono opacity-40 text-[9px]">ZONE-0x12</td>
+                          <td><div className="w-2 h-2 bg-accent" /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </motion.div>
+              </div>
+            )}
 
-              <motion.div initial="hidden" animate="visible" variants={fadeUp} className="op-panel shadow-2xl pointer-events-auto">
-                <div className="op-panel-header">
-                  <span className="op-title">Attack Path Inference</span>
-                  <Zap className="w-3 h-3 text-accent" />
-                </div>
-                <div className="space-y-2">
-                  <p className="text-[10px] text-muted-foreground leading-relaxed italic border-l border-accent/30 pl-2">
-                    L9-Inference: High-confidence path detected from [prod-api] to [admin-console] via JWT-Bypass.
-                  </p>
-                  <button className="w-full h-6 bg-accent/10 border border-accent/20 text-accent text-[9px] font-bold uppercase hover:bg-accent/20 transition-all">
-                    Initiate Path Synthesis
-                  </button>
-                </div>
-              </motion.div>
-            </div>
+            {activeWorkspace === 'findings' && (
+              <div className="p-8 h-full overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+                {MOCK_FINDINGS.map(finding => (
+                  <motion.div 
+                    key={finding.id} 
+                    initial="hidden" 
+                    animate="visible" 
+                    variants={fadeUp}
+                    className="op-panel hover:border-primary/50 transition-colors cursor-pointer"
+                    onClick={() => setSelectedFinding(finding)}
+                  >
+                    <div className="op-panel-header">
+                      <span className="op-title">{finding.id}</span>
+                      <Shield className={`w-3 h-3 ${finding.severity === 'critical' ? 'text-destructive' : 'text-muted-foreground'}`} />
+                    </div>
+                    <h3 className="text-sm font-bold mb-4">{finding.title}</h3>
+                    <div className="flex gap-4">
+                       <div className="flex flex-col gap-1">
+                          <span className="op-label">Severity</span>
+                          <span className={`op-badge ${finding.severity === 'critical' ? 'op-badge-destructive' : 'op-badge-muted'}`}>{finding.severity}</span>
+                       </div>
+                       <div className="flex flex-col gap-1">
+                          <span className="op-label">Classification</span>
+                          <span className="op-value">{finding.type}</span>
+                       </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+
+            {/* Floatover UI Overlays (Only for intelligence view) */}
+            {activeWorkspace === 'intelligence' && (
+              <div className="absolute top-4 left-4 w-64 space-y-4 pointer-events-none">
+                <motion.div initial="hidden" animate="visible" variants={fadeUp} className="op-panel shadow-2xl pointer-events-auto">
+                  <div className="op-panel-header">
+                    <span className="op-title">Operational Summary</span>
+                    <Info className="w-3 h-3 text-muted-foreground" />
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="op-label text-muted-foreground">Total Assets</span>
+                      <span className="op-value text-white">412</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="op-label text-muted-foreground">Exposure Paths</span>
+                      <span className="op-value text-accent">14 Active</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="op-label text-muted-foreground">Reasoning Engine</span>
+                      <span className="op-badge op-badge-primary">Enabled</span>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div initial="hidden" animate="visible" variants={fadeUp} className="op-panel shadow-2xl pointer-events-auto">
+                  <div className="op-panel-header">
+                    <span className="op-title">Attack Path Inference</span>
+                    <Zap className="w-3 h-3 text-accent" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] text-muted-foreground leading-relaxed italic border-l border-accent/30 pl-2">
+                      L9-Inference: High-confidence path detected from [prod-api] to [admin-console] via JWT-Bypass.
+                    </p>
+                    <button className="w-full h-6 bg-accent/10 border border-accent/20 text-accent text-[9px] font-bold uppercase hover:bg-accent/20 transition-all">
+                      Initiate Path Synthesis
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
           </div>
         </main>
 
@@ -241,7 +321,15 @@ export default function Home() {
 
           <div className="flex-1 overflow-y-auto p-2 space-y-2">
             {MOCK_FINDINGS.map(finding => (
-              <div key={finding.id} className="p-3 border border-border bg-black/20 hover:bg-white/5 transition-all cursor-pointer group">
+              <div 
+                key={finding.id} 
+                onClick={() => setSelectedFinding(finding)}
+                className={`p-3 border transition-all cursor-pointer group ${
+                  selectedFinding?.id === finding.id 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border bg-black/20 hover:bg-white/5'
+                }`}
+              >
                 <div className="flex justify-between items-start mb-2">
                   <span className="op-label op-text-mono !text-primary">{finding.id}</span>
                   <span className={`op-badge ${
@@ -263,9 +351,11 @@ export default function Home() {
           </div>
 
           <div className="p-4 border-t border-border bg-[#0d0d0f]">
-             <span className="op-label block mb-3">Lineage Integrity</span>
+             <span className="op-label block mb-3">Lineage Integrity {selectedFinding && `[${selectedFinding.id}]`}</span>
              <div className="p-2 border border-border bg-black/40 op-text-mono text-[9px] text-muted-foreground break-all">
-                SHA256: 9f8349b1e2e3c4d5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9
+                {selectedFinding 
+                  ? `INTEGRITY_VERIFIED::${btoa(selectedFinding.id).substring(0, 32)}...` 
+                  : 'SHA256: 9f8349b1e2e3c4d5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9'}
              </div>
           </div>
         </aside>
