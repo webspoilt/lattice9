@@ -1,6 +1,14 @@
+function requireEnv(key: string): string {
+  const val = process.env[key];
+  if (!val) {
+    throw new Error(`Required environment variable ${key} is not set`);
+  }
+  return val;
+}
+
 export const ENV = {
   appId: process.env.VITE_APP_ID ?? "",
-  cookieSecret: process.env.JWT_SECRET ?? "",
+  cookieSecret: requireEnv("JWT_SECRET"),
   databaseUrl: process.env.DATABASE_URL ?? "",
   oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
   ownerOpenId: process.env.OWNER_OPEN_ID ?? "",

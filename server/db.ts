@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { createHash } from "crypto";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "../drizzle/schema";
@@ -30,11 +31,17 @@ export async function upsertUser(userData: {
 }) {
   if (!db) return;
   
-  // 1. Ensure a default tenant exists
-  let tenant = await db.query.tenants.findFirst();
-  if (!tenant) {
-    const [newTenant] = await db.insert(schema.tenants).values({ name: "Lattice9 Sovereign" }).returning();
-    tenant = newTenant;
+  // 1. Check if user already has a tenant via existing record, or create one
+  const existing = await getUserByOpenId(userData.openId);
+  let tenantId = existing?.tenantId;
+
+  if (!tenantId) {
+    let tenant = await db.query.tenants.findFirst();
+    if (!tenant) {
+      const [newTenant] = await db.insert(schema.tenants).values({ name: "Lattice9 Sovereign" }).returning();
+      tenant = newTenant;
+    }
+    tenantId = tenant.id;
   }
 
   // 2. Map fields to schema
@@ -44,10 +51,9 @@ export async function upsertUser(userData: {
     displayName: userData.name,
     loginMethod: userData.loginMethod,
     lastSignedIn: userData.lastSignedIn || new Date(),
-    tenantId: tenant.id,
+    tenantId,
   };
 
-  const existing = await getUserByOpenId(userData.openId);
   if (existing) {
     await db.update(schema.users)
       .set(dbUser)
@@ -79,7 +85,7 @@ export async function createEngagement(userId: string, tenantId: string, name: s
     name,
     status: "active",
     authorizationStatement: authStatement,
-    authorizationHash: Buffer.from(authStatement).toString('hex'), // Placeholder hash
+    authorizationHash: createHash("sha256").update(authStatement + userId).digest("hex"),
     createdBy: userId,
   }).returning();
 }

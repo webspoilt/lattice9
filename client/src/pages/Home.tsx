@@ -46,7 +46,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               {isAuthenticated ? (
                 <Button 
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate("/console")}
                   className="bg-cyan-600 hover:bg-cyan-500 text-black font-bold px-8 py-6 text-lg rounded-none skew-x-[-10deg] transition-all"
                 >
                   <span className="skew-x-[10deg] flex items-center gap-2">

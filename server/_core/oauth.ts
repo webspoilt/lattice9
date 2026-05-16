@@ -1,8 +1,10 @@
-import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+import { COOKIE_NAME } from "@shared/const";
 import type { Express, Request, Response } from "express";
 import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
+
+const ONE_HOUR_MS = 60 * 60 * 1000;
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -38,11 +40,11 @@ export function registerOAuthRoutes(app: Express) {
 
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {
         name: userInfo.name || "",
-        expiresInMs: ONE_YEAR_MS,
+        expiresInMs: ONE_HOUR_MS,
       });
 
       const cookieOptions = getSessionCookieOptions(req);
-      res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+      res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_HOUR_MS });
 
       res.redirect(302, "/");
     } catch (error) {

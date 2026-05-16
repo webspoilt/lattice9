@@ -266,37 +266,49 @@ export default function Lattice9Console() {
                           <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
                           
                           <div className="relative z-10 space-y-12">
-                            <div className="flex flex-col gap-8">
+                            {findingsQuery.data && findingsQuery.data.length > 0 ? (
+                              findingsQuery.data.slice(0, 4).map((f, i) => (
+                                <div className="flex flex-col gap-8" key={f.id}>
+                                  <div className="flex items-start gap-6">
+                                    <div className="w-6 h-6 border border-zinc-700 flex items-center justify-center shrink-0 text-[10px] font-mono text-zinc-500 bg-zinc-900">
+                                      {String(i + 1).padStart(2, "0")}
+                                    </div>
+                                    <div className="space-y-2 flex-1">
+                                      <div className="text-[10px] font-mono text-indigo-500 uppercase font-bold tracking-[0.2em]">
+                                        {f.sourceTool || "Observation"}_{f.severity}
+                                      </div>
+                                      <p className="text-[13px] text-zinc-300 leading-relaxed max-w-xl font-medium">
+                                        {f.evidence || f.title || "No evidence captured"}
+                                      </p>
+                                      <div className="flex gap-2 pt-1 flex-wrap">
+                                        <span className="text-[9px] font-mono text-zinc-600 px-1.5 py-0.5 border border-white/5 bg-white/[0.02]">
+                                          CWE: {f.cwe || "N/A"}
+                                        </span>
+                                        <span className="text-[9px] font-mono text-zinc-600 px-1.5 py-0.5 border border-white/5 bg-white/[0.02]">
+                                          CONF: {f.confidence}
+                                        </span>
+                                        <span className="text-[9px] font-mono text-zinc-600 px-1.5 py-0.5 border border-white/5 bg-white/[0.02]">
+                                          STATE: {f.validationState}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  {i < Math.min(findingsQuery.data.length, 4) - 1 && (
+                                    <div className="h-8 w-px bg-zinc-800 ml-[11.5px]" />
+                                  )}
+                                </div>
+                              ))
+                            ) : (
                               <div className="flex items-start gap-6">
                                 <div className="w-6 h-6 border border-zinc-700 flex items-center justify-center shrink-0 text-[10px] font-mono text-zinc-500 bg-zinc-900">01</div>
                                 <div className="space-y-2">
-                                  <div className="text-[10px] font-mono text-indigo-500 uppercase font-bold tracking-[0.2em]">Telemetry_Normalization</div>
-                                  <p className="text-[13px] text-zinc-300 leading-relaxed max-w-xl font-medium">
-                                    "Processed artifact 'CAPT-922' through intelligence layer. Topological overlap identifies shared auth domain with objective node 'DB-PRIMARY'."
+                                  <div className="text-[10px] font-mono text-zinc-500 uppercase font-bold tracking-[0.2em]">Reasoning Trace</div>
+                                  <p className="text-[13px] text-zinc-500 leading-relaxed max-w-xl font-medium italic">
+                                    Initiate intelligence capture to populate reasoning trace...
                                   </p>
-                                  <div className="flex gap-2 pt-1">
-                                    <span className="text-[9px] font-mono text-zinc-600 px-1.5 py-0.5 border border-white/5 bg-white/[0.02]">L9_PROV: SHA-256:e821</span>
-                                    <span className="text-[9px] font-mono text-zinc-600 px-1.5 py-0.5 border border-white/5 bg-white/[0.02]">CONFIDENCE_HIGH</span>
-                                  </div>
                                 </div>
                               </div>
-
-                              <div className="h-8 w-px bg-zinc-800 ml-[11.5px]" />
-
-                              <div className="flex items-start gap-6">
-                                <div className="w-6 h-6 border border-zinc-700 flex items-center justify-center shrink-0 text-[10px] font-mono text-zinc-500 bg-zinc-900">02</div>
-                                <div className="space-y-2">
-                                  <div className="text-[10px] font-mono text-zinc-500 uppercase font-bold tracking-[0.2em]">Attack_Path_Inference</div>
-                                  <p className="text-[13px] text-zinc-300 leading-relaxed max-w-xl font-medium">
-                                    "Projected attack chain 'PATH-DELTA' onto infrastructure graph. 4 high-value assets identified within blast radius of current exposure."
-                                  </p>
-                                  <div className="flex gap-2 pt-1">
-                                    <span className="text-[9px] font-mono text-zinc-600 px-1.5 py-0.5 border border-white/5 bg-white/[0.02]">GRAPH_CORRELATION</span>
-                                    <span className="text-[9px] font-mono text-zinc-600 px-1.5 py-0.5 border border-white/5 bg-white/[0.02]">DRIFT_DETECTED</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
+                            )}
                           </div>
                         </Card>
                       </div>
@@ -369,16 +381,17 @@ export default function Lattice9Console() {
                         <h1 className="text-white text-4xl font-bold tracking-tighter uppercase mb-2">Intelligence_Summary</h1>
                         <p className="text-zinc-600 font-mono text-[10px] uppercase mb-12 tracking-widest border-l-2 border-indigo-500 pl-4">Lattice9 Core Engine // CTX: {selectedEngagement?.name}</p>
                         
-                        <div className="p-8 bg-white/[0.01] border border-red-900/10 border-l-4 border-l-red-600 rounded-none mb-12">
-                          <h2 className="text-red-600 text-xs font-bold uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                            <AlertTriangle className="w-4 h-4" />
-                            CRITICAL_PATH_EXPOSURE
-                          </h2>
-                          <p className="text-zinc-300 text-sm leading-relaxed mb-6 font-medium">
-                            Deterministic attack chain identified. Infrastructure correlation confirms Remote Code Execution (RCE) capability via verified tech-stack vulnerability.
-                          </p>
-                          <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest font-bold">Priority: Tactical_Remediation_Immediate</div>
-                        </div>
+                        {findingsQuery.data && findingsQuery.data.length > 0 && findingsQuery.data.some(f => f.severity === "critical") && (
+                          <div className="p-8 bg-white/[0.01] border border-red-900/10 border-l-4 border-l-red-600 rounded-none mb-12">
+                            <h2 className="text-red-600 text-xs font-bold uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                              <AlertTriangle className="w-4 h-4" />
+                              CRITICAL_PATH_EXPOSURE
+                            </h2>
+                            <p className="text-zinc-300 text-sm leading-relaxed mb-6 font-medium">
+                              {findingsQuery.data.filter(f => f.severity === "critical").length} critical findings identified. Review evidence and validate before reporting.
+                            </p>
+                          </div>
+                        )}
 
                         <h2 className="text-white text-lg font-bold tracking-tighter uppercase mb-6 border-b border-white/10 pb-3">Analyzed_Exposures</h2>
                         <div className="space-y-12">

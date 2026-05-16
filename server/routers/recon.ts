@@ -8,7 +8,10 @@ import { db, getEngagementById } from "../db";
 import axios from "axios";
 
 const ENGINE_URL = process.env.ENGINE_URL || "http://localhost:8000";
-const ENGINE_KEY = process.env.LATTICE9_ENGINE_KEY || "sovereign-l9-secret-2026";
+const ENGINE_KEY = process.env.LATTICE9_ENGINE_KEY;
+if (!ENGINE_KEY) {
+  throw new Error("LATTICE9_ENGINE_KEY environment variable is required");
+}
 
 export const reconRouter = router({
   startCollection: protectedProcedure

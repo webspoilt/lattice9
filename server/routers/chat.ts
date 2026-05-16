@@ -50,9 +50,14 @@ Always respond with educational value and ethical guidance.`;
 
       // Save conversation
       const conversation = await getConversationByUserId(ctx.user.id);
-      const messages = conversation
-        ? JSON.parse(conversation.messages || "[]")
-        : [];
+      let messages: any[] = [];
+      if (conversation) {
+        try {
+          messages = JSON.parse(conversation.messages || "[]");
+        } catch {
+          messages = [];
+        }
+      }
 
       messages.push(
         { role: "user", content: input.message },
@@ -72,6 +77,10 @@ Always respond with educational value and ethical guidance.`;
   getHistory: protectedProcedure.query(async ({ ctx }) => {
     const conversation = await getConversationByUserId(ctx.user.id);
     if (!conversation) return [];
-    return JSON.parse(conversation.messages || "[]");
+    try {
+      return JSON.parse(conversation.messages || "[]");
+    } catch {
+      return [];
+    }
   }),
 });
