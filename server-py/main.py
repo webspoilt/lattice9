@@ -1,495 +1,446 @@
+"""
+Lattice9 Graph Intelligence Engine — FastAPI Application
+
+Endpoints:
+  POST /analyze/{engagement_id}    — Full intelligence pipeline
+  GET  /health                     — Health check
+  POST /events/{engagement_id}     — Event-driven re-analysis
+  GET  /snapshots/{engagement_id}  — Temporal snapshots
+  GET  /algorithms/{engagement_id} — Graph algorithm results
+"""
+
 import asyncio
 import json
-import os
-import uuid
-import hashlib
 import logging
-from typing import List, Optional, Dict, Any, Tuple
-from fastapi import FastAPI, HTTPException, Header, BackgroundTasks
-from pydantic import BaseModel
-from neo4j import GraphDatabase, AsyncGraphDatabase
-from neo4j.exceptions import ServiceUnavailable
-import asyncpg
+import uuid
+from typing import Optional
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, HTTPException, Header, BackgroundTasks, Query
+from neo4j import AsyncGraphDatabase
 import redis.asyncio as aioredis
 
-# Configuration
-DATABASE_URL = os.getenv("DATABASE_URL")
-NEO4J_URI = os.getenv("NEO4J_URI")
-NEO4J_USER = os.getenv("NEO4J_USER")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
-REDIS_URL = os.getenv("REDIS_URL")
-LATTICE9_ENGINE_KEY = os.getenv("LATTICE9_ENGINE_KEY")
+from config import (
+    NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD,
+    REDIS_URL, LATTICE9_ENGINE_KEY, ENGINE_VERSION, logger,
+)
+from db import get_pg_pool, close_pg_pool
+from models import AnalysisRequest
+from graph.schema import ensure_constraints
+from graph.engine import (
+    merge_entity_node, merge_finding_node, merge_evidence_node,
+    link_finding_to_entity, create_relationship, delete_engagement_graph,
+    get_graph_summary,
+)
+from graph.algorithms import (
+    shortest_attack_paths, bfs_traversal, influence_propagation_fallback,
+    blast_radius_analysis, centrality_analysis, privilege_chain_synthesis,
+    exposure_diffusion,
+)
+from graph.temporal import (
+    create_snapshot, compute_temporal_diff, record_diffs,
+    get_exposure_evolution, detect_infrastructure_mutations,
+)
+from graph.confidence import (
+    propagate_confidence_to_graph, recalculate_finding_confidence,
+    temporal_decay, bayesian_update,
+)
+from reasoning.attack_paths import generate_attack_paths
+from reasoning.exploit_chains import synthesize_exploit_chains, compute_exploit_feasibility
+from reasoning.prioritization import prioritize_findings, prioritize_attack_paths
+from evidence.lineage import (
+    create_evidence_chain, get_evidence_provenance,
+    get_finding_evidence_chain, get_engagement_evidence_lineage,
+)
 
-REQUIRED_ENV = {
-    "DATABASE_URL": DATABASE_URL,
-    "NEO4J_URI": NEO4J_URI,
-    "NEO4J_USER": NEO4J_USER,
-    "NEO4J_PASSWORD": NEO4J_PASSWORD,
-    "LATTICE9_ENGINE_KEY": LATTICE9_ENGINE_KEY,
-}
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("lattice9-graph-engine")
-
-missing = [k for k, v in REQUIRED_ENV.items() if not v]
-if missing:
-    logger.warning(f"Missing required environment variables: {', '.join(missing)}")
-
-app = FastAPI(title="Lattice9 Graph Engine", version="5.0.0")
-
-ENTITY_TYPES = {
-    "host": "Host",
-    "service": "Service",
-    "endpoint": "Endpoint",
-    "identity": "Identity",
-    "credential": "Credential",
-    "vulnerability": "Vulnerability",
-    "finding": "Finding",
-    "evidence": "Evidence",
-    "trust_zone": "TrustZone",
-    "objective": "Objective",
-}
-
-async def get_pg_pool():
-    return await asyncpg.create_pool(dsn=DATABASE_URL, min_size=1, max_size=4)
 
 class IntelligenceEngine:
+    """Orchestrates all graph intelligence operations."""
+
     def __init__(self):
         self.driver = None
-        self.redis_client = None
-        try:
-            if NEO4J_URI and NEO4J_USER and NEO4J_PASSWORD:
-                self.driver = AsyncGraphDatabase.driver(
-                    NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD)
-                )
-                logger.info("Neo4j async driver created.")
-        except Exception as e:
-            logger.error(f"Failed to create Neo4j driver: {e}")
+        self.redis = None
+        self._init_driver()
+        self._init_redis()
 
-        try:
-            if REDIS_URL:
-                self.redis_client = aioredis.from_url(REDIS_URL)
-        except Exception as e:
-            logger.error(f"Failed to connect to Redis: {e}")
+    def _init_driver(self):
+        if all([NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD]):
+            try:
+                self.driver = AsyncGraphDatabase.driver(
+                    NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD),
+                    max_connection_pool_size=10,
+                    connection_acquisition_timeout=30,
+                )
+                logger.info("Neo4j driver initialized (pool: 10)")
+            except Exception as e:
+                logger.error(f"Neo4j init failed: {e}")
+
+    def _init_redis(self):
+        if REDIS_URL:
+            try:
+                self.redis = aioredis.from_url(REDIS_URL, max_connections=10)
+                logger.info("Redis client initialized")
+            except Exception as e:
+                logger.error(f"Redis init failed: {e}")
 
     async def close(self):
         if self.driver:
             await self.driver.close()
-        if self.redis_client:
-            await self.redis_client.close()
+        if self.redis:
+            await self.redis.close()
+        await close_pg_pool()
 
-    async def _ensure_constraints(self):
-        if not self.driver:
-            return
-        async with self.driver.session(database="neo4j") as session:
-            constraints = [
-                "CREATE CONSTRAINT IF NOT EXISTS FOR (e:L9Entity) REQUIRE (e.engagement_id, e.entity_type, e.canonical_key) IS UNIQUE",
-                "CREATE CONSTRAINT IF NOT EXISTS FOR (e:L9Entity) REQUIRE e.id IS UNIQUE",
-                "CREATE INDEX IF NOT EXISTS FOR (e:L9Entity) ON (e.engagement_id)",
-                "CREATE INDEX IF NOT EXISTS FOR (e:L9Entity) ON (e.entity_type)",
-            ]
-            for cypher in constraints:
-                try:
-                    await session.run(cypher)
-                except Exception as e:
-                    logger.warning(f"Constraint/index creation skipped: {e}")
+    async def run_full_analysis(self, engagement_id: str, run_id: str = None):
+        """
+        Full intelligence pipeline:
+        1. Schema constraints
+        2. Entity/evidence correlation → Neo4j
+        3. Relationship inference
+        4. Confidence propagation
+        5. Attack path generation
+        6. Temporal snapshot
+        7. Prioritization
+        8. Drift detection + Redis publish
+        """
+        logger.info(f"=== Full analysis pipeline start: {engagement_id} (run={run_id}) ===")
 
-    async def correlate_entities(self, engagement_id: str):
-        """
-        Pull entities from PostgreSQL, merge into Neo4j graph,
-        and infer typed relationships.
-        """
-        logger.info(f"Running correlation pass for engagement {engagement_id}")
         if not self.driver:
-            logger.error("Neo4j driver not available, skipping correlation")
+            logger.error("Neo4j unavailable, aborting")
             return
 
-        await self._ensure_constraints()
-
+        await ensure_constraints(self.driver)
         pg_pool = await get_pg_pool()
+        if not pg_pool:
+            logger.error("PostgreSQL unavailable, aborting")
+            return
+
         try:
-            async with pg_pool.acquire() as conn:
-                # 1. Fetch entities for this engagement
-                rows = await conn.fetch(
-                    "SELECT id, entity_type, canonical_key, display_name, "
-                    "confidence::text, first_seen_at, last_seen_at, valid_from, "
-                    "valid_to, attributes::text "
-                    "FROM entities WHERE engagement_id = $1",
-                    engagement_id
+            # Step 1-3: Correlate entities and infer relationships
+            await self._correlate_all(engagement_id, pg_pool)
+
+            # Step 4: Propagate confidence through the graph
+            await propagate_confidence_to_graph(self.driver, engagement_id)
+
+            # Step 5: Generate attack paths
+            paths = await generate_attack_paths(self.driver, pg_pool, engagement_id)
+
+            # Step 6: Capture temporal snapshot
+            try:
+                snapshot_id = await create_snapshot(self.driver, pg_pool, engagement_id)
+                logger.info(f"Snapshot captured: {snapshot_id}")
+            except Exception as e:
+                logger.warning(f"Snapshot capture failed (non-fatal): {e}")
+                snapshot_id = None
+
+            # Step 7: Prioritize findings
+            try:
+                prioritized = await prioritize_findings(self.driver, pg_pool, engagement_id)
+                logger.info(f"Prioritized {len(prioritized)} findings")
+            except Exception as e:
+                logger.warning(f"Prioritization failed (non-fatal): {e}")
+
+            # Step 8: Drift detection + Redis notification
+            if self.redis:
+                await self.redis.publish(
+                    "drift.detected",
+                    json.dumps({
+                        "engagement_id": engagement_id,
+                        "run_id": run_id,
+                        "path_count": len(paths),
+                        "snapshot_id": snapshot_id,
+                        "timestamp": str(uuid.uuid1()),
+                    })
                 )
 
-                if not rows:
-                    logger.info(f"No entities found for engagement {engagement_id}")
-                    return
-
-                # 2. Fetch findings (they become Finding nodes)
-                finding_rows = await conn.fetch(
-                    "SELECT f.id, f.title, f.severity, f.confidence::text, "
-                    "f.validation_state, f.cwe, f.affected_entity_id, "
-                    "f.first_seen_at, f.last_seen_at, "
-                    "COALESCE(e.display_name, 'unknown') as entity_name, "
-                    "COALESCE(e.canonical_key, 'unknown') as entity_key "
-                    "FROM findings f "
-                    "LEFT JOIN entities e ON f.affected_entity_id = e.id "
-                    "WHERE f.engagement_id = $1",
-                    engagement_id
-                )
-
-                # 3. Fetch evidence items
-                evidence_rows = await conn.fetch(
-                    "SELECT id, source_type, artifact_uri, sha256, "
-                    "captured_at, metadata::text "
-                    "FROM evidence_items WHERE engagement_id = $1",
-                    engagement_id
-                )
-
-                logger.info(
-                    f"Fetched {len(rows)} entities, {len(finding_rows)} findings, "
-                    f"{len(evidence_rows)} evidence items"
-                )
-
-            # 4. Merge all entity nodes into Neo4j
-            async with self.driver.session(database="neo4j") as session:
-                for row in rows:
-                    attrs = json.loads(row["attributes"]) if row["attributes"] else {}
-                    await session.run(
-                        """
-                        MERGE (e:L9Entity {
-                            engagement_id: $engagement_id,
-                            entity_type: $entity_type,
-                            canonical_key: $canonical_key
-                        })
-                        SET e.id = $id,
-                            e.display_name = $display_name,
-                            e.confidence = $confidence,
-                            e.first_seen_at = $first_seen_at,
-                            e.last_seen_at = $last_seen_at,
-                            e.valid_from = $valid_from,
-                            e.valid_to = $valid_to,
-                            e.attributes = $attributes
-                        """,
-                        engagement_id=engagement_id,
-                        entity_type=row["entity_type"],
-                        canonical_key=row["canonical_key"],
-                        id=str(row["id"]),
-                        display_name=row["display_name"],
-                        confidence=float(row["confidence"]),
-                        first_seen_at=row["first_seen_at"].isoformat(),
-                        last_seen_at=row["last_seen_at"].isoformat(),
-                        valid_from=row["valid_from"].isoformat(),
-                        valid_to=row["valid_to"].isoformat() if row["valid_to"] else None,
-                        attributes=json.dumps(attrs),
-                    )
-
-                # 5. Merge finding nodes + link to affected entity
-                for f in finding_rows:
-                    await session.run(
-                        """
-                        MERGE (n:L9Entity {
-                            engagement_id: $engagement_id,
-                            entity_type: 'finding',
-                            canonical_key: $id
-                        })
-                        SET n.id = $id,
-                            n.display_name = $title,
-                            n.severity = $severity,
-                            n.confidence = $confidence,
-                            n.validation_state = $validation_state,
-                            n.cwe = $cwe,
-                            n.first_seen_at = $first_seen_at,
-                            n.last_seen_at = $last_seen_at
-                        """,
-                        engagement_id=engagement_id,
-                        id=str(f["id"]),
-                        title=f["title"],
-                        severity=f["severity"],
-                        confidence=float(f["confidence"]) if f["confidence"] else 0.5,
-                        validation_state=f["validation_state"],
-                        cwe=f["cwe"] or "",
-                        first_seen_at=f["first_seen_at"].isoformat(),
-                        last_seen_at=f["last_seen_at"].isoformat(),
-                    )
-
-                    # Link finding -> affected entity via HAS_FINDING relationship
-                    if f["affected_entity_id"]:
-                        await session.run(
-                            """
-                            MATCH (finding:L9Entity {id: $finding_id})
-                            MATCH (entity:L9Entity {id: $entity_id})
-                            MERGE (entity)-[r:HAS_FINDING]->(finding)
-                            SET r.last_seen_at = $last_seen_at,
-                                r.confidence = $confidence
-                            """,
-                            finding_id=str(f["id"]),
-                            entity_id=str(f["affected_entity_id"]),
-                            last_seen_at=f["last_seen_at"].isoformat(),
-                            confidence=float(f["confidence"]) if f["confidence"] else 0.5,
-                        )
-
-                # 6. Merge evidence nodes + link them
-                for ev in evidence_rows:
-                    await session.run(
-                        """
-                        MERGE (n:L9Entity {
-                            engagement_id: $engagement_id,
-                            entity_type: 'evidence',
-                            canonical_key: $sha256
-                        })
-                        SET n.id = $id,
-                            n.display_name = $source_type,
-                            n.artifact_uri = $artifact_uri,
-                            n.captured_at = $captured_at
-                        """,
-                        engagement_id=engagement_id,
-                        sha256=ev["sha256"],
-                        id=str(ev["id"]),
-                        source_type=ev["source_type"],
-                        artifact_uri=ev["artifact_uri"],
-                        captured_at=ev["captured_at"].isoformat(),
-                    )
-
-                # 7. Infer relationships between entities based on type patterns
-                await self._infer_relationships(session, engagement_id, rows)
-
-                logger.info(f"Correlation complete for engagement {engagement_id}")
+            summary = await get_graph_summary(self.driver, engagement_id)
+            logger.info(f"=== Analysis complete: {engagement_id} === {summary}")
 
         except Exception as e:
-            logger.error(f"Correlation failed: {e}", exc_info=True)
+            logger.error(f"Analysis pipeline failed: {e}", exc_info=True)
         finally:
             await pg_pool.close()
 
-    async def _infer_relationships(self, session, engagement_id, rows):
-        """
-        Infer typed relationships between entities based on naming conventions
-        and type-pairing rules.
-        """
-        # Map entities by type for relationship inference
-        by_type: Dict[str, List[Dict]] = {}
-        for row in rows:
-            et = row["entity_type"]
-            if et not in by_type:
-                by_type[et] = []
-            by_type[et].append(row)
+    async def _correlate_all(self, engagement_id: str, pg_pool):
+        """Fetch all data from PostgreSQL and merge into Neo4j graph."""
+        async with pg_pool.acquire() as conn:
+            # Fetch entities
+            entity_rows = await conn.fetch(
+                """SELECT id, entity_type, canonical_key, display_name,
+                          confidence::text, first_seen_at, last_seen_at,
+                          valid_from, valid_to, attributes::text
+                   FROM entities WHERE engagement_id = $1""",
+                engagement_id,
+            )
 
-        # RESOLVES_TO: host entities named as IPs -> host entities named as FQDNs
+            # Fetch findings
+            finding_rows = await conn.fetch(
+                """SELECT f.id, f.title, f.severity, f.confidence::text,
+                          f.validation_state, f.cwe, f.affected_entity_id,
+                          f.first_seen_at, f.last_seen_at,
+                          COALESCE(e.display_name, 'unknown') AS entity_name,
+                          COALESCE(e.canonical_key, 'unknown') AS entity_key
+                   FROM findings f
+                   LEFT JOIN entities e ON f.affected_entity_id = e.id
+                   WHERE f.engagement_id = $1""",
+                engagement_id,
+            )
+
+            # Fetch evidence
+            evidence_rows = await conn.fetch(
+                """SELECT id, source_type, artifact_uri, sha256,
+                          captured_at, metadata::text
+                   FROM evidence_items WHERE engagement_id = $1""",
+                engagement_id,
+            )
+
+        logger.info(
+            f"Fetched {len(entity_rows)} entities, {len(finding_rows)} findings, "
+            f"{len(evidence_rows)} evidence items"
+        )
+
+        if not entity_rows and not finding_rows:
+            logger.info(f"No data for engagement {engagement_id}")
+            return
+
+        async with self.driver.session(database="neo4j") as session:
+            # Merge entities
+            for row in entity_rows:
+                await merge_entity_node(session, dict(row), engagement_id)
+
+            # Merge findings + link to affected entities
+            for f in finding_rows:
+                await merge_finding_node(session, dict(f), engagement_id)
+                if f["affected_entity_id"]:
+                    await link_finding_to_entity(
+                        session,
+                        str(f["id"]),
+                        str(f["affected_entity_id"]),
+                        float(f["confidence"]) if f["confidence"] else 0.5,
+                        f["last_seen_at"],
+                    )
+
+            # Merge evidence
+            for ev in evidence_rows:
+                await merge_evidence_node(session, dict(ev), engagement_id)
+
+            # Infer typed relationships
+            await self._infer_relationships(session, entity_rows, engagement_id)
+
+    async def _infer_relationships(self, session, entity_rows, engagement_id):
+        """Infer typed relationships between entities."""
+        by_type = {}
+        for row in entity_rows:
+            et = row["entity_type"]
+            by_type.setdefault(et, []).append(row)
+
+        # RESOLVES_TO: FQDN hosts → IP hosts
         hosts = by_type.get("host", [])
         for host in hosts:
             ck = host["canonical_key"]
-            # If this looks like a domain, check for IP-patterned hosts
             if not ck.replace(".", "").isdigit():
                 for other in hosts:
                     ock = other["canonical_key"]
                     if ock.replace(".", "").isdigit():
-                        await session.run(
-                            """
-                            MATCH (a:L9Entity {id: $source_id})
-                            MATCH (b:L9Entity {id: $target_id})
-                            MERGE (a)-[r:RESOLVES_TO]->(b)
-                            SET r.confidence = 0.7,
-                                r.first_seen_at = $now
-                            """,
-                            source_id=str(host["id"]),
-                            target_id=str(other["id"]),
-                            now=host["first_seen_at"].isoformat(),
+                        await create_relationship(
+                            session, str(host["id"]), str(other["id"]),
+                            "RESOLVES_TO", 0.7,
+                            {"inference_rule": "dns_resolution"},
                         )
 
-        # HOSTS: service entities -> host entities (by canonical_key prefix matching)
+        # HOSTS: services → hosts
         services = by_type.get("service", [])
         for svc in services:
             svc_key = svc["canonical_key"]
             for host in hosts:
                 host_key = host["canonical_key"]
                 if host_key in svc_key or svc_key.endswith(host_key):
-                    await session.run(
-                        """
-                        MATCH (a:L9Entity {id: $svc_id})
-                        MATCH (b:L9Entity {id: $host_id})
-                        MERGE (b)-[r:HOSTS]->(a)
-                        SET r.confidence = 0.8,
-                            r.first_seen_at = $now
-                        """,
-                        svc_id=str(svc["id"]),
-                        host_id=str(host["id"]),
-                        now=svc["first_seen_at"].isoformat(),
+                    await create_relationship(
+                        session, str(host["id"]), str(svc["id"]),
+                        "HOSTS", 0.8,
+                        {"inference_rule": "key_containment"},
+                    )
+
+        # AUTHENTICATES_TO: credentials → services (by naming patterns)
+        creds = by_type.get("credential", [])
+        for cred in creds:
+            cred_key = cred["canonical_key"].lower()
+            for svc in services:
+                svc_key = svc["canonical_key"].lower()
+                if any(part in cred_key for part in svc_key.split(".")):
+                    await create_relationship(
+                        session, str(cred["id"]), str(svc["id"]),
+                        "AUTHENTICATES_TO", 0.6,
+                        {"inference_rule": "key_pattern_match"},
                     )
 
         logger.info(f"Inferred relationships for engagement {engagement_id}")
 
-    async def generate_attack_paths(self, engagement_id: str):
-        """
-        Use weighted Neo4j graph traversal (Cypher) to find ranked attack paths
-        from entry nodes (services exposed to internet) to objectives.
-        Results are written back to PostgreSQL and a drift score is published to Redis.
-        """
-        logger.info(f"Generating attack paths for engagement {engagement_id}")
-        if not self.driver:
-            logger.error("Neo4j driver not available, skipping attack path generation")
-            return
 
-        try:
-            async with self.driver.session(database="neo4j") as session:
-                # Find exposure-level nodes — entities with high connectivity
-                # or explicitly marked as entry points
-                result = await session.run(
-                    """
-                    // Find paths from high-exposure nodes to findings/critical entities
-                    MATCH path = (entry:L9Entity {engagement_id: $engagement_id})
-                        -[:HAS_FINDING|HOSTS|RESOLVES_TO*1..5]->(terminal:L9Entity)
-                    WHERE entry.entity_type IN ['service', 'host', 'endpoint']
-                      AND terminal.entity_type IN ['finding', 'vulnerability', 'objective']
-                    RETURN
-                        [n in nodes(path) | n.display_name] AS node_names,
-                        [n in nodes(path) | n.entity_type] AS node_types,
-                        [n in nodes(path) | n.id] AS node_ids,
-                        length(path) AS depth,
-                        reduce(conf = 1.0, n in nodes(path) |
-                            conf * coalesce(toFloat(n.confidence), 0.5)
-                        ) AS path_confidence
-                    ORDER BY path_confidence DESC
-                    LIMIT 20
-                    """,
-                    engagement_id=engagement_id
-                )
-
-                paths = []
-                async for record in result:
-                    paths.append({
-                        "node_names": record["node_names"],
-                        "node_types": record["node_types"],
-                        "node_ids": record["node_ids"],
-                        "depth": record["depth"],
-                        "path_confidence": record["path_confidence"],
-                    })
-
-                # Fallback: if no paths found via traversal, attempt brute force
-                if not paths:
-                    result = await session.run(
-                        """
-                        MATCH (a:L9Entity {engagement_id: $engagement_id})
-                        MATCH (b:L9Entity {engagement_id: $engagement_id})
-                        WHERE a <> b
-                          AND a.entity_type IN ['service', 'host', 'endpoint']
-                          AND b.entity_type IN ['finding', 'vulnerability', 'objective']
-                        WITH a, b
-                        OPTIONAL MATCH p = shortestPath(
-                            (a)-[*..6]-(b)
-                        )
-                        WHERE p IS NOT NULL
-                        RETURN
-                            [n in nodes(p) | n.display_name] AS node_names,
-                            [n in nodes(p) | n.entity_type] AS node_types,
-                            [n in nodes(p) | n.id] AS node_ids,
-                            length(p) AS depth,
-                            0.5 AS path_confidence
-                        ORDER BY depth ASC
-                        LIMIT 20
-                        """,
-                        engagement_id=engagement_id
-                    )
-                    async for record in result:
-                        paths.append({
-                            "node_names": record["node_names"],
-                            "node_types": record["node_types"],
-                            "node_ids": record["node_ids"],
-                            "depth": record["depth"],
-                            "path_confidence": record["path_confidence"],
-                        })
-
-                logger.info(
-                    f"Generated {len(paths)} attack paths for engagement {engagement_id}"
-                )
-
-                # Persist attack paths to PostgreSQL
-                pg_pool = await get_pg_pool()
-                try:
-                    async with pg_pool.acquire() as conn:
-                        for path in paths:
-                            entry_id = path["node_ids"][0] if path["node_ids"] else None
-                            obj_id = path["node_ids"][-1] if path["node_ids"] else None
-
-                            await conn.execute(
-                                """
-                                INSERT INTO attack_paths
-                                    (id, engagement_id, entry_entity_id, objective_entity_id,
-                                     title, confidence, feasibility, impact, priority,
-                                     state, reasoning_trace, created_at)
-                                VALUES
-                                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'candidate', $10, NOW())
-                                ON CONFLICT (id) DO NOTHING
-                                """,
-                                str(uuid.uuid4()),
-                                engagement_id,
-                                entry_id,
-                                obj_id,
-                                f"Path: {' -> '.join(path['node_names'])}",
-                                str(path["path_confidence"]),
-                                str(path["path_confidence"] * 0.8),
-                                "0.7",
-                                str(path["path_confidence"] * 0.7),
-                                json.dumps({
-                                    "node_names": path["node_names"],
-                                    "node_types": path["node_types"],
-                                    "node_ids": path["node_ids"],
-                                    "depth": path["depth"],
-                                }),
-                            )
-                finally:
-                    await pg_pool.close()
-
-                # Publish drift event to Redis
-                if self.redis_client:
-                    await self.redis_client.publish(
-                        "drift.detected",
-                        json.dumps({
-                            "engagement_id": engagement_id,
-                            "path_count": len(paths),
-                            "timestamp": str(uuid.uuid1()),
-                        })
-                    )
-
-        except Exception as e:
-            logger.error(f"Attack path generation failed: {e}", exc_info=True)
-
+# Module-level singleton
 engine = IntelligenceEngine()
 
-class AnalysisRequest(BaseModel):
-    run_id: str
-    profile: str = "full_offensive"
+
+# === FastAPI Application ===
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info(f"Lattice9 Engine v{ENGINE_VERSION} starting")
+    yield
+    logger.info("Engine shutting down")
+    await engine.close()
+
+
+app = FastAPI(
+    title="Lattice9 Graph Intelligence Engine",
+    version=ENGINE_VERSION,
+    lifespan=lifespan,
+)
+
+
+def verify_engine_key(x_lattice9_key: Optional[str] = Header(None)):
+    if x_lattice9_key != LATTICE9_ENGINE_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+# === API Endpoints ===
 
 @app.post("/analyze/{engagement_id}")
 async def analyze_engagement(
     engagement_id: str,
     request: AnalysisRequest,
     tasks: BackgroundTasks,
-    x_lattice9_key: Optional[str] = Header(None)
+    x_lattice9_key: Optional[str] = Header(None),
 ):
-    if x_lattice9_key != LATTICE9_ENGINE_KEY:
-        logger.warning(f"Unauthorized analysis attempt for {engagement_id}")
-        raise HTTPException(status_code=401, detail="Unauthorized: Invalid LATTICE9_ENGINE_KEY")
+    verify_engine_key(x_lattice9_key)
+    logger.info(f"Analysis request: {engagement_id} (run={request.run_id})")
+    tasks.add_task(engine.run_full_analysis, engagement_id, request.run_id)
+    return {"status": "analysis_queued", "engagement_id": engagement_id, "run_id": request.run_id}
 
-    logger.info(f"Received analysis request for {engagement_id} (Run: {request.run_id})")
 
-    tasks.add_task(engine.correlate_entities, engagement_id)
-    tasks.add_task(engine.generate_attack_paths, engagement_id)
+@app.post("/events/{engagement_id}")
+async def event_driven_analysis(
+    engagement_id: str,
+    event_type: str = Query(..., description="Event type: evidence_added, finding_updated"),
+    entity_id: str = Query(None, description="Affected entity ID"),
+    tasks: BackgroundTasks = BackgroundTasks(),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Event-driven re-analysis for specific graph operations."""
+    verify_engine_key(x_lattice9_key)
 
-    return {
-        "status": "analysis_queued",
-        "engagement_id": engagement_id,
-        "run_id": request.run_id
-    }
+    if event_type == "evidence_added":
+        tasks.add_task(engine.run_full_analysis, engagement_id, f"event_{event_type}")
+    elif event_type == "finding_updated" and entity_id:
+        pg_pool = await get_pg_pool()
+        if pg_pool:
+            await recalculate_finding_confidence(engine.driver, pg_pool, entity_id)
+            await pg_pool.close()
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown event: {event_type}")
+
+    return {"status": "event_queued", "event_type": event_type}
+
+
+@app.get("/snapshots/{engagement_id}")
+async def list_snapshots(engagement_id: str, x_lattice9_key: Optional[str] = Header(None)):
+    verify_engine_key(x_lattice9_key)
+    pg_pool = await get_pg_pool()
+    try:
+        evolution = await get_exposure_evolution(engine.driver, pg_pool, engagement_id)
+        return evolution
+    finally:
+        await pg_pool.close()
+
+
+@app.get("/algorithms/{engagement_id}")
+async def get_algorithm_results(
+    engagement_id: str,
+    algorithm: str = Query("centrality", description="Algorithm: centrality, influence, blast, privilege, exposure"),
+    node_id: str = Query(None, description="Node ID for blast radius analysis"),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Run and return graph algorithm results."""
+    verify_engine_key(x_lattice9_key)
+
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+
+    if algorithm == "centrality":
+        result = await centrality_analysis(engine.driver, engagement_id)
+    elif algorithm == "influence":
+        result = await influence_propagation_fallback(engine.driver, engagement_id)
+    elif algorithm == "blast" and node_id:
+        result = await blast_radius_analysis(engine.driver, engagement_id, node_id)
+    elif algorithm == "privilege":
+        result = await privilege_chain_synthesis(engine.driver, engagement_id)
+    elif algorithm == "exposure":
+        result = await exposure_diffusion(engine.driver, engagement_id)
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown algorithm or missing node_id")
+
+    return {"engagement_id": engagement_id, "algorithm": algorithm, "result": result}
+
+
+@app.get("/algorithms/{engagement_id}/paths")
+async def get_attack_paths(
+    engagement_id: str,
+    max_depth: int = Query(6, description="Max path depth"),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+
+    paths = await shortest_attack_paths(engine.driver, engagement_id, max_depth=max_depth)
+    return {"engagement_id": engagement_id, "paths": paths, "total": len(paths)}
+
+
+@app.get("/algorithms/{engagement_id}/exploit-chains")
+async def get_exploit_chains(engagement_id: str, x_lattice9_key: Optional[str] = Header(None)):
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+
+    chains = await synthesize_exploit_chains(engine.driver, engagement_id)
+    return {"engagement_id": engagement_id, "exploit_chains": chains, "total": len(chains)}
+
+
+@app.get("/evidence/{engagement_id}/lineage")
+async def get_lineage(engagement_id: str, x_lattice9_key: Optional[str] = Header(None)):
+    verify_engine_key(x_lattice9_key)
+    pg_pool = await get_pg_pool()
+    try:
+        lineage = await get_engagement_evidence_lineage(pg_pool, engagement_id)
+        return lineage
+    finally:
+        await pg_pool.close()
+
+
+@app.get("/evidence/{evidence_id}/provenance")
+async def get_provenance(evidence_id: str, x_lattice9_key: Optional[str] = Header(None)):
+    verify_engine_key(x_lattice9_key)
+    pg_pool = await get_pg_pool()
+    try:
+        provenance = await get_evidence_provenance(pg_pool, evidence_id)
+        return provenance
+    finally:
+        await pg_pool.close()
+
 
 @app.get("/health")
 async def health():
+    status = "operational"
+    if engine.driver:
+        try:
+            async with engine.driver.session(database="neo4j") as session:
+                await session.run("RETURN 1")
+        except Exception:
+            status = "degraded"
+
     return {
-        "status": "operational",
-        "engine": "Lattice9-OS-V5",
-        "schema_version": "5.0.0"
+        "status": status,
+        "engine": f"Lattice9-OS-{ENGINE_VERSION}",
+        "schema_version": ENGINE_VERSION,
+        "neo4j": engine.driver is not None,
+        "redis": engine.redis is not None,
     }
-
-@app.on_event("shutdown")
-async def shutdown():
-    await engine.close()
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)

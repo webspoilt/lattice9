@@ -59,8 +59,8 @@ export default function Home() {
     <div className="min-h-screen bg-[#0a0a0b] text-[#e0e0e0] selection:bg-indigo-500/20 relative">
 
       <span id="lattice9-diag" className="sr-only">MOUNTED</span>
-      {/* Background Layers - Keeping disabled to ensure scroll stability */}
-      {/* <BackgroundField entropy={globalEntropy} /> */}
+      {/* Background Layers */}
+      <BackgroundField entropy={globalEntropy} />
 
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#1e1e20] bg-[#0a0a0b]/80 backdrop-blur-md">
@@ -119,8 +119,36 @@ export default function Home() {
               </motion.div>
             </div>
 
-            {/* 3D Intelligence Navigator - Placeholder for now to ensure layout */}
-            <div className="hidden lg:block relative z-20 h-[540px] border border-[#1e1e20] bg-[#0e0e10]/40 backdrop-blur-sm" />
+            {/* 3D Intelligence Navigator - Positioned towards center-right */}
+            <motion.div 
+              className="hidden lg:block relative z-20" 
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+            >
+              <div className="relative aspect-square w-full max-w-[540px] mx-auto border border-[#1e1e20] bg-[#0e0e10]/40 backdrop-blur-sm overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                <div className="absolute top-0 left-0 right-0 h-10 border-b border-[#1e1e20] bg-[#0a0a0b]/90 flex items-center justify-between px-5 z-20">
+                  <span className="text-[10px] font-mono text-indigo-400 tracking-[0.2em] uppercase">Intelligence_Navigator_v5.0.0</span>
+                  <div className="flex gap-5">
+                    {[{ l: 'Asset', c: '#6366f1' }, { l: 'Identity', c: '#8c8ca0' }, { l: 'Vuln', c: '#d4a574' }].map(l => (
+                      <div key={l.l} className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-none" style={{ background: l.c }} />
+                        <span className="text-[9px] font-mono text-[#666] tracking-tighter uppercase">{l.l}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="absolute inset-0 pt-10">
+                  <IntelligenceNavigator data={MOCK_INTELLIGENCE} />
+                </div>
+                
+                {/* Decorative corners */}
+                <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-indigo-500/40 z-30" />
+                <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-indigo-500/40 z-30" />
+                <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-indigo-500/40 z-30" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-indigo-500/40 z-30" />
+              </div>
+            </motion.div>
           </div>
         </div>
 
