@@ -100,7 +100,8 @@
   }
 
   .op-value {
-    @apply text-[11px] font-semibold text-foreground op-text-mono;
+    @apply text-[11px] font-semibold text-foreground;
+    font-family: 'IBM Plex Mono', monospace;
   }
 
   .op-table {
