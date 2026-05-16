@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
-import { EntityType, RelationshipType } from '../../../../../shared/intelligence';
+import { EntityType, RelationshipType } from '../shared/intelligence';
 
 /**
  * IntelligenceNavigator: The Operational Command View
