@@ -41,9 +41,14 @@ export const IntelligenceNavigator: React.FC<{ data: any; className?: string }> 
   useEffect(() => {
     const fg = fgRef.current;
     if (fg) {
-      fg.d3Force('charge')?.strength(-150);
-      fg.d3Force('link')?.distance(100);
-      fg.d3AlphaTarget(0.01);
+      // Use optional chaining and type checks for D3 methods
+      if (typeof fg.d3Force === 'function') {
+        fg.d3Force('charge')?.strength(-150);
+        fg.d3Force('link')?.distance(100);
+      }
+      if (typeof fg.d3AlphaTarget === 'function') {
+        fg.d3AlphaTarget(0.01);
+      }
     }
   }, []);
 
@@ -59,13 +64,16 @@ export const IntelligenceNavigator: React.FC<{ data: any; className?: string }> 
         enablePanInteraction={false}
         enableZoomInteraction={false}
         nodeCanvasObject={(node: any, ctx, globalScale) => {
+          // Prevent drawing if coordinates are not yet initialized by D3
+          if (typeof node.x !== 'number' || typeof node.y !== 'number') return;
+
           const time = performance.now() / 1000;
           const label = node.label;
           const fontSize = 10 / globalScale;
           const size = node.val || 5;
           
           // Organic jitter
-          const jitter = node.entropy * 0.8;
+          const jitter = (node.entropy || 0) * 0.8;
           const nx = node.x + (Math.random() - 0.5) * jitter;
           const ny = node.y + (Math.random() - 0.5) * jitter;
           

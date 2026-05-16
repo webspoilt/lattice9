@@ -8,6 +8,7 @@ import { CoreSections } from '@/components/CoreSections';
 import { PretextLog } from '@/components/PretextLog';
 import { BackgroundField } from '@/components/BackgroundField';
 import { AdversarialSlopeGraph } from '@/components/AdversarialSlopeGraph';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const MOCK_INTELLIGENCE = {
   entities: [
@@ -58,7 +59,9 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#0a0a0b] text-[#e0e0e0] selection:bg-indigo-500/20 relative">
       {/* Background Layers */}
-      <BackgroundField entropy={globalEntropy} />
+      <ErrorBoundary>
+        <BackgroundField entropy={globalEntropy} />
+      </ErrorBoundary>
 
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#1e1e20] bg-[#0a0a0b]/80 backdrop-blur-md">
@@ -137,7 +140,9 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="absolute inset-0 pt-10">
-                  <IntelligenceNavigator data={MOCK_INTELLIGENCE} />
+                  <ErrorBoundary>
+                    <IntelligenceNavigator data={MOCK_INTELLIGENCE} />
+                  </ErrorBoundary>
                 </div>
                 
                 {/* Decorative corners */}
