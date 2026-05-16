@@ -57,8 +57,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0b] text-[#e0e0e0] selection:bg-indigo-500/20 relative">
-
-      <span id="lattice9-diag" className="sr-only">MOUNTED</span>
       {/* Background Layers */}
       <BackgroundField entropy={globalEntropy} />
 
