@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { CodeBlock } from "@/components/CodeBlock";
 import { Logo } from "@/components/Logo";
-import { CorrelationGraph3D } from "@/components/CorrelationGraph3D";
+import { IntelligencePanel } from "@/components/IntelligencePanel";
 import { 
   Loader2, 
   Shield, 
@@ -24,8 +24,7 @@ import {
   Search,
   AlertTriangle,
   Server,
-  Share2,
-  Cuboid
+  Share2
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -220,86 +219,10 @@ export default function Lattice9Console() {
                 </div>
 
                 <div className="flex-1 overflow-hidden">
-                  <TabsContent value="intelligence" className="h-full m-0 p-0 flex flex-col overflow-hidden">
-                    <div className="flex-1 flex overflow-hidden">
-                      {/* Attack Path Queue — left sidebar */}
-                      <div className="w-80 shrink-0 border-r border-white/5 overflow-y-auto p-5 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-[0.2em]">Correlation_Priority</h3>
-                          <Fingerprint className="w-4 h-4 text-zinc-800" />
-                        </div>
-                        <div className="space-y-2">
-                          {findingsQuery.data?.map(f => (
-                            <div 
-                              key={f.id} 
-                              className="p-3 bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 transition-all cursor-pointer group"
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <SeverityBadge severity={f.severity as any} />
-                                <span className="text-[8px] font-mono text-zinc-600 uppercase">Conf: {f.confidence}</span>
-                              </div>
-                              <h4 className="text-[11px] font-bold text-zinc-200 leading-tight group-hover:text-indigo-400 transition-colors uppercase tracking-tight">{f.title}</h4>
-                              <div className="mt-2 flex items-center gap-2">
-                                <div className="h-0.5 flex-1 bg-zinc-800 overflow-hidden">
-                                  <div className="h-full bg-indigo-500/40" style={{ width: '85%' }} />
-                                </div>
-                                <span className="text-[7px] font-mono text-zinc-600 font-bold uppercase tracking-widest shrink-0">Validated</span>
-                              </div>
-                            </div>
-                          ))}
-                          {(!findingsQuery.data || findingsQuery.data.length === 0) && (
-                            <div className="p-8 border border-dashed border-white/5 text-center text-zinc-700 text-[10px] font-mono uppercase tracking-widest">
-                              Intelligence synthesis pending...
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* 3D Correlation Graph + Reasoning Trace — right area */}
-                      <div className="flex-1 flex flex-col overflow-hidden">
-                        {/* 3D Graph */}
-                        <div className="flex-1 min-h-0 relative">
-                          {selectedEngagementId && (
-                            <CorrelationGraph3D engagementId={selectedEngagementId} />
-                          )}
-                        </div>
-
-                        {/* Reasoning trace strip */}
-                        <div className="h-32 shrink-0 border-t border-white/5 bg-[#0e0e10] overflow-y-auto px-5 py-3">
-                          <div className="flex items-center gap-3 mb-2">
-                            <Activity className="w-3 h-3 text-indigo-500" />
-                            <span className="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-[0.2em]">Reasoning_Trace</span>
-                          </div>
-                          <div className="flex gap-4 overflow-x-auto pb-2">
-                            {findingsQuery.data && findingsQuery.data.length > 0 ? (
-                              findingsQuery.data.slice(0, 6).map((f, i) => (
-                                <div key={f.id} className="flex items-start gap-3 shrink-0 min-w-[200px] max-w-[260px] p-2.5 bg-white/[0.01] border border-white/5">
-                                  <div className="w-4 h-4 border border-zinc-700 flex items-center justify-center shrink-0 text-[8px] font-mono text-zinc-500 bg-zinc-900">
-                                    {String(i + 1).padStart(2, "0")}
-                                  </div>
-                                  <div className="space-y-1 min-w-0">
-                                    <div className="text-[8px] font-mono text-indigo-500 uppercase font-bold tracking-[0.15em] truncate">
-                                      {f.sourceTool || "Observation"}_{f.severity}
-                                    </div>
-                                    <p className="text-[10px] text-zinc-400 leading-relaxed line-clamp-2 font-medium">
-                                      {f.evidence || f.title || "No evidence captured"}
-                                    </p>
-                                    <div className="flex gap-1.5 pt-1 flex-wrap">
-                                      <span className="text-[7px] font-mono text-zinc-600 px-1 py-0.5 border border-white/5">CWE: {f.cwe || "N/A"}</span>
-                                      <span className="text-[7px] font-mono text-zinc-600 px-1 py-0.5 border border-white/5">CONF: {f.confidence}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="flex items-center gap-3 text-zinc-700 text-[10px] font-mono italic">
-                                Initiate intelligence capture to populate reasoning trace...
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  <TabsContent value="intelligence" className="h-full m-0 p-0">
+                    {selectedEngagementId && (
+                      <IntelligencePanel engagementId={selectedEngagementId} />
+                    )}
                   </TabsContent>
 
                   <TabsContent value="evidence" className="h-full m-0 p-8 overflow-y-auto">

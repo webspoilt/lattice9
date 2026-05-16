@@ -329,6 +329,43 @@ flowchart TB
 
 ## 09. Graph Intelligence Layer
 
+### Module Architecture
+
+The graph intelligence engine (`server-py/`) is organized as a modular Python package:
+
+```
+server-py/
+├── main.py                 # FastAPI entry point + pipeline orchestration
+├── config.py               # Environment configuration
+├── models.py               # Pydantic data models
+├── db.py                   # PostgreSQL async connection pool
+├── graph/
+│   ├── schema.py           # Multi-label Neo4j schema (typed nodes, edges, constraints)
+│   ├── engine.py           # Core node/edge CRUD operations
+│   ├── algorithms.py       # Dijkstra, BFS/DFS, PageRank, centrality, blast radius
+│   ├── temporal.py         # Snapshots, diffs, drift detection
+│   └── confidence.py       # Bayesian confidence propagation
+├── reasoning/
+│   ├── attack_paths.py     # Weighted multi-path inference + composite scoring
+│   ├── exploit_chains.py   # Exploit dependency mapping + feasibility scoring
+│   └── prioritization.py   # Contextual priority ranking (entropy-weighted)
+└── evidence/
+    └── lineage.py          # Immutable evidence chains + provenance graphs
+```
+
+### API Endpoints
+
+| Endpoint | Function |
+|---|---|
+| `POST /analyze/{id}` | Full intelligence pipeline |
+| `POST /events/{id}` | Event-driven re-analysis |
+| `GET /algorithms/{id}` | Graph algorithm results (centrality, influence, blast, privilege, exposure) |
+| `GET /algorithms/{id}/paths` | Attack path inference |
+| `GET /algorithms/{id}/exploit-chains` | Exploit chain synthesis |
+| `GET /snapshots/{id}` | Temporal snapshot history |
+| `GET /evidence/{id}/lineage` | Evidence provenance |
+| `GET /health` | System health |
+
 Lattice9 models infrastructure as a directed, typed, weighted multigraph:
 
 $$
