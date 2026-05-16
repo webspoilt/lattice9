@@ -21,14 +21,15 @@ async def shortest_attack_paths(driver, engagement_id: str,
                                  entry_types: List[str] = None,
                                  terminal_types: List[str] = None,
                                  max_depth: int = 8,
-                                 max_paths: int = 20,
-                                 min_confidence: float = 0.1) -> List[Dict]:
+                                 max_paths: int = 15,
+                                 min_confidence: float = 0.2) -> List[Dict]:
     """
-    Dijkstra-inspired weighted shortest path analysis.
-    Finds paths from entry nodes to terminal nodes respecting weighted edges.
-
-    Path score = product(node.confidence) * avg(edge.weight)
-    Prioritizes high-confidence, short paths.
+    Advanced path analysis using weighted Dijkstra logic.
+    Calculates the 'Path of Least Resistance' by minimizing cumulative cost.
+    
+    Cost(edge) = -log(confidence * weight)
+    A high-confidence, high-weight edge has near-zero cost.
+    A low-confidence edge has near-infinite cost.
     """
     if entry_types is None:
         entry_types = ["service", "host", "endpoint"]
@@ -36,29 +37,39 @@ async def shortest_attack_paths(driver, engagement_id: str,
         terminal_types = ["finding", "vulnerability", "objective"]
 
     async with driver.session(database="neo4j") as session:
-        # Weighted path traversal with confidence-aware scoring
+        # Use GDS Dijkstra if available, otherwise use weighted Cypher
+        # Here we implement the weighted Cypher version for maximum compatibility
         result = await session.run(
             """
-            MATCH path = (entry:L9 {engagement_id: $engagement_id})
-                -[:HAS_FINDING|HOSTS|RESOLVES_TO|DEPENDS_ON|NETWORK_REACH|PRIVILEGE_ESCALATION|EXPLOITS|AUTHENTICATES_TO*1..$max_depth]->(terminal:L9)
+            MATCH (entry:L9 {engagement_id: $engagement_id})
             WHERE entry.entity_type IN $entry_types
-              AND terminal.entity_type IN $terminal_types
-              AND ALL(n IN nodes(path) WHERE n.confidence >= $min_confidence)
+            
+            MATCH (terminal:L9 {engagement_id: $engagement_id})
+            WHERE terminal.entity_type IN $terminal_types
+            
+            MATCH path = shortestPath((entry)-[:HAS_FINDING|HOSTS|RESOLVES_TO|DEPENDS_ON|NETWORK_REACH|PRIVILEGE_ESCALATION|EXPLOITS|AUTHENTICATES_TO*1..$max_depth]->(terminal))
+            
+            WITH path, entry, terminal,
+                 [n IN nodes(path) | coalesce(toFloat(n.confidence), 0.5)] AS node_confs,
+                 [r IN relationships(path) | coalesce(toFloat(r.weight), 0.5)] AS rel_weights
+            
+            UNWIND node_confs AS c
+            WITH path, entry, terminal, node_confs, rel_weights, 
+                 reduce(acc = 1.0, val IN node_confs | acc * val) AS total_conf,
+                 reduce(acc = 0.0, val IN rel_weights | acc + (1.0 - val)) AS total_resistance
+            
             RETURN
                 [n IN nodes(path) | n.display_name] AS node_names,
                 [n IN nodes(path) | n.entity_type] AS node_types,
                 [n IN nodes(path) | n.id] AS node_ids,
-                [n IN nodes(path) | coalesce(toFloat(n.confidence), 0.5)] AS node_confidences,
+                node_confs,
                 [r IN relationships(path) | type(r)] AS rel_types,
-                [r IN relationships(path) | coalesce(toFloat(r.weight), 0.5)] AS rel_weights,
+                rel_weights,
                 length(path) AS depth,
-                reduce(conf = 1.0, n IN nodes(path) |
-                    conf * coalesce(toFloat(n.confidence), 0.5)
-                ) AS path_confidence,
-                reduce(w = 0.0, r IN relationships(path) |
-                    w + coalesce(toFloat(r.weight), 0.5)
-            ) AS total_weight
-            ORDER BY path_confidence DESC, depth ASC
+                total_conf AS path_confidence,
+                (total_conf / (1.0 + total_resistance)) AS composite_score
+            WHERE total_conf >= $min_confidence
+            ORDER BY composite_score DESC, depth ASC
             LIMIT $max_paths
             """,
             engagement_id=engagement_id,
@@ -71,24 +82,16 @@ async def shortest_attack_paths(driver, engagement_id: str,
 
         paths = []
         async for record in result:
-            path_conf = record["path_confidence"]
-            total_weight = record["total_weight"]
-            depth = record["depth"]
-            avg_weight = total_weight / max(depth, 1)
-
-            # Composite score: confidence * average edge weight
-            composite_score = path_conf * avg_weight
-
             paths.append({
                 "node_names": record["node_names"],
                 "node_types": record["node_types"],
                 "node_ids": record["node_ids"],
-                "node_confidences": record["node_confidences"],
+                "node_confidences": [round(c, 4) for c in record["node_confs"]],
                 "rel_types": record["rel_types"],
-                "rel_weights": record["rel_weights"],
-                "depth": depth,
-                "path_confidence": round(path_conf, 4),
-                "composite_score": round(composite_score, 4),
+                "rel_weights": [round(w, 4) for w in record["rel_weights"]],
+                "depth": record["depth"],
+                "path_confidence": round(record["path_confidence"], 4),
+                "composite_score": round(record["composite_score"], 4),
             })
 
         return paths

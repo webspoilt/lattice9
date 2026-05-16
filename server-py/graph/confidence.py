@@ -158,37 +158,76 @@ def confidence_from_severity(severity: str) -> float:
 
 async def propagate_confidence_to_graph(driver, engagement_id: str):
     """
-    Propagate confidence scores through the graph using Bayesian updates.
-    Updates node confidences based on connected evidence and neighbor states.
+    Propagate confidence scores through the graph using iterative Bayesian updates.
+    Updates node confidences based on evidence, lineage, and neighbor states.
     """
     async with driver.session(database="neo4j") as session:
-        # 1. Propagate from findings to their host entities
-        await session.run(
+        # 1. Capture initial state
+        result = await session.run(
             """
-            MATCH (entity:L9 {engagement_id: $engagement_id})-[r:HAS_FINDING]->(finding:L9:Finding)
-            WITH entity, avg(coalesce(toFloat(finding.confidence), 0.5)) AS finding_confidence
-            SET entity.confidence = $bayes_update(
-                coalesce(toFloat(entity.confidence), 0.5),
-                finding_confidence,
-                0.3
+            MATCH (n:L9 {engagement_id: $engagement_id})
+            RETURN n.id AS id, n.entity_type AS type, coalesce(toFloat(n.confidence), 0.5) AS conf
+            """,
+            engagement_id=engagement_id
+        )
+        nodes = {record["id"]: {"type": record["type"], "conf": record["conf"]} async for record in result}
+
+        # 2. Iterative propagation (Max 3 passes to avoid infinite loops/over-smoothing)
+        for i in range(3):
+            logger.info(f"Confidence propagation pass {i+1}/3 for {engagement_id}")
+            
+            # Fetch relationships for propagation
+            result = await session.run(
+                """
+                MATCH (src:L9 {engagement_id: $engagement_id})-[r]->(dst:L9 {engagement_id: $engagement_id})
+                RETURN src.id AS src_id, dst.id AS dst_id, type(r) AS rel_type, 
+                       coalesce(toFloat(r.weight), 0.5) AS weight
+                """,
+                engagement_id=engagement_id
             )
-            """,
-            engagement_id=engagement_id,
-        )
-        # Note: actual bayesian update is done via Python, see propagate_confidence
 
-        # 2. Confidence of services based on host confidence
-        await session.run(
-            """
-            MATCH (host:L9 {engagement_id: $engagement_id})-[r:HOSTS]->(service:L9)
-            WITH service, avg(coalesce(toFloat(host.confidence), 0.5)) AS host_confidence
-            SET service.confidence = coalesce(toFloat(service.confidence), 0.5) * 0.7
-                + host_confidence * 0.3
-            """,
-            engagement_id=engagement_id,
-        )
+            updates = []
+            async for record in result:
+                src_id, dst_id = record["src_id"], record["dst_id"]
+                if src_id not in nodes or dst_id not in nodes:
+                    continue
 
-        logger.info(f"Confidence propagation complete for {engagement_id}")
+                src_conf = nodes[src_id]["conf"]
+                dst_conf = nodes[dst_id]["conf"]
+                rel_weight = record["weight"]
+                rel_type = record["rel_type"]
+
+                # Inference rules for confidence propagation
+                if rel_type == "HAS_FINDING":
+                    # Finding confidence propagates strongly to the entity
+                    new_dst_conf = bayesian_update(dst_conf, src_conf, rel_weight * 0.8)
+                    nodes[dst_id]["conf"] = new_dst_conf
+                    updates.append((dst_id, new_dst_conf))
+                
+                elif rel_type == "HOSTS":
+                    # Host compromise (high confidence finding) decays service confidence
+                    new_dst_conf = bayesian_update(dst_conf, src_conf, rel_weight * 0.5)
+                    nodes[dst_id]["conf"] = new_dst_conf
+                    updates.append((dst_id, new_dst_conf))
+
+                elif rel_type == "AUTHENTICATES_TO":
+                    # Compromised credential provides high confidence path to service
+                    new_dst_conf = bayesian_update(dst_conf, src_conf, rel_weight * 0.9)
+                    nodes[dst_id]["conf"] = new_dst_conf
+                    updates.append((dst_id, new_dst_conf))
+
+            # Batch update the graph
+            if updates:
+                await session.run(
+                    """
+                    UNWIND $updates AS update
+                    MATCH (n:L9 {id: update.id})
+                    SET n.confidence = update.conf
+                    """,
+                    updates=[{"id": u[0], "conf": u[1]} for u in updates]
+                )
+
+        logger.info(f"Bayesian confidence propagation complete for {engagement_id}")
 
 
 async def update_node_confidence(driver, node_id: str, new_confidence: float):
