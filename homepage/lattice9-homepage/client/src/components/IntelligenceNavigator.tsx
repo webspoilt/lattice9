@@ -38,20 +38,6 @@ export const IntelligenceNavigator: React.FC<{ data: any; className?: string }> 
     return { nodes, links };
   }, [data]);
 
-  useEffect(() => {
-    const fg = fgRef.current;
-    if (fg) {
-      // Use optional chaining and type checks for D3 methods
-      if (typeof fg.d3Force === 'function') {
-        fg.d3Force('charge')?.strength(-150);
-        fg.d3Force('link')?.distance(100);
-      }
-      if (typeof fg.d3AlphaTarget === 'function') {
-        fg.d3AlphaTarget(0.01);
-      }
-    }
-  }, []);
-
   return (
     <div className={`absolute inset-0 z-0 overflow-hidden ${className}`}>
       <ForceGraph2D
@@ -63,6 +49,7 @@ export const IntelligenceNavigator: React.FC<{ data: any; className?: string }> 
         enableNodeDrag={false}
         enablePanInteraction={false}
         enableZoomInteraction={false}
+        d3AlphaTarget={0.01}
         nodeCanvasObject={(node: any, ctx, globalScale) => {
           // Prevent drawing if coordinates are not yet initialized by D3
           if (typeof node.x !== 'number' || typeof node.y !== 'number') return;

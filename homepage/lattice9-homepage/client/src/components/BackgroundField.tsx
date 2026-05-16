@@ -93,15 +93,20 @@ function Field({ entropy }: { entropy: number }) {
 
 export function BackgroundField({ entropy = 0.2 }: { entropy?: number }) {
   return (
-    <div className="absolute inset-0 z-0">
+    <div className="absolute inset-0 z-0 bg-[#0a0a0b]">
+      {/* CSS fallback / base layer */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.03),transparent_70%)]" />
+      
       <Canvas 
         camera={{ position: [0, 0, 1] }}
-        dpr={[1, 1.5]} // Limit DPR to 1.5 to save RAM/GPU on high-res displays
         gl={{ 
-          antialias: true,
-          alpha: false, 
+          antialias: false,
+          alpha: true,
           stencil: false,
           depth: false
+        }}
+        onCreated={({ gl }) => {
+          gl.setClearColor(0x0a0a0b, 0);
         }}
       >
         <Field entropy={entropy} />
