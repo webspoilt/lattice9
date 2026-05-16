@@ -78,7 +78,7 @@ export default function Home() {
               <a key={l} href={`#${l.toLowerCase()}`} className="text-[10px] font-mono text-[#555] hover:text-indigo-400 transition-colors tracking-widest uppercase">{l}</a>
             ))}
           </div>
-          <a href="https://github.com/webspoilt/hawk-pentest-platform" target="_blank" rel="noopener noreferrer">
+          <a href="https://github.com/webspoilt/lattice9" target="_blank" rel="noopener noreferrer">
             <Button size="sm" className="bg-indigo-600 text-white hover:bg-indigo-500 text-[10px] font-mono tracking-widest h-7 px-4 rounded-none lowercase gap-2">
               <Github className="w-3 h-3" /> github
             </Button>
@@ -346,7 +346,7 @@ export default function Home() {
               <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>Lattice9 is an experimental intelligence organism. Open source, graph-native, and mathematically constrained.</p>
             </motion.div>
             <motion.div className="flex gap-4" variants={fadeUp}>
-              <a href="https://github.com/webspoilt/hawk-pentest-platform" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/webspoilt/lattice9" target="_blank" rel="noopener noreferrer">
                 <Button className="bg-indigo-600 text-white hover:bg-indigo-500 gap-2 text-xs font-mono tracking-wider h-10 px-5 rounded-none">View on GitHub <ArrowRight className="w-3.5 h-3.5" /></Button>
               </a>
             </motion.div>
@@ -363,7 +363,7 @@ export default function Home() {
               <span className="text-xs font-mono text-[#555]">Lattice9 — Offensive Intelligence Engine</span>
             </div>
             <div className="flex items-center gap-6">
-              <a href="https://github.com/webspoilt/hawk-pentest-platform" className="text-[10px] font-mono text-[#555] hover:text-[#888] transition-colors tracking-wider uppercase">GitHub</a>
+              <a href="https://github.com/webspoilt/lattice9" className="text-[10px] font-mono text-[#555] hover:text-[#888] transition-colors tracking-wider uppercase">GitHub</a>
               <span className="text-[10px] font-mono text-[#333]">by zeroday</span>
               <span className="text-[10px] font-mono text-[#333]">v5.0.0</span>
             </div>
