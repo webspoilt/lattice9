@@ -2,31 +2,39 @@ import React, { useMemo, useRef } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 
 /**
- * IntelligenceNavigator: Operational Graph Workspace
+ * IntelligenceNavigator: Graph Intelligence Workspace
  * 
- * Implements high-density infrastructure mapping and attack path visualization
- * following Tactical Operational design principles.
+ * Implements high-density infrastructure mapping with weighted influence
+ * and attack path synthesis.
  */
 
-export const IntelligenceNavigator: React.FC<{ data: any; className?: string }> = ({ data, className = "" }) => {
+interface Props {
+  data: any;
+  className?: string;
+  onNodeClick?: (nodeId: string) => void;
+}
+
+export const IntelligenceNavigator: React.FC<Props> = ({ data, className = "", onNodeClick }) => {
   const fgRef = useRef<any>(null);
 
   const graphData = useMemo(() => {
-    // Transform normalized intelligence data into Tactical Graph format
+    // Transform engine data into Influence-Weighted format
     const nodes = data?.entities?.map((e: any) => ({
       id: e.id,
-      label: e.label,
-      type: e.type,
-      val: e.type === 'vuln' ? 6 : 4,
-      // Operational palette: Tactical Blue, Operational Amber, Slate Cyan
-      color: e.type === 'vuln' ? '#c48c00' : (e.type === 'identity' ? '#00a3a3' : '#4a6fa5'),
+      label: e.display_name || e.id,
+      type: e.entity_type,
+      // Scale by influence score (PageRank) or confidence
+      val: (e.influence_score ? e.influence_score * 20 : 4) + (e.confidence * 2),
+      color: e.entity_type === 'vuln' ? '#f59e0b' : (e.entity_type === 'identity' ? '#06b6d4' : '#3b82f6'),
+      confidence: e.confidence || 0.5
     })) || [];
 
     const links = data?.inferences?.map((i: any) => ({
       source: i.sourceId,
       target: i.targetEntityId,
       label: i.type,
-      color: '#252529' // Deep charcoal edges
+      weight: i.weight || 1,
+      color: '#27272a'
     })) || [];
 
     return { nodes, links };
@@ -43,47 +51,46 @@ export const IntelligenceNavigator: React.FC<{ data: any; className?: string }> 
         enableNodeDrag={true}
         enablePanInteraction={true}
         enableZoomInteraction={true}
-        d3AlphaTarget={0.01}
-        d3VelocityDecay={0.4}
         linkDirectionalArrowLength={3}
         linkDirectionalArrowRelPos={1}
-        linkWidth={1}
+        linkWidth={(link: any) => link.weight || 1}
+        onNodeClick={(node: any) => onNodeClick?.(node.id)}
         nodeCanvasObject={(node: any, ctx, globalScale) => {
           if (typeof node.x !== 'number' || typeof node.y !== 'number') return;
 
           const label = node.label;
-          const fontSize = 8 / globalScale;
+          const fontSize = 7 / globalScale;
           const size = node.val || 4;
           
-          // Draw tactical node marker
+          // Draw tactical marker
           ctx.beginPath();
           if (node.type === 'vuln') {
-            // Diamond for vulnerabilities
+            // Diamond for vulnerabilities (indicator of risk)
             ctx.moveTo(node.x, node.y - size);
             ctx.lineTo(node.x + size, node.y);
             ctx.lineTo(node.x, node.y + size);
             ctx.lineTo(node.x - size, node.y);
             ctx.closePath();
           } else {
-            // Sharp circle for assets/identities
+            // Sharp circle for assets
             ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
           }
           
           ctx.fillStyle = node.color;
           ctx.fill();
           
-          // Tactical outline
-          ctx.strokeStyle = '#ffffff20';
-          ctx.lineWidth = 1 / globalScale;
+          // Confidence Ring
+          ctx.strokeStyle = `rgba(255, 255, 255, ${node.confidence * 0.3})`;
+          ctx.lineWidth = 2 / globalScale;
           ctx.stroke();
 
-          // Draw operational label
-          if (globalScale > 2.5) {
-            ctx.font = `${fontSize}px "IBM Plex Mono"`;
+          // High-scale labels
+          if (globalScale > 3) {
+            ctx.font = `${fontSize}px "JetBrains Mono", "IBM Plex Mono", monospace`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#8e8e93';
-            ctx.fillText(label, node.x, node.y + size + 5);
+            ctx.fillStyle = '#71717a';
+            ctx.fillText(label, node.x, node.y + size + 4);
           }
         }}
       />
