@@ -234,12 +234,45 @@ export default function Home() {
         <CoreSections />
       </div>
 
-      {/* Predictive Intelligence Section - Keeping disabled to ensure no KaTeX crash */}
-      {/* 
+      {/* Predictive Intelligence Section */}
       <section id="intelligence" className="py-24 border-t border-[#1a1a1c] bg-[#0a0a0b]">
-        ...
+        <div className="container">
+          <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+          }}>
+            <motion.div className="space-y-6" variants={fadeUp}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-px w-6 bg-indigo-500/30" />
+                <span className="text-[9px] font-mono text-indigo-400 tracking-[0.3em] uppercase">PREDICTIVE_INFERENCE</span>
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Derivative Analysis.</h2>
+              <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
+                Lattice9 calculates the rate of change across multiple adversarial metrics. By analyzing the slope of trust decay and recon yield, we can predict system compromise before it manifests in deterministic logs.
+              </p>
+              <div className="space-y-4 pt-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-none border border-[#1e1e20] bg-[#0e0e10] flex items-center justify-center text-[10px] text-indigo-400 font-mono">01</div>
+                  <div>
+                    <h4 className="text-xs font-bold text-[#aaa] mb-1">Direct Slope Labeling</h4>
+                    <p className="text-[10px] text-[#555]">Industry-standard visualization with immediate rate-of-change visibility.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-none border border-[#1e1e20] bg-[#0e0e10] flex items-center justify-center text-[10px] text-indigo-400 font-mono">02</div>
+                  <div>
+                    <h4 className="text-xs font-bold text-[#aaa] mb-1">KaTeX Formula Support</h4>
+                    <p className="text-[10px] text-[#555]">High-fidelity mathematical typesetting for exact derivative expressions.</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            <motion.div variants={fadeUp}>
+              <AdversarialSlopeGraph />
+            </motion.div>
+          </motion.div>
+        </div>
       </section>
-      */}
 
       {/* Operational Log */}
       <section id="research" className="py-24 border-t border-[#1a1a1c] relative overflow-hidden bg-[#050506]">
