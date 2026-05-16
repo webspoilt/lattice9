@@ -59,7 +59,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#0a0a0b] text-[#e0e0e0] selection:bg-indigo-500/20 relative">
 
       <span id="lattice9-diag" className="sr-only">MOUNTED</span>
-      {/* Background Layers - Keeping disabled for now */}
+      {/* Background Layers - Keeping disabled to ensure scroll stability */}
       {/* <BackgroundField entropy={globalEntropy} /> */}
 
       {/* Nav */}
@@ -91,7 +91,10 @@ export default function Home() {
         <div className="container relative z-10 py-12 flex-1 flex flex-col justify-center">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center text-center lg:text-left">
             <div className="space-y-10 max-w-2xl mx-auto lg:mx-0">
-              <motion.div className="space-y-6" variants={stagger} initial="hidden" animate="visible">
+              <motion.div className="space-y-6" initial="hidden" animate="visible" variants={{
+                hidden: { opacity: 1 },
+                visible: { transition: { staggerChildren: 0.1, delayChildren: 0.3 } }
+              }}>
                 <motion.div className="flex items-center gap-3 justify-center lg:justify-start" variants={fadeUp}>
                   <div className="h-px w-12 bg-indigo-500/30" />
                   <span className="text-[10px] font-mono text-indigo-400 tracking-[0.4em] uppercase">Intelligence_Reasoning_Active</span>
@@ -116,17 +119,8 @@ export default function Home() {
               </motion.div>
             </div>
 
-            {/* 3D Intelligence Navigator - Positioned towards center-right (Keep disabled) */}
-            {/* 
-            <motion.div 
-              className="hidden lg:block relative z-20" 
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-            >
-              ...
-            </motion.div>
-            */}
+            {/* 3D Intelligence Navigator - Placeholder for now to ensure layout */}
+            <div className="hidden lg:block relative z-20 h-[540px] border border-[#1e1e20] bg-[#0e0e10]/40 backdrop-blur-sm" />
           </div>
         </div>
 
@@ -147,6 +141,161 @@ export default function Home() {
           <ChevronDown className="w-4 h-4 text-[#444]" />
         </motion.div>
       </section>
+
+      {/* Architecture */}
+      <section id="architecture" className="py-24 border-t border-[#1a1a1c] bg-[#080809]">
+        <div className="container">
+          <motion.div className="space-y-16" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+          }}>
+            <motion.div className="max-w-lg space-y-4" variants={fadeUp}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-px w-6 bg-indigo-500/30" />
+                <span className="text-[9px] font-mono text-indigo-400 tracking-[0.3em] uppercase">Architecture</span>
+              </div>
+              <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>How the engine reasons.</h2>
+              <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
+                Lattice9 models every target as a graph G=(V,E). Intelligence flows through the topology via Bayesian inference and spectral partitioning.
+              </p>
+            </motion.div>
+            <motion.div className="p-8 rounded-none border border-[#1e1e20] bg-[#0e0e10] overflow-x-auto shadow-inner" variants={fadeUp}>
+              <pre className="text-[11px] font-mono text-[#555] leading-loose whitespace-pre">
+{`       [ TARGET_SYSTEM ]
+           │
+    ┌──────┴──────┐
+    │             │
+ [ NODES ]     [ EDGES ] ←── Probabilistic Exploit Trajectories
+    │             │
+    └──────┬──────┘
+           │
+    [ SPECTRAL_TOPOLOGY ] ←── λ₂(L) > 0 (Fiedler Vector)
+           │
+    [ BAYESIAN_FUSION ] ←── P(H|E) = P(E|H)·P(H) / P(E)
+           │
+    ┌──────┴──────┐
+    │             │
+ [ PATH_OPTIM ]   [ ENTROPY_MIN ] ←── Bellman Equations
+    │             │
+    └─────────────┘
+           │
+      [ OPERATOR ]`}
+              </pre>
+            </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[
+                { s: '01', t: 'Evidence Collection', d: 'Gather raw signals from headers, DNS, timing, and entropy analysis.' },
+                { s: '02', t: 'Confidence Calibration', d: 'Weigh each signal by source type (Deterministic, Statistical, Heuristic).' },
+                { s: '03', t: 'Graph Fusion', d: 'Map evidence onto the asset graph. Calculate centrality-weighted risk.' },
+                { s: '04', t: 'Decision Compression', d: 'Synthesize all intelligence into the top 3 attack paths.' },
+              ].map((p, i) => (
+                <motion.div key={p.s} className="p-5 rounded-none border border-[#1e1e20] bg-[#0e0e10] hover:border-indigo-500/20 transition-colors group"
+                  variants={fadeUp}>
+                  <div className="text-[10px] font-mono text-indigo-400 tracking-[0.3em] mb-3">{p.s}</div>
+                  <h3 className="text-sm font-bold mb-2 group-hover:text-indigo-400 transition-colors" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{p.t}</h3>
+                  <p className="text-xs text-[#666] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>{p.d}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Core Modules */}
+      <div id="modules">
+        <CoreSections />
+      </div>
+
+      {/* Predictive Intelligence Section - Keeping disabled to ensure no KaTeX crash */}
+      {/* 
+      <section id="intelligence" className="py-24 border-t border-[#1a1a1c] bg-[#0a0a0b]">
+        ...
+      </section>
+      */}
+
+      {/* Operational Log */}
+      <section id="research" className="py-24 border-t border-[#1a1a1c] relative overflow-hidden bg-[#050506]">
+        <div className="container relative z-10">
+          <motion.div className="space-y-16" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+          }}>
+            <motion.div className="max-w-lg space-y-4" variants={fadeUp}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-px w-6 bg-indigo-500/30" />
+                <span className="text-[9px] font-mono text-indigo-400 tracking-[0.3em] uppercase">SYSTEM.DUMP</span>
+              </div>
+              <h2 className="text-xl font-bold tracking-tight text-[#888]" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>REASONING_TRACE_v5.0.0</h2>
+              <p className="text-xs text-[#555] font-mono leading-relaxed max-w-sm">
+                Every inference is backed by an evidence chain. Lattice9 propagates confidence through the graph to minimize false positives.
+              </p>
+            </motion.div>
+
+            <div className="relative min-h-[600px] border border-[#1e1e20] bg-[#000000] p-8 overflow-hidden shadow-2xl rounded-none">
+              <PretextLog 
+                color="#6366f1"
+                className="opacity-80"
+                content={`[SYSTEM_INIT] Initializing adversarial systems theory engine... OK
+[STATUS] Project status: ESCAPING_CONTAINMENT
+[LOGIC] Executing Offensive Intelligence Compression:
+      Target: 1,000,000 observations -> 3 high-confidence narratives.
+      Inference Engine: Stable. Confidence propagation: 0.94
+
+[DIAGNOSTIC] Analyzing graph-native recon topology G=(V,E)
+      V*(s) = maxₐ Σ P(s′|s,a)[R + γV*(s′)]
+      Evaluating probabilistic truth propagation... SUCCESS.
+
+[STREAM] Measuring Shannon Entropy across trust zones
+      H(X) = −Σ p(xᵢ) log₂ p(xᵢ)
+      Alert: Transitive confidence cascade instability detected at 0x6366F1.
+      Stabilizing ontology via Spectral Laplacian... OK.
+
+[EVOLUTION] Drift toward systems-level cyber observability
+      ∂Ω/∂t = ∫K(x,y)·φ(y)dΓ(y)
+      Warning: Abstraction recursion detected in exploit graph. 
+      Decoupling cyber-philosophy from operational outcomes.
+
+[GOAL] Reducing noise. Grounding inference quality.
+[END_OF_DUMP] SYSTEM_NOMINAL // STATUS: DANGEROUSLY_AMBITIOUS`}
+              />
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-24 border-t border-[#1a1a1c] bg-[#0a0a0b]">
+        <div className="container">
+          <motion.div className="max-w-lg space-y-6" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
+            <motion.div variants={fadeUp}>
+              <h2 className="text-2xl font-bold tracking-tight mb-3" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Built for operators who care about ground truth.</h2>
+              <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>Lattice9 is an experimental intelligence organism. Open source, graph-native, and mathematically constrained.</p>
+            </motion.div>
+            <motion.div className="flex gap-4" variants={fadeUp}>
+              <a href="https://github.com/webspoilt/lattice9" target="_blank" rel="noopener noreferrer">
+                <Button className="bg-indigo-600 text-white hover:bg-indigo-500 gap-2 text-xs font-mono tracking-wider h-10 px-5 rounded-none">View on GitHub <ArrowRight className="w-3.5 h-3.5" /></Button>
+              </a>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-10 border-t border-[#1a1a1c] bg-[#08080a] mb-7">
+        <div className="container">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 rounded-none bg-indigo-600 flex items-center justify-center"><Radar className="w-3 h-3 text-[#0a0a0b]" /></div>
+              <span className="text-xs font-mono text-[#555]">Lattice9 — Offensive Intelligence Engine</span>
+            </div>
+            <div className="flex items-center gap-6">
+              <a href="https://github.com/webspoilt/lattice9" className="text-[10px] font-mono text-[#555] hover:text-[#888] transition-colors tracking-wider uppercase">GitHub</a>
+              <span className="text-[10px] font-mono text-[#333]">by zeroday</span>
+              <span className="text-[10px] font-mono text-[#333]">v5.0.0</span>
+            </div>
+          </div>
+        </div>
+      </footer>
 
       {/* Telemetry Bar */}
       <TelemetryBar />
