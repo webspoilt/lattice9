@@ -1,13 +1,24 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, Radar, ChevronDown, Github } from 'lucide-react';
+import { motion, Variants } from 'framer-motion';
+import { 
+  Radar, 
+  ChevronRight, 
+  Github, 
+  Terminal, 
+  Database, 
+  Network, 
+  Shield, 
+  Activity, 
+  Layers,
+  Search,
+  Settings,
+  User,
+  Zap,
+  Info
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IntelligenceNavigator } from '@/components/IntelligenceNavigator';
 import { TelemetryBar } from '@/components/TelemetryBar';
-import { CoreSections } from '@/components/CoreSections';
-import { PretextLog } from '@/components/PretextLog';
-import { BackgroundField } from '@/components/BackgroundField';
-import { AdversarialSlopeGraph } from '@/components/AdversarialSlopeGraph';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const MOCK_INTELLIGENCE = {
@@ -26,343 +37,267 @@ const MOCK_INTELLIGENCE = {
   ]
 };
 
+const MOCK_FINDINGS = [
+  { id: 'F-921', title: 'Credential Leakage in CI/CD', severity: 'critical', type: 'IDENTITY' },
+  { id: 'F-842', title: 'Insecure JWT Validation', severity: 'high', type: 'VULN' },
+  { id: 'F-711', title: 'Orphaned API Endpoint', severity: 'medium', type: 'ASSET' },
+  { id: 'F-603', title: 'TLS 1.1 Support Detected', severity: 'low', type: 'SERVICE' },
+];
+
 export default function Home() {
   const [globalEntropy, setGlobalEntropy] = useState(0.2);
+  const [activeWorkspace, setActiveWorkspace] = useState('intelligence');
 
   useEffect(() => {
-    console.log("LATTICE9_INIT: Offensive Intelligence Interface active.");
-    
-    // Simulate global entropy fluctuations
     const interval = setInterval(() => {
       setGlobalEntropy(prev => {
         const target = Math.random() > 0.8 ? 0.6 : 0.2;
         return prev + (target - prev) * 0.1;
       });
     }, 2000);
-    
     return () => clearInterval(interval);
   }, []);
 
-  const stagger = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.3 } },
+  // Fixed variants with proper types for React 19 / latest Framer Motion
+  const fadeUp: Variants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { duration: 0.4, ease: "easeOut" } 
+    },
   };
-  const fadeUp = {
-    hidden: { opacity: 0, y: 16 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: [0.23, 1, 0.32, 1] } },
-  };
-  const fadeIn = (i: number) => ({
-    hidden: { opacity: 0, y: 24 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, delay: i * 0.12, ease: [0.23, 1, 0.32, 1] } },
-  });
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] text-[#e0e0e0] selection:bg-indigo-500/20 relative">
-      {/* Background Layers */}
-      <ErrorBoundary>
-        <BackgroundField entropy={globalEntropy} />
-      </ErrorBoundary>
-
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#1e1e20] bg-[#0a0a0b]/80 backdrop-blur-md">
-        <div className="container flex items-center justify-between h-14">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-none bg-indigo-600 flex items-center justify-center">
-              <Radar className="w-4 h-4 text-[#0a0a0b]" />
+    <div className="h-screen bg-[#0d0d0f] text-[#d1d1d6] flex flex-col overflow-hidden font-sans op-scanlines">
+      {/* Global Operational Header */}
+      <header className="h-10 border-b border-border bg-[#141417] flex items-center justify-between px-4 z-50">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Radar className="w-4 h-4 text-primary" />
+            <span className="op-title text-white">Lattice9</span>
+            <div className="h-4 w-px bg-border mx-2" />
+            <span className="op-label text-muted-foreground">Operational Interface v5.0.0</span>
+          </div>
+          <div className="hidden md:flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <span className="op-label">Status:</span>
+              <span className="op-badge op-badge-accent">Nominal</span>
             </div>
-            <span className="text-sm font-bold tracking-[0.15em] uppercase" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Lattice9</span>
-            <span className="hidden sm:inline text-[10px] font-mono text-[#444] ml-2 tracking-widest lowercase">system.intelligence_v5.0.0</span>
+            <div className="flex items-center gap-1.5">
+              <span className="op-label">Entropy:</span>
+              <span className="op-value">{globalEntropy.toFixed(4)}</span>
+            </div>
           </div>
-          <div className="hidden md:flex items-center gap-8">
-            {['Topology', 'Entropy', 'Inference'].map((l) => (
-              <a key={l} href={`#${l.toLowerCase()}`} className="text-[10px] font-mono text-[#555] hover:text-indigo-400 transition-colors tracking-widest uppercase">{l}</a>
-            ))}
-          </div>
-          <a href="https://github.com/webspoilt/lattice9" target="_blank" rel="noopener noreferrer">
-            <Button size="sm" className="bg-indigo-600 text-white hover:bg-indigo-500 text-[10px] font-mono tracking-widest h-7 px-4 rounded-none lowercase gap-2">
-              <Github className="w-3 h-3" /> github
-            </Button>
-          </a>
         </div>
-      </nav>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1 bg-black/40 border border-border">
+            <User className="w-3 h-3 text-muted-foreground" />
+            <span className="op-value !text-[10px] uppercase">Operator: Root</span>
+          </div>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none hover:bg-white/5">
+            <Settings className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      </header>
 
-      {/* Hero: Active Intelligence Environment */}
-      <section className="relative pt-24 min-h-screen flex flex-col overflow-hidden bg-transparent">
-        
-        <div className="container relative z-10 py-12 flex-1 flex flex-col justify-center">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center text-center lg:text-left">
-            <div className="space-y-10 max-w-2xl mx-auto lg:mx-0">
-              <motion.div className="space-y-6" initial="hidden" animate="visible" variants={{
-                hidden: { opacity: 1 },
-                visible: { transition: { staggerChildren: 0.1, delayChildren: 0.3 } }
-              }}>
-                <motion.div className="flex items-center gap-3 justify-center lg:justify-start" variants={fadeUp}>
-                  <div className="h-px w-12 bg-indigo-500/30" />
-                  <span className="text-[10px] font-mono text-indigo-400 tracking-[0.4em] uppercase">Intelligence_Reasoning_Active</span>
-                </motion.div>
-                
-                <motion.h1 className="text-6xl lg:text-8xl font-bold leading-[0.95] tracking-tighter lowercase" style={{ fontFamily: "'IBM Plex Mono', monospace" }} variants={fadeUp}>
-                  Reasoning <br />
-                  <span className="text-indigo-500">Over</span> <br />
-                  Orchestration.
-                </motion.h1>
+      <div className="flex flex-1 overflow-hidden">
+        {/* Tactical Navigation Sidebar */}
+        <aside className="w-48 border-r border-border bg-[#141417] flex flex-col">
+          <nav className="flex-1 p-2 space-y-1">
+            <div className="px-2 pb-2 mb-2 border-b border-border">
+              <span className="op-label !text-[8px]">Intelligence Core</span>
+            </div>
+            {[
+              { id: 'intelligence', label: 'Graph Explorer', icon: Network },
+              { id: 'assets', label: 'Infrastructure', icon: Database },
+              { id: 'findings', label: 'Evidence Log', icon: Shield },
+              { id: 'telemetry', label: 'Real-time Trace', icon: Activity },
+            ].map(item => (
+              <button
+                key={item.id}
+                onClick={() => setActiveWorkspace(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-[11px] font-medium transition-all group ${
+                  activeWorkspace === item.id 
+                    ? 'bg-primary/10 text-primary border-r-2 border-primary' 
+                    : 'text-muted-foreground hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <item.icon className={`w-3.5 h-3.5 ${activeWorkspace === item.id ? 'text-primary' : 'text-muted-foreground'}`} />
+                {item.label}
+              </button>
+            ))}
 
-                <motion.p className="text-base lg:text-lg leading-relaxed text-[#666] max-w-md font-light mx-auto lg:mx-0" variants={fadeUp}>
-                  Lattice9 generates normalized attack surface graphs using probabilistic inference. We solve for exploitability by deriving truth from high-entropy adversarial noise.
-                </motion.p>
+            <div className="px-2 pt-6 pb-2 mb-2 border-b border-border">
+              <span className="op-label !text-[8px]">Operation Context</span>
+            </div>
+            {['L9-ALPHA', 'L9-BETA', 'DEV-ENV'].map(ctx => (
+              <button key={ctx} className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-mono text-muted-foreground hover:text-white hover:bg-white/5">
+                {ctx}
+                <ChevronRight className="w-2.5 h-2.5 opacity-30" />
+              </button>
+            ))}
+          </nav>
 
-                <motion.div className="flex items-center gap-4 pt-4 justify-center lg:justify-start" variants={fadeUp}>
-                  <Button className="bg-indigo-600 text-white hover:bg-indigo-500 gap-2 text-xs font-mono tracking-wider h-11 px-6 rounded-none">
-                    Initialize Engine <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button variant="outline" className="border-[#2a2a2d] text-[#888] hover:bg-[#151517] text-xs font-mono tracking-wider h-11 px-6 rounded-none">Documentation</Button>
-                </motion.div>
+          <div className="p-4 border-t border-border space-y-4">
+             <div className="space-y-1.5">
+                <span className="op-label block">Uptime</span>
+                <span className="op-value block">142:23:11</span>
+             </div>
+             <a href="https://github.com/webspoilt/lattice9" target="_blank" rel="noopener noreferrer">
+               <Button className="w-full h-8 bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] uppercase font-bold tracking-widest rounded-none gap-2">
+                 <Github className="w-3.5 h-3.5" /> Source
+               </Button>
+             </a>
+          </div>
+        </aside>
+
+        {/* Main Intelligence Surface */}
+        <main className="flex-1 flex flex-col bg-[#0d0d0f] relative overflow-hidden">
+          {/* Workspace Tabs / Tools */}
+          <div className="h-8 border-b border-border bg-[#141417]/50 flex items-center px-4 justify-between">
+            <div className="flex gap-4">
+              <span className="op-label text-primary">Intelligence Navigator</span>
+              <span className="op-label opacity-30">Projection: Mercator</span>
+              <span className="op-label opacity-30">Clustering: Spectral</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 bg-primary" />
+                <span className="op-label">Asset</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 bg-accent" />
+                <span className="op-label">Vuln</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 relative op-grid-pattern">
+            {/* Graph Visualization Workspace */}
+            <div className="absolute inset-0">
+              <ErrorBoundary>
+                <IntelligenceNavigator data={MOCK_INTELLIGENCE} />
+              </ErrorBoundary>
+            </div>
+
+            {/* Floatover UI Overlays */}
+            <div className="absolute top-4 left-4 w-64 space-y-4 pointer-events-none">
+              <motion.div initial="hidden" animate="visible" variants={fadeUp} className="op-panel shadow-2xl pointer-events-auto">
+                <div className="op-panel-header">
+                  <span className="op-title">Operational Summary</span>
+                  <Info className="w-3 h-3 text-muted-foreground" />
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="op-label text-muted-foreground">Total Assets</span>
+                    <span className="op-value text-white">412</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="op-label text-muted-foreground">Exposure Paths</span>
+                    <span className="op-value text-accent">14 Active</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="op-label text-muted-foreground">Reasoning Engine</span>
+                    <span className="op-badge op-badge-primary">Enabled</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div initial="hidden" animate="visible" variants={fadeUp} className="op-panel shadow-2xl pointer-events-auto">
+                <div className="op-panel-header">
+                  <span className="op-title">Attack Path Inference</span>
+                  <Zap className="w-3 h-3 text-accent" />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[10px] text-muted-foreground leading-relaxed italic border-l border-accent/30 pl-2">
+                    L9-Inference: High-confidence path detected from [prod-api] to [admin-console] via JWT-Bypass.
+                  </p>
+                  <button className="w-full h-6 bg-accent/10 border border-accent/20 text-accent text-[9px] font-bold uppercase hover:bg-accent/20 transition-all">
+                    Initiate Path Synthesis
+                  </button>
+                </div>
               </motion.div>
             </div>
-
-            {/* 3D Intelligence Navigator - Positioned towards center-right */}
-            <motion.div 
-              className="hidden lg:block relative z-20" 
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-            >
-              <div className="relative aspect-square w-full max-w-[540px] mx-auto border border-[#1e1e20] bg-[#0e0e10]/40 backdrop-blur-sm overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-                <div className="absolute top-0 left-0 right-0 h-10 border-b border-[#1e1e20] bg-[#0a0a0b]/90 flex items-center justify-between px-5 z-20">
-                  <span className="text-[10px] font-mono text-indigo-400 tracking-[0.2em] uppercase">Intelligence_Navigator_v5.0.0</span>
-                  <div className="flex gap-5">
-                    {[{ l: 'Asset', c: '#6366f1' }, { l: 'Identity', c: '#8c8ca0' }, { l: 'Vuln', c: '#d4a574' }].map(l => (
-                      <div key={l.l} className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-none" style={{ background: l.c }} />
-                        <span className="text-[9px] font-mono text-[#666] tracking-tighter uppercase">{l.l}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="absolute inset-0 pt-10">
-                  <ErrorBoundary>
-                    <IntelligenceNavigator data={MOCK_INTELLIGENCE} />
-                  </ErrorBoundary>
-                </div>
-                
-                {/* Decorative corners */}
-                <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-indigo-500/40 z-30" />
-                <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-indigo-500/40 z-30" />
-                <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-indigo-500/40 z-30" />
-                <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-indigo-500/40 z-30" />
-              </div>
-            </motion.div>
           </div>
-        </div>
+        </main>
 
-        {/* Side annotations */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4 pointer-events-none">
-          <div className="telemetry-text text-[#2a2a2d]" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>LATTICE9_SURFACE_TOPOLOGY_v5.0.0</div>
-        </div>
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-3 pointer-events-none">
-          {['PROB', 'GRAPH', 'BAYES', 'ENTROPY'].map((l, i) => (
-            <div key={l} className="flex items-center gap-1.5 justify-end">
-              <span className="telemetry-text text-[#2a2a2d]">{l}</span>
-              <div className="w-1 h-1 rounded-none" style={{ background: ['#6366f1', '#6366f1', '#d4a574', '#6366f1'][i], opacity: 0.4 }} />
-            </div>
-          ))}
-        </div>
+        {/* Operational Inspector Panel (Right) */}
+        <aside className="w-72 border-l border-border bg-[#141417] flex flex-col">
+          <div className="p-4 border-b border-border bg-[#1c1c1f]/50">
+             <div className="flex items-center justify-between mb-2">
+                <h3 className="op-title text-white">Evidence Inspector</h3>
+                <Layers className="w-3 h-3 text-muted-foreground" />
+             </div>
+             <div className="relative">
+                <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input 
+                  type="text" 
+                  placeholder="Filter findings..." 
+                  className="w-full bg-black border border-border h-7 pl-8 text-[11px] font-mono focus:outline-none focus:border-primary/50"
+                />
+             </div>
+          </div>
 
-        <motion.div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10" animate={{ y: [0, 6, 0] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}>
-          <ChevronDown className="w-4 h-4 text-[#444]" />
-        </motion.div>
-      </section>
-
-      {/* Architecture */}
-      <section id="architecture" className="py-24 border-t border-[#1a1a1c] bg-[#080809]">
-        <div className="container">
-          <motion.div className="space-y-16" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={{
-            hidden: { opacity: 0 },
-            visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-          }}>
-            <motion.div className="max-w-lg space-y-4" variants={fadeUp}>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="h-px w-6 bg-indigo-500/30" />
-                <span className="text-[9px] font-mono text-indigo-400 tracking-[0.3em] uppercase">Architecture</span>
+          <div className="flex-1 overflow-y-auto p-2 space-y-2">
+            {MOCK_FINDINGS.map(finding => (
+              <div key={finding.id} className="p-3 border border-border bg-black/20 hover:bg-white/5 transition-all cursor-pointer group">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="op-label op-text-mono !text-primary">{finding.id}</span>
+                  <span className={`op-badge ${
+                    finding.severity === 'critical' ? 'op-badge-destructive' : 
+                    finding.severity === 'high' ? 'op-badge-destructive' : 
+                    'op-badge-muted'
+                  }`}>
+                    {finding.severity}
+                  </span>
+                </div>
+                <h4 className="text-[11px] font-bold mb-2 group-hover:text-primary transition-colors">{finding.title}</h4>
+                <div className="flex items-center gap-3">
+                  <span className="op-label !text-[8px] opacity-40">{finding.type}</span>
+                  <div className="h-2 w-px bg-border" />
+                  <span className="op-label !text-[8px] opacity-40">2 HOURS AGO</span>
+                </div>
               </div>
-              <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>How the engine reasons.</h2>
-              <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
-                Lattice9 models every target as a graph G=(V,E). Intelligence flows through the topology via Bayesian inference and spectral partitioning.
-              </p>
-            </motion.div>
-            <motion.div className="p-8 rounded-none border border-[#1e1e20] bg-[#0e0e10] overflow-x-auto shadow-inner" variants={fadeUp}>
-              <pre className="text-[11px] font-mono text-[#555] leading-loose whitespace-pre">
-{`       [ TARGET_SYSTEM ]
-           │
-    ┌──────┴──────┐
-    │             │
- [ NODES ]     [ EDGES ] ←── Probabilistic Exploit Trajectories
-    │             │
-    └──────┬──────┘
-           │
-    [ SPECTRAL_TOPOLOGY ] ←── λ₂(L) > 0 (Fiedler Vector)
-           │
-    [ BAYESIAN_FUSION ] ←── P(H|E) = P(E|H)·P(H) / P(E)
-           │
-    ┌──────┴──────┐
-    │             │
- [ PATH_OPTIM ]   [ ENTROPY_MIN ] ←── Bellman Equations
-    │             │
-    └─────────────┘
-           │
-      [ OPERATOR ]`}
-              </pre>
-            </motion.div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {[
-                { s: '01', t: 'Evidence Collection', d: 'Gather raw signals from headers, DNS, timing, and entropy analysis.' },
-                { s: '02', t: 'Confidence Calibration', d: 'Weigh each signal by source type (Deterministic, Statistical, Heuristic).' },
-                { s: '03', t: 'Graph Fusion', d: 'Map evidence onto the asset graph. Calculate centrality-weighted risk.' },
-                { s: '04', t: 'Decision Compression', d: 'Synthesize all intelligence into the top 3 attack paths.' },
-              ].map((p, i) => (
-                <motion.div key={p.s} className="p-5 rounded-none border border-[#1e1e20] bg-[#0e0e10] hover:border-indigo-500/20 transition-colors group"
-                  variants={fadeUp}>
-                  <div className="text-[10px] font-mono text-indigo-400 tracking-[0.3em] mb-3">{p.s}</div>
-                  <h3 className="text-sm font-bold mb-2 group-hover:text-indigo-400 transition-colors" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{p.t}</h3>
-                  <p className="text-xs text-[#666] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>{p.d}</p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
+            ))}
+          </div>
 
-      {/* Core Modules */}
-      <div id="modules">
-        <CoreSections />
+          <div className="p-4 border-t border-border bg-[#0d0d0f]">
+             <span className="op-label block mb-3">Lineage Integrity</span>
+             <div className="p-2 border border-border bg-black/40 op-text-mono text-[9px] text-muted-foreground break-all">
+                SHA256: 9f8349b1e2e3c4d5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9
+             </div>
+          </div>
+        </aside>
       </div>
 
-      {/* Predictive Intelligence Section */}
-      <section id="intelligence" className="py-24 border-t border-[#1a1a1c] bg-[#0a0a0b]">
-        <div className="container">
-          <motion.div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={{
-            hidden: { opacity: 0 },
-            visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-          }}>
-            <motion.div className="space-y-6" variants={fadeUp}>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="h-px w-6 bg-indigo-500/30" />
-                <span className="text-[9px] font-mono text-indigo-400 tracking-[0.3em] uppercase">PREDICTIVE_INFERENCE</span>
-              </div>
-              <h2 className="text-3xl font-bold tracking-tight" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Derivative Analysis.</h2>
-              <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>
-                Lattice9 calculates the rate of change across multiple adversarial metrics. By analyzing the slope of trust decay and recon yield, we can predict system compromise before it manifests in deterministic logs.
-              </p>
-              <div className="space-y-4 pt-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-none border border-[#1e1e20] bg-[#0e0e10] flex items-center justify-center text-[10px] text-indigo-400 font-mono">01</div>
-                  <div>
-                    <h4 className="text-xs font-bold text-[#aaa] mb-1">Direct Slope Labeling</h4>
-                    <p className="text-[10px] text-[#555]">Industry-standard visualization with immediate rate-of-change visibility.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-none border border-[#1e1e20] bg-[#0e0e10] flex items-center justify-center text-[10px] text-indigo-400 font-mono">02</div>
-                  <div>
-                    <h4 className="text-xs font-bold text-[#aaa] mb-1">KaTeX Formula Support</h4>
-                    <p className="text-[10px] text-[#555]">High-fidelity mathematical typesetting for exact derivative expressions.</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-            <motion.div variants={fadeUp}>
-              <AdversarialSlopeGraph />
-            </motion.div>
-          </motion.div>
+      {/* Real-time Telemetry Trace */}
+      <footer className="h-10 border-t border-border bg-[#0d0d0f] flex items-center px-4 gap-6 z-50">
+        <div className="flex items-center gap-2">
+           <Terminal className="w-3.5 h-3.5 text-muted-foreground" />
+           <span className="op-label">Telemetry Trace</span>
         </div>
-      </section>
-
-      {/* Operational Log */}
-      <section id="research" className="py-24 border-t border-[#1a1a1c] relative overflow-hidden bg-[#050506]">
-        <div className="container relative z-10">
-          <motion.div className="space-y-16" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-100px' }} variants={{
-            hidden: { opacity: 0 },
-            visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-          }}>
-            <motion.div className="max-w-lg space-y-4" variants={fadeUp}>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="h-px w-6 bg-indigo-500/30" />
-                <span className="text-[9px] font-mono text-indigo-400 tracking-[0.3em] uppercase">SYSTEM.DUMP</span>
-              </div>
-              <h2 className="text-xl font-bold tracking-tight text-[#888]" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>REASONING_TRACE_v5.0.0</h2>
-              <p className="text-xs text-[#555] font-mono leading-relaxed max-w-sm">
-                Every inference is backed by an evidence chain. Lattice9 propagates confidence through the graph to minimize false positives.
-              </p>
-            </motion.div>
-
-            <div className="relative min-h-[600px] border border-[#1e1e20] bg-[#000000] p-8 overflow-hidden shadow-2xl rounded-none">
-              <PretextLog 
-                color="#6366f1"
-                className="opacity-80"
-                content={`[SYSTEM_INIT] Initializing adversarial systems theory engine... OK
-[STATUS] Project status: ESCAPING_CONTAINMENT
-[LOGIC] Executing Offensive Intelligence Compression:
-      Target: 1,000,000 observations -> 3 high-confidence narratives.
-      Inference Engine: Stable. Confidence propagation: 0.94
-
-[DIAGNOSTIC] Analyzing graph-native recon topology G=(V,E)
-      V*(s) = maxₐ Σ P(s′|s,a)[R + γV*(s′)]
-      Evaluating probabilistic truth propagation... SUCCESS.
-
-[STREAM] Measuring Shannon Entropy across trust zones
-      H(X) = −Σ p(xᵢ) log₂ p(xᵢ)
-      Alert: Transitive confidence cascade instability detected at 0x6366F1.
-      Stabilizing ontology via Spectral Laplacian... OK.
-
-[EVOLUTION] Drift toward systems-level cyber observability
-      ∂Ω/∂t = ∫K(x,y)·φ(y)dΓ(y)
-      Warning: Abstraction recursion detected in exploit graph. 
-      Decoupling cyber-philosophy from operational outcomes.
-
-[GOAL] Reducing noise. Grounding inference quality.
-[END_OF_DUMP] SYSTEM_NOMINAL // STATUS: DANGEROUSLY_AMBITIOUS`}
-              />
-            </div>
-          </motion.div>
+        <div className="flex-1 overflow-hidden h-full flex items-center">
+           <div className="flex gap-8 whitespace-nowrap animate-telemetry-scroll op-text-mono text-[10px] text-muted-foreground opacity-50">
+             <span>[07:22:11] INITIALIZING GRAPH_PARTITIONER... OK</span>
+             <span>[07:22:12] EXECUTING DIJKSTRA ATTACH_PATH_CALC...</span>
+             <span>[07:22:14] BAYESIAN_FUSION COMPLETED FOR 0x921F</span>
+             <span>[07:22:15] DETECTED ANOMALOUS TRUST_ZONE ESCALATION</span>
+             <span>[07:22:18] PROPAGATING CONFIDENCE_SCORE: 0.9412</span>
+             <span>[07:22:11] INITIALIZING GRAPH_PARTITIONER... OK</span>
+             <span>[07:22:12] EXECUTING DIJKSTRA ATTACH_PATH_CALC...</span>
+             <span>[07:22:14] BAYESIAN_FUSION COMPLETED FOR 0x921F</span>
+             <span>[07:22:15] DETECTED ANOMALOUS TRUST_ZONE ESCALATION</span>
+             <span>[07:22:18] PROPAGATING CONFIDENCE_SCORE: 0.9412</span>
+           </div>
         </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-24 border-t border-[#1a1a1c] bg-[#0a0a0b]">
-        <div className="container">
-          <motion.div className="max-w-lg space-y-6" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
-            <motion.div variants={fadeUp}>
-              <h2 className="text-2xl font-bold tracking-tight mb-3" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>Built for operators who care about ground truth.</h2>
-              <p className="text-sm text-[#777] leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>Lattice9 is an experimental intelligence organism. Open source, graph-native, and mathematically constrained.</p>
-            </motion.div>
-            <motion.div className="flex gap-4" variants={fadeUp}>
-              <a href="https://github.com/webspoilt/lattice9" target="_blank" rel="noopener noreferrer">
-                <Button className="bg-indigo-600 text-white hover:bg-indigo-500 gap-2 text-xs font-mono tracking-wider h-10 px-5 rounded-none">View on GitHub <ArrowRight className="w-3.5 h-3.5" /></Button>
-              </a>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-10 border-t border-[#1a1a1c] bg-[#08080a] mb-7">
-        <div className="container">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-5 h-5 rounded-none bg-indigo-600 flex items-center justify-center"><Radar className="w-3 h-3 text-[#0a0a0b]" /></div>
-              <span className="text-xs font-mono text-[#555]">Lattice9 — Offensive Intelligence Engine</span>
-            </div>
-            <div className="flex items-center gap-6">
-              <a href="https://github.com/webspoilt/lattice9" className="text-[10px] font-mono text-[#555] hover:text-[#888] transition-colors tracking-wider uppercase">GitHub</a>
-              <span className="text-[10px] font-mono text-[#333]">by zeroday</span>
-              <span className="text-[10px] font-mono text-[#333]">v5.0.0</span>
-            </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+             <div className="w-2 h-2 bg-accent" />
+             <span className="op-label !text-accent">Live Feed</span>
           </div>
         </div>
       </footer>
-
-      {/* Telemetry Bar */}
-      <TelemetryBar />
     </div>
   );
 }

@@ -4,10 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -27,331 +27,136 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 :root {
-  /* Scientific Instrumentalism Design System - Lattice9 */
-  /* Primary: Dark graphite and tungsten for computational depth */
-  --primary: #6366f1; /* Indigo for accents */
-  --primary-foreground: #0f0f0f; /* Deep graphite */
-  --sidebar-primary: #6366f1;
-  --sidebar-primary-foreground: #0f0f0f;
-  --chart-1: #6366f1; /* Spectral indigo */
-  --chart-2: #4f46e5; /* Deeper indigo for data */
-  --chart-3: #d4a574; /* Amber for confidence */
-  --chart-4: #2d2d2d; /* Tungsten */
-  --chart-5: #1a1a1a; /* Deep graphite */
-  --radius: 0px; /* Zero radius for tactical precision */
-  --background: #0a0a0b; /* Deep operation black */
-  --foreground: #e8e8e8; /* Light gray for contrast */
-  --card: #0e0e10; /* Slightly lighter graphite */
-  --card-foreground: #e8e8e8;
-  --popover: #0e0e10;
-  --popover-foreground: #e8e8e8;
-  --secondary: #1e1e20; /* Tungsten */
-  --secondary-foreground: #e8e8e8;
-  --muted: #1e1e20; /* Muted graphite */
-  --muted-foreground: #666666; /* Muted text */
-  --accent: #6366f1; /* Spectral indigo */
-  --accent-foreground: #0f0f0f;
-  --destructive: #c44040; /* Subtle red for alerts */
-  --destructive-foreground: #0f0f0f;
-  --border: #1e1e20; /* Tungsten borders */
-  --input: #0e0e10; /* Dark input backgrounds */
-  --ring: #6366f1; /* Indigo focus ring */
-  --sidebar: #0a0a0b;
-  --sidebar-foreground: #e8e8e8;
-  --sidebar-accent: #6366f1;
-  --sidebar-accent-foreground: #0f0f0f;
-  --sidebar-border: #1e1e20;
-  --sidebar-ring: #6366f1;
-}
+  /* Lattice9 Tactical Operational System - Color Tokens */
+  --background: #0d0d0f; /* Deep charcoal (not pure black) */
+  --foreground: #d1d1d6; /* Muted silver */
+  
+  --card: #141417; /* Slate panel */
+  --card-foreground: #d1d1d6;
+  
+  --popover: #141417;
+  --popover-foreground: #d1d1d6;
+  
+  --primary: #4a6fa5; /* Tactical desaturated blue */
+  --primary-foreground: #ffffff;
+  
+  --secondary: #1c1c1f; /* Graphite */
+  --secondary-foreground: #8e8e93;
+  
+  --muted: #1c1c1f;
+  --muted-foreground: #636366; /* Deep gray for metadata */
+  
+  --accent: #00a3a3; /* Muted operational cyan */
+  --accent-foreground: #ffffff;
+  
+  --destructive: #ae3f3f; /* Desaturated red */
+  --destructive-foreground: #ffffff;
+  
+  --border: #252529; /* Explicit charcoal borders */
+  --input: #09090a;
+  --ring: #4a6fa5;
 
-.dark {
-  /* Dark theme (same as root for Scientific Instrumentalism) */
-  --primary: #6366f1;
-  --primary-foreground: #0f0f0f;
-  --sidebar-primary: #6366f1;
-  --sidebar-primary-foreground: #0f0f0f;
-  --background: #0a0a0b;
-  --foreground: #e8e8e8;
-  --card: #0e0e10;
-  --card-foreground: #e8e8e8;
-  --popover: #0e0e10;
-  --popover-foreground: #e8e8e8;
-  --secondary: #1e1e20;
-  --secondary-foreground: #e8e8e8;
-  --muted: #1e1e20;
-  --muted-foreground: #666666;
-  --accent: #6366f1;
-  --accent-foreground: #0f0f0f;
-  --destructive: #c44040;
-  --destructive-foreground: #0f0f0f;
-  --border: #1e1e20;
-  --input: #0e0e10;
-  --ring: #6366f1;
-  --chart-1: #6366f1;
-  --chart-2: #4f46e5;
-  --chart-3: #d4a574;
-  --chart-4: #2d2d2d;
-  --chart-5: #1a1a1a;
-  --sidebar: #0a0a0b;
-  --sidebar-foreground: #e8e8e8;
-  --sidebar-accent: #6366f1;
-  --sidebar-accent-foreground: #0f0f0f;
-  --sidebar-border: #1e1e20;
-  --sidebar-ring: #6366f1;
+  --radius: 0px;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    border-radius: 0 !important; /* Force tactical zero-radius */
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
-  button:not(:disabled),
-  [role="button"]:not([aria-disabled="true"]),
-  [type="button"]:not(:disabled),
-  [type="submit"]:not(:disabled),
-  [type="reset"]:not(:disabled),
-  a[href],
-  select:not(:disabled),
-  input[type="checkbox"]:not(:disabled),
-  input[type="radio"]:not(:disabled) {
-    @apply cursor-pointer;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight text-white/90;
   }
 }
 
 @layer components {
-  /* Typography System - Scientific Instrumentalism */
-  /* Display: IBM Plex Mono Bold for headers (scientific precision) */
-  /* Body: Inter Regular for descriptions (modern clarity) */
-  /* Monospace: IBM Plex Mono for equations and telemetry */
+  /* Operational Density System */
   
-  .display-lg {
-    @apply text-4xl font-bold tracking-tight;
-    font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: 0.02em;
+  .op-panel {
+    @apply bg-card border border-border p-4 relative overflow-hidden;
   }
 
-  .display-md {
-    @apply text-3xl font-bold tracking-tight;
-    font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: 0.02em;
+  .op-panel-header {
+    @apply border-b border-border -mx-4 -mt-4 px-4 py-2 mb-4 bg-secondary/50 flex items-center justify-between;
   }
 
-  .display-sm {
-    @apply text-2xl font-bold tracking-tight;
-    font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: 0.02em;
+  .op-title {
+    @apply text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground;
   }
 
-  .heading-lg {
-    @apply text-2xl font-bold;
-    font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: 0.015em;
-  }
-
-  .heading-md {
-    @apply text-xl font-bold;
-    font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: 0.015em;
-  }
-
-  .heading-sm {
-    @apply text-lg font-semibold;
+  .op-text-mono {
     font-family: 'IBM Plex Mono', monospace;
   }
 
-  .body-lg {
-    @apply text-base leading-relaxed;
-    font-family: 'Inter', sans-serif;
+  .op-label {
+    @apply text-[9px] font-bold uppercase tracking-widest text-muted-foreground;
   }
 
-  .body-md {
-    @apply text-sm leading-relaxed;
-    font-family: 'Inter', sans-serif;
+  .op-value {
+    @apply text-[11px] font-semibold text-foreground op-text-mono;
   }
 
-  .body-sm {
-    @apply text-xs leading-relaxed;
-    font-family: 'Inter', sans-serif;
+  .op-table {
+    @apply w-full text-left text-[11px];
   }
 
-  .mono-lg {
-    @apply text-base font-mono;
-    font-family: 'IBM Plex Mono', monospace;
+  .op-table th {
+    @apply py-2 px-3 border-b border-border bg-secondary/30 text-[9px] font-bold uppercase tracking-widest text-muted-foreground;
   }
 
-  .mono-md {
-    @apply text-sm font-mono;
-    font-family: 'IBM Plex Mono', monospace;
+  .op-table td {
+    @apply py-2 px-3 border-b border-border/50 text-foreground/80;
   }
 
-  .mono-sm {
-    @apply text-xs font-mono;
-    font-family: 'IBM Plex Mono', monospace;
+  .op-badge {
+    @apply px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tighter border border-current;
   }
 
-  /* Mathematical annotation styling */
-  .equation-annotation {
-    @apply text-xs opacity-40 font-mono;
-    font-family: 'IBM Plex Mono', monospace;
-    letter-spacing: 0.01em;
+  .op-badge-primary { @apply text-primary border-primary/30 bg-primary/5; }
+  .op-badge-accent { @apply text-accent border-accent/30 bg-accent/5; }
+  .op-badge-destructive { @apply text-destructive border-destructive/30 bg-destructive/5; }
+  .op-badge-muted { @apply text-muted-foreground border-border bg-secondary/50; }
+
+  /* Tactical Buttons */
+  .op-btn {
+    @apply h-8 px-4 text-[10px] font-bold uppercase tracking-widest transition-all inline-flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50;
   }
 
-  /* Spectral gradient utilities */
-  .gradient-spectral {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #d4a574 100%);
+  .op-btn-primary { @apply bg-primary text-white hover:bg-primary/90; }
+  .op-btn-secondary { @apply bg-secondary text-foreground hover:bg-secondary/80 border border-border; }
+  .op-btn-ghost { @apply hover:bg-white/5 text-muted-foreground hover:text-foreground; }
+
+  /* Infrastructure Grid */
+  .op-grid-pattern {
+    background-image: radial-gradient(circle, #252529 1px, transparent 1px);
+    background-size: 24px 24px;
   }
 
-  .gradient-spectral-reverse {
-    background: linear-gradient(135deg, #d4a574 0%, #4f46e5 50%, #6366f1 100%);
-  }
-
-  /* Confidence pulse animation */
-  @keyframes confidence-pulse {
-    0%, 100% {
-      opacity: 0.4;
-    }
-    50% {
-      opacity: 0.8;
-    }
-  }
-
-  .pulse-confidence {
-    animation: confidence-pulse 2s ease-in-out infinite;
-  }
-
-  /* Subtle glow effect for nodes */
-  .glow-node {
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3), 0 0 40px rgba(99, 102, 241, 0.1);
-  }
-
-  .glow-node-amber {
-    box-shadow: 0 0 20px rgba(212, 165, 116, 0.3), 0 0 40px rgba(212, 165, 116, 0.1);
-  }
-
-  /* Mesh topology background pattern */
-  .mesh-background {
-    background-image: linear-gradient(0deg, transparent 24%, rgba(99, 102, 241, 0.05) 25%, rgba(99, 102, 241, 0.05) 26%, transparent 27%, transparent 74%, rgba(99, 102, 241, 0.05) 75%, rgba(99, 102, 241, 0.05) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(99, 102, 241, 0.05) 25%, rgba(99, 102, 241, 0.05) 26%, transparent 27%, transparent 74%, rgba(99, 102, 241, 0.05) 75%, rgba(99, 102, 241, 0.05) 76%, transparent 77%, transparent);
-    background-size: 50px 50px;
-  }
-
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
-  .container {
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
-    padding-right: 1rem;
-  }
-
-  .flex {
-    min-height: 0;
-    min-width: 0;
-  }
-
-  @media (min-width: 640px) {
-    .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
-      padding-right: 1.5rem;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .container {
-      padding-left: 2rem;
-      padding-right: 2rem;
-      max-width: 1280px;
-    }
-  }
-
-  /* Telemetry text */
-  .telemetry-text {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  /* Lattice card */
-  .l9-card {
-    background: linear-gradient(135deg, rgba(14, 17, 24, 1), rgba(10, 10, 11, 0.9));
-    border: 1px solid #1e1e20;
-    border-radius: 0px;
+  /* Scanline effect (subtle, for texture) */
+  .op-scanlines {
     position: relative;
-    overflow: hidden;
   }
-  .l9-card::before {
-    content: '';
+  .op-scanlines::after {
+    content: " ";
+    display: block;
     position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.15), transparent);
-  }
-  .l9-card:hover {
-    border-color: rgba(99, 102, 241, 0.3);
-  }
-
-  /* Section line */
-  .l9-section-line {
-    height: 1px;
-    background: linear-gradient(90deg, rgba(99, 102, 241, 0.3), rgba(99, 102, 241, 0.05), transparent);
-  }
-
-  /* Status dots */
-  .status-dot { width: 6px; height: 6px; border-radius: 0px; display: inline-block; }
-  .status-active { background: #6366f1; box-shadow: 0 0 6px rgba(99, 102, 241, 0.4); }
-  .status-warning { background: #d4a574; box-shadow: 0 0 6px rgba(212, 165, 116, 0.4); }
-  .status-critical { background: #c44040; box-shadow: 0 0 6px rgba(196, 64, 64, 0.4); }
-
-  /* Grid background */
-  .l9-grid-bg {
-    background-image:
-      linear-gradient(rgba(30, 30, 32, 0.3) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(30, 30, 32, 0.3) 1px, transparent 1px);
-    background-size: 40px 40px;
-  }
-
-  /* Telemetry scroll */
-  @keyframes telemetry-scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-  .animate-telemetry-scroll {
-    animation: telemetry-scroll 45s linear infinite;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.01), rgba(0, 255, 0, 0.005), rgba(0, 0, 255, 0.01));
+    z-index: 2;
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #0a0a0b; }
-::-webkit-scrollbar-thumb { background: #1e1e20; border-radius: 0px; }
-::-webkit-scrollbar-thumb:hover { background: #2a2a2d; }
+/* Custom Scrollbar - Tactical Gray */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #0d0d0f; }
+::-webkit-scrollbar-thumb { background: #252529; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a3f; }
