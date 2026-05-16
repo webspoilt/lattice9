@@ -48,7 +48,7 @@ export const IntelligenceNavigator: React.FC<{ data: any; className?: string }> 
   }, []);
 
   return (
-    <div className={`absolute inset-0 z-0 overflow-hidden pointer-events-none ${className}`}>
+    <div className={`absolute inset-0 z-0 overflow-hidden ${className}`}>
       <ForceGraph2D
         ref={fgRef}
         graphData={graphData}

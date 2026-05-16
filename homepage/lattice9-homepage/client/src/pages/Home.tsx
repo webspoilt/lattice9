@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Radar, ChevronDown } from 'lucide-react';
+import { ArrowRight, Radar, ChevronDown, Github } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IntelligenceNavigator } from '@/components/IntelligenceNavigator';
 import { TelemetryBar } from '@/components/TelemetryBar';
@@ -60,7 +60,7 @@ export default function Home() {
 
       {/* Background Layers */}
       <BackgroundField entropy={globalEntropy} />
-      <IntelligenceNavigator data={MOCK_INTELLIGENCE} className="opacity-30" />
+      {/* Background Navigator removed to move it to hero section */}
 
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#1e1e20] bg-[#0a0a0b]/80 backdrop-blur-md">
@@ -77,8 +77,10 @@ export default function Home() {
               <a key={l} href={`#${l.toLowerCase()}`} className="text-[10px] font-mono text-[#555] hover:text-indigo-400 transition-colors tracking-widest uppercase">{l}</a>
             ))}
           </div>
-          <a href="https://github.com/webspoilt/lattice9" target="_blank" rel="noopener noreferrer">
-            <Button size="sm" className="bg-indigo-600 text-white hover:bg-indigo-500 text-[10px] font-mono tracking-widest h-7 px-4 rounded-none lowercase">deploy_node</Button>
+          <a href="https://github.com/webspoilt/hawk-pentest-platform" target="_blank" rel="noopener noreferrer">
+            <Button size="sm" className="bg-indigo-600 text-white hover:bg-indigo-500 text-[10px] font-mono tracking-widest h-7 px-4 rounded-none lowercase gap-2">
+              <Github className="w-3 h-3" /> github
+            </Button>
           </a>
         </div>
       </nav>
@@ -87,7 +89,7 @@ export default function Home() {
       <section className="relative pt-24 min-h-screen flex flex-col overflow-hidden bg-transparent">
         
         <div className="container relative z-10 py-12 flex-1 flex flex-col justify-center">
-          <div className="grid grid-cols-1 lg:grid-cols-1 gap-16 items-center text-center lg:text-left">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center text-center lg:text-left">
             <div className="space-y-10 max-w-2xl mx-auto lg:mx-0">
               <motion.div className="space-y-6" variants={stagger} initial="hidden" animate="visible">
                 <motion.div className="flex items-center gap-3 justify-center lg:justify-start" variants={fadeUp}>
@@ -113,6 +115,37 @@ export default function Home() {
                 </motion.div>
               </motion.div>
             </div>
+
+            {/* 3D Intelligence Navigator - Positioned towards center-right */}
+            <motion.div 
+              className="hidden lg:block relative z-20" 
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+            >
+              <div className="relative aspect-square w-full max-w-[540px] mx-auto border border-[#1e1e20] bg-[#0e0e10]/40 backdrop-blur-sm overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                <div className="absolute top-0 left-0 right-0 h-10 border-b border-[#1e1e20] bg-[#0a0a0b]/90 flex items-center justify-between px-5 z-20">
+                  <span className="text-[10px] font-mono text-indigo-400 tracking-[0.2em] uppercase">Intelligence_Navigator_v5.0.0</span>
+                  <div className="flex gap-5">
+                    {[{ l: 'Asset', c: '#6366f1' }, { l: 'Identity', c: '#8c8ca0' }, { l: 'Vuln', c: '#d4a574' }].map(l => (
+                      <div key={l.l} className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-none" style={{ background: l.c }} />
+                        <span className="text-[9px] font-mono text-[#666] tracking-tighter uppercase">{l.l}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="absolute inset-0 pt-10">
+                  <IntelligenceNavigator data={MOCK_INTELLIGENCE} />
+                </div>
+                
+                {/* Decorative corners */}
+                <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-indigo-500/40 z-30" />
+                <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-indigo-500/40 z-30" />
+                <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-indigo-500/40 z-30" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-indigo-500/40 z-30" />
+              </div>
+            </motion.div>
           </div>
         </div>
 
