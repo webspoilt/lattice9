@@ -352,6 +352,70 @@ async def list_snapshots(engagement_id: str, x_lattice9_key: Optional[str] = Hea
         await pg_pool.close()
 
 
+@app.get("/snapshots/{engagement_id}/drift")
+async def get_drift_analysis(
+    engagement_id: str,
+    from_snapshot_id: str = Query(..., description="Source Snapshot UUID"),
+    to_snapshot_id: str = Query(..., description="Target Snapshot UUID"),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Compute structural graph drift and topology mutations between two snapshots."""
+    verify_engine_key(x_lattice9_key)
+    pg_pool = await get_pg_pool()
+    try:
+        diff_data = await compute_temporal_diff(
+            engine.driver, pg_pool, engagement_id, from_snapshot_id, to_snapshot_id
+        )
+        mutations = await detect_infrastructure_mutations(engine.driver, pg_pool, engagement_id)
+        return {"diff": diff_data, "mutations": mutations}
+    except Exception as e:
+        logger.error(f"Error computing snapshot drift: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
+
+
+@app.get("/snapshots/{engagement_id}/replay/{path_id}")
+async def replay_attack_path(
+    engagement_id: str,
+    path_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Perform a step-by-step playback simulation of an attack path with dynamic prerequisite audits."""
+    verify_engine_key(x_lattice9_key)
+    pg_pool = await get_pg_pool()
+    try:
+        async with pg_pool.acquire() as conn:
+            path_row = await conn.fetchrow(
+                "SELECT * FROM attack_paths WHERE id = $1 AND engagement_id = $2",
+                path_id, engagement_id
+            )
+            if not path_row:
+                raise HTTPException(status_code=404, detail="Attack path not found")
+            
+            trace = json.loads(path_row["reasoning_trace"])
+            step_validations = trace.get("step_validations", [])
+            total_economic_cost = trace.get("total_economic_cost", 0.0)
+            total_detection_risk = trace.get("total_detection_risk", 0.0)
+            
+            return {
+                "path_id": path_id,
+                "title": path_row["title"],
+                "confidence": float(path_row["confidence"]),
+                "feasibility": float(path_row["feasibility"]),
+                "attacker_roi": float(path_row.get("attacker_roi") or 0.0),
+                "steps_timeline": step_validations,
+                "aggregated_cost": total_economic_cost,
+                "aggregated_detection_risk": total_detection_risk,
+                "status": "simulation_ready"
+            }
+    except Exception as e:
+        logger.error(f"Error replaying attack path {path_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
+
+
 @app.get("/algorithms/{engagement_id}")
 async def get_algorithm_results(
     engagement_id: str,
@@ -423,6 +487,35 @@ async def get_provenance(evidence_id: str, x_lattice9_key: Optional[str] = Heade
     try:
         provenance = await get_evidence_provenance(pg_pool, evidence_id)
         return provenance
+    finally:
+        await pg_pool.close()
+
+
+@app.get("/evidence/{finding_id}/pedigree")
+async def get_evidence_pedigree(finding_id: str, x_lattice9_key: Optional[str] = Header(None)):
+    """Retrieve derived pedigree recursion lineage representing ancestor nodes leading to the confidence state."""
+    verify_engine_key(x_lattice9_key)
+    pg_pool = await get_pg_pool()
+    try:
+        # Retrieve supporting and contradicting ancestors recursively
+        chain_data = await get_finding_evidence_chain(pg_pool, finding_id)
+        
+        # Traverse for each supporting evidence's pedigree trace
+        detailed_pedigrees = []
+        for evidence in chain_data.get("supporting_evidence", []):
+            prov = await get_evidence_provenance(pg_pool, evidence["id"])
+            if "pedigree_ancestry" in prov:
+                detailed_pedigrees.extend(prov["pedigree_ancestry"])
+                
+        return {
+            "finding_id": finding_id,
+            "evidence_chain": chain_data,
+            "pedigree_genealogy": detailed_pedigrees,
+            "net_genealogy_count": len(detailed_pedigrees)
+        }
+    except Exception as e:
+        logger.error(f"Error fetching pedigree genealogy for {finding_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         await pg_pool.close()
 

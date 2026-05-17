@@ -55,7 +55,8 @@ async def create_evidence_chain(pg_pool, engagement_id: str,
 async def get_evidence_provenance(pg_pool, evidence_id: str) -> dict:
     """
     Get the full provenance chain for an evidence item.
-    Traces: evidence → findings → entities → relationships.
+    Traces recursively: evidence -> findings -> entities -> relationships.
+    Builds a hierarchical pedigree genealogy to represent derived confidence nodes.
     """
     async with pg_pool.acquire() as conn:
         row = await conn.fetchrow(
@@ -65,7 +66,7 @@ async def get_evidence_provenance(pg_pool, evidence_id: str) -> dict:
         if not row:
             return {"error": "Evidence not found"}
 
-        # Findings derived from this evidence
+        # Findings derived directly from this evidence
         findings = await conn.fetch(
             """
             SELECT f.id, f.title, f.severity, f.confidence, fe.role
@@ -76,7 +77,7 @@ async def get_evidence_provenance(pg_pool, evidence_id: str) -> dict:
             evidence_id,
         )
 
-        # Relationships supported by this evidence
+        # Relationships supported directly by this evidence
         rels = await conn.fetch(
             """
             SELECT r.id, r.relationship_type, r.source_entity_id, r.target_entity_id
@@ -87,10 +88,69 @@ async def get_evidence_provenance(pg_pool, evidence_id: str) -> dict:
             evidence_id,
         )
 
+        # Recursively compile complete pedigree ancestry
+        pedigree_nodes = []
+        visited = set()
+
+        async def trace_ancestry(node_id: str, node_type: str, depth: int = 0):
+            if node_id in visited or depth > 5:
+                return
+            visited.add(node_id)
+
+            if node_type == "finding":
+                # Find other evidence supporting or contradicting this same finding
+                ancestors = await conn.fetch(
+                    """
+                    SELECT ei.id, ei.source_type, ei.artifact_uri, fe.role, fe.confidence_delta
+                    FROM finding_evidence fe
+                    JOIN evidence_items ei ON fe.evidence_id = ei.id
+                    WHERE fe.finding_id = $1 AND fe.evidence_id != $2
+                    """,
+                    node_id, evidence_id
+                )
+                for ancestor in ancestors:
+                    pedigree_nodes.append({
+                        "node_id": ancestor["id"],
+                        "type": "evidence",
+                        "relation": ancestor["role"],
+                        "source_type": ancestor["source_type"],
+                        "uri": ancestor["artifact_uri"],
+                        "confidence_impact": float(ancestor["confidence_delta"]),
+                        "derived_target": node_id,
+                        "depth": depth + 1
+                    })
+                    await trace_ancestry(ancestor["id"], "evidence", depth + 1)
+            elif node_type == "evidence":
+                # Trace from this evidence node to other related findings
+                descendants = await conn.fetch(
+                    """
+                    SELECT fe.finding_id, fe.role
+                    FROM finding_evidence fe
+                    WHERE fe.evidence_id = $1
+                    """,
+                    node_id
+                )
+                for desc in descendants:
+                    await trace_ancestry(desc["finding_id"], "finding", depth + 1)
+
+        # Initialize recursive pedigree trace
+        for f in findings:
+            await trace_ancestry(f["id"], "finding", depth=0)
+
+        # Parse row metadata
+        evidence_data = dict(row)
+        if "metadata" in evidence_data and isinstance(evidence_data["metadata"], str):
+            try:
+                evidence_data["metadata"] = json.loads(evidence_data["metadata"])
+            except Exception:
+                pass
+
         return {
-            "evidence": dict(row),
+            "evidence": evidence_data,
             "derived_findings": [dict(f) for f in findings],
             "supported_relationships": [dict(r) for r in rels],
+            "pedigree_ancestry": pedigree_nodes,
+            "net_pedigree_depth": len(visited)
         }
 
 

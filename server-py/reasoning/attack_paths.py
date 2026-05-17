@@ -56,8 +56,24 @@ async def generate_attack_paths(driver, pg_pool, engagement_id: str) -> List[Dic
             step_validations = []
             cumulative_penalty = 1.0
             is_constrained = False
+            total_economic_cost = 0.0
+            total_detection_risk = 0.0
             
             for idx, (nid, ntype, nname) in enumerate(zip(node_ids, node_types, node_names)):
+                # Calculate economic costs and detection risks accumulated on this step
+                if idx > 0:
+                    prev_id = node_ids[idx - 1]
+                    # We can assign specific operational costs and risk defaults based on entity transitions
+                    if ntype == "finding":
+                        total_economic_cost += 0.5  # Standard exploitation cost
+                        total_detection_risk += 0.4  # Moderate EDR visibility
+                    elif ntype == "service":
+                        total_economic_cost += 0.1  # Low overhead discovery
+                        total_detection_risk += 0.05  # Quiet traversal
+                    else:
+                        total_economic_cost += 0.2
+                        total_detection_risk += 0.1
+
                 if ntype == "finding":
                     try:
                         res = await evaluate_finding_feasibility(session, nid)
@@ -93,6 +109,15 @@ async def generate_attack_paths(driver, pg_pool, engagement_id: str) -> List[Dic
             feasibility *= depth_penalty
 
             blast_factor = min(1.0, blast_score / 10.0) if blast_score else 0.5
+            
+            # Calculate Attacker ROI: ROI = Gain / (Cost * (1 + DetectionProbability))
+            # Gain = blast_factor (exposure value of the objective)
+            # Cost = total_economic_cost
+            # DetectionProbability = total_detection_risk normalized
+            gain = blast_factor
+            cost_denom = max(0.1, total_economic_cost) * (1.0 + min(1.0, total_detection_risk))
+            attacker_roi = gain / cost_denom
+            
             final_priority = feasibility * (0.5 + 0.5 * blast_factor)
 
             enhanced.append({
@@ -104,11 +129,14 @@ async def generate_attack_paths(driver, pg_pool, engagement_id: str) -> List[Dic
                 "feasibility": round(feasibility, 4),
                 "impact": round(blast_factor, 4),
                 "composite_score": round(final_priority, 4),
+                "attacker_roi": round(attacker_roi, 4),
                 "reasoning_trace": {
                     "is_constrained": is_constrained,
                     "step_validations": step_validations,
                     "blast_radius_exposure": round(blast_score, 4),
-                    "depth_penalty_applied": round(depth_penalty, 4)
+                    "depth_penalty_applied": round(depth_penalty, 4),
+                    "total_economic_cost": round(total_economic_cost, 4),
+                    "total_detection_risk": round(total_detection_risk, 4)
                 }
             })
 

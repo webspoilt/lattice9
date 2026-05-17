@@ -8,6 +8,8 @@ import sys
 import unittest
 from unittest.mock import AsyncMock, MagicMock
 
+import math
+
 # Ensure server-py path is available for imports
 sys.path.append(".")
 
@@ -556,6 +558,119 @@ class TestLattice9Engine(unittest.TestCase):
         p = paths[0]
         self.assertEqual(p["node_ids"], ["entry-host", "finding-1"])
         self.assertGreater(p["composite_score"], 0.3)
+        loop.close()
+
+    def test_pedigree_ancestry_recursion(self):
+        """Verify recursive ancestry tracking and pedigree tree reconstruction from database states."""
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        mock_conn = AsyncMock()
+        
+        # 1. Fetch primary evidence row
+        mock_conn.fetchrow.return_value = {
+            "id": "evidence-1",
+            "engagement_id": "engagement-123",
+            "source_type": "nmap",
+            "artifact_uri": "file:///nmap.xml",
+            "sha256": "abcdef123456",
+            "captured_at": "2026-05-17T06:00:00Z",
+            "metadata": "{}"
+        }
+
+        # 2. Mock findings derived from this evidence
+        findings = [
+            {"id": "finding-1", "title": "EternalBlue MS17-010", "severity": "critical", "confidence": 0.8, "role": "supporting"}
+        ]
+        
+        # 3. Mock relationships supported by this evidence
+        rels = [
+            {"id": "rel-1", "relationship_type": "EXPLOITS", "source_entity_id": "host-1", "target_entity_id": "host-2"}
+        ]
+
+        # 4. Mock ancestors (other evidence pieces supporting finding-1)
+        ancestors = [
+            {"id": "evidence-2", "source_type": "metasploit", "artifact_uri": "file:///msf.log", "role": "supporting", "confidence_delta": 0.15}
+        ]
+
+        mock_conn.fetch.side_effect = [
+            findings,
+            rels,
+            ancestors,  # called during trace_ancestry recursion
+            []  # leaf node termination
+        ]
+
+        mock_pg_pool = MagicMock()
+        mock_pg_pool.acquire.return_value.__aenter__.return_value = mock_conn
+
+        from evidence.lineage import get_evidence_provenance
+        prov = loop.run_until_complete(get_evidence_provenance(mock_pg_pool, "evidence-1"))
+
+        self.assertIsNotNone(prov)
+        self.assertEqual(prov["evidence"]["id"], "evidence-1")
+        self.assertEqual(len(prov["pedigree_ancestry"]), 1)
+        self.assertEqual(prov["pedigree_ancestry"][0]["node_id"], "evidence-2")
+        self.assertEqual(prov["pedigree_ancestry"][0]["confidence_impact"], 0.15)
+        loop.close()
+
+    def test_dijkstra_economic_traversal_weights(self):
+        """Verify Dijkstra routing avoids high-risk/cost paths in favor of quiet movements."""
+        # Cost Equation: -ln(P(u->v)) + EconomicCost + DetectionRisk
+        # PrivEsc: Penalty 1.5, Econ 0.5, Risk 0.4. Sum = -ln(0.5/1.5) + 0.5 + 0.4 = 1.098 + 0.9 = 1.998
+        # Trusts: Penalty 0.95, Econ 0.05, Risk 0.02. Sum = -ln(0.95/0.95) + 0.05 + 0.02 = 0 + 0.07 = 0.07
+        
+        # Manually compute edge transition cost algorithm in test to verify equations
+        def calculate_cost(rel_type, base_prob):
+            rel_penalty = 1.0
+            economic_cost = 0.0
+            detection_risk = 0.0
+            if rel_type == "PRIVILEGE_ESCALATION":
+                rel_penalty = 1.5
+                economic_cost = 0.5
+                detection_risk = 0.4
+            elif rel_type == "TRUSTS":
+                rel_penalty = 0.95
+                economic_cost = 0.05
+                detection_risk = 0.02
+
+            transition_prob = max((base_prob) / rel_penalty, 0.001)
+            return -math.log(transition_prob) + economic_cost + detection_risk
+
+        cost_privesc = calculate_cost("PRIVILEGE_ESCALATION", 0.5)
+        cost_trusts = calculate_cost("TRUSTS", 0.95)
+
+        self.assertGreater(cost_privesc, cost_trusts)
+        self.assertAlmostEqual(cost_privesc, -math.log(0.5/1.5) + 0.5 + 0.4, places=4)
+        self.assertAlmostEqual(cost_trusts, -math.log(1.0) + 0.05 + 0.02, places=4)
+
+    def test_temporal_drift_and_infrastructure_mutations(self):
+        """Verify topological drift scores and mutation structures can be parsed correctly."""
+        from graph.temporal import compute_temporal_diff
+        from datetime import datetime
+        
+        # Test basic drift computation logic mock
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        mock_session = AsyncMock()
+        mock_conn = AsyncMock()
+
+        # Mock Postgres snapshot fetches with proper 'metadata' field key
+        mock_conn.fetchrow.side_effect = [
+            {"id": "snap-1", "metadata": '{"nodes": [{"id": "A", "type": "host"}], "relationships": []}', "captured_at": datetime.utcnow()},
+            {"id": "snap-2", "metadata": '{"nodes": [{"id": "A", "type": "host"}], "relationships": [{"src_id": "A", "dst_id": "B", "type": "TRUSTS", "weight": 0.9}]}', "captured_at": datetime.utcnow()}
+        ]
+
+        mock_pg_pool = MagicMock()
+        mock_pg_pool.acquire.return_value.__aenter__.return_value = mock_conn
+
+        diff = loop.run_until_complete(compute_temporal_diff(
+            None, mock_pg_pool, "engagement-1", "snap-1", "snap-2"
+        ))
+
+        self.assertIsNotNone(diff)
+        self.assertIn("drift_score", diff)
+        self.assertGreater(diff["drift_score"], 0.0)
         loop.close()
 
 

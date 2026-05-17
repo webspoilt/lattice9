@@ -223,17 +223,30 @@ async def shortest_attack_paths(driver, engagement_id: str,
 
                 # Dynamic Feasibility & Empirically Calibrated Cost Calculation:
                 # P(transition) = P(node state) * relationship_weight * exploit_feasibility / rel_penalty
-                # Cost = -ln(P(transition))
+                # Cost = -ln(P(transition)) + EconomicCostMultiplier + DetectionMultiplier
                 curr_conf = node_map[curr]["confidence"]
                 
                 # Default relation penalty if target node is not a finding
                 rel_penalty = 1.0
+                economic_cost = 0.0
+                detection_risk = 0.0
+
                 if rel_type == "PRIVILEGE_ESCALATION":
                     rel_penalty = 1.5
+                    economic_cost = 0.5  # Modest difficulty barrier
+                    detection_risk = 0.4  # Moderate EDR visibility risk
                 elif rel_type == "AUTHENTICATES_TO":
                     rel_penalty = 1.05
+                    economic_cost = 0.1  # Highly cost-efficient traversal
+                    detection_risk = 0.05  # Quiet, low-detection risk
                 elif rel_type == "NETWORK_REACH":
                     rel_penalty = 1.2
+                    economic_cost = 0.2
+                    detection_risk = 0.3  # Network-level visibility (IDS/NDR)
+                elif rel_type == "TRUSTS":
+                    rel_penalty = 0.95  # Favored path (higher probability of lateral trust exploitation)
+                    economic_cost = 0.05
+                    detection_risk = 0.02
                 
                 # Check dynamic exploit preconditions if target is a finding
                 target_feasibility = finding_feasibility.get(neighbor_id, 1.0)
@@ -242,7 +255,10 @@ async def shortest_attack_paths(driver, engagement_id: str,
                 
                 # Cost calibration bounds
                 p_trans = max(0.0001, min(0.9999, p_trans))
-                edge_cost = -math.log(p_trans)
+                
+                # Integrate Economic Cost & Detection Risk metrics directly into Dijkstra Edge Costs
+                # Favors clean, quiet, and cheap paths over noisy, expensive exploits
+                edge_cost = -math.log(p_trans) + economic_cost + detection_risk
 
                 new_cost = cost + edge_cost
                 new_path = path + [neighbor_id]

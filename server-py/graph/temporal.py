@@ -62,6 +62,23 @@ async def create_snapshot(driver, pg_pool, engagement_id: str,
                 "confidence": record["confidence"],
             })
 
+        # Get all relationship states for full topology replay
+        rels_detail_result = await session.run(
+            """
+            MATCH (src:L9 {engagement_id: $engagement_id})-[r]->(dst:L9 {engagement_id: $engagement_id})
+            RETURN src.id AS src_id, dst.id AS dst_id, type(r) AS rel_type, coalesce(toFloat(r.weight), 0.5) AS weight
+            """,
+            engagement_id=engagement_id,
+        )
+        rel_states = []
+        async for record in rels_detail_result:
+            rel_states.append({
+                "src_id": record["src_id"],
+                "dst_id": record["dst_id"],
+                "type": record["rel_type"],
+                "weight": record["weight"]
+            })
+
     # Record snapshot in PostgreSQL
     async with pg_pool.acquire() as conn:
         await conn.execute(
@@ -73,7 +90,7 @@ async def create_snapshot(driver, pg_pool, engagement_id: str,
             """,
             snapshot_id, engagement_id, graph_version, snapshot_type,
             captured_at, int(entity_count), int(rel_count),
-            json.dumps({"nodes": node_states}),
+            json.dumps({"nodes": node_states, "relationships": rel_states}),
         )
 
     logger.info(f"Snapshot {snapshot_id} captured: {entity_count} entities, {rel_count} relationships")
@@ -85,7 +102,7 @@ async def compute_temporal_diff(driver, pg_pool, engagement_id: str,
                                  to_snapshot_id: str) -> dict:
     """
     Compute the temporal diff between two graph snapshots.
-    Returns added/modified/removed nodes and drift score.
+    Returns added/modified/removed nodes and relationships, and overall drift score.
     """
     async with pg_pool.acquire() as conn:
         from_row = await conn.fetchrow(
@@ -100,12 +117,18 @@ async def compute_temporal_diff(driver, pg_pool, engagement_id: str,
         if not from_row or not to_row:
             raise ValueError("Snapshot not found")
 
-        from_nodes = json.loads(from_row["metadata"])["nodes"]
-        to_nodes = json.loads(to_row["metadata"])["nodes"]
+        metadata_from = json.loads(from_row["metadata"])
+        metadata_to = json.loads(to_row["metadata"])
+
+        from_nodes = metadata_from.get("nodes", [])
+        to_nodes = metadata_to.get("nodes", [])
         from_ids = {n["id"] for n in from_nodes}
         to_ids = {n["id"] for n in to_nodes}
 
-    # Compute diffs
+        from_rels = metadata_from.get("relationships", [])
+        to_rels = metadata_to.get("relationships", [])
+
+    # 1. Compute node diffs
     added = [n for n in to_nodes if n["id"] not in from_ids]
     removed = [n for n in from_nodes if n["id"] not in to_ids]
     from_map = {n["id"]: n for n in from_nodes}
@@ -125,11 +148,49 @@ async def compute_temporal_diff(driver, pg_pool, engagement_id: str,
                 "type": tn.get("type"),
             })
 
+    # 2. Compute relationship diffs (Topology shifts)
+    from_rels_map = {(r["src_id"], r["dst_id"], r["type"]): r["weight"] for r in from_rels}
+    to_rels_map = {(r["src_id"], r["dst_id"], r["type"]): r["weight"] for r in to_rels}
+
+    added_rels = []
+    removed_rels = []
+    modified_rels = []
+
+    for r_key, weight in to_rels_map.items():
+        if r_key not in from_rels_map:
+            added_rels.append({
+                "src_id": r_key[0],
+                "dst_id": r_key[1],
+                "type": r_key[2],
+                "weight": weight
+            })
+        elif abs(float(weight) - float(from_rels_map[r_key])) > 0.05:
+            modified_rels.append({
+                "src_id": r_key[0],
+                "dst_id": r_key[1],
+                "type": r_key[2],
+                "from_weight": from_rels_map[r_key],
+                "to_weight": weight
+            })
+
+    for r_key in from_rels_map:
+        if r_key not in to_rels_map:
+            removed_rels.append({
+                "src_id": r_key[0],
+                "dst_id": r_key[1],
+                "type": r_key[2],
+                "weight": from_rels_map[r_key]
+            })
+
     # Compute drift score: weighted combination of changes
     added_score = len(added) * 0.3
     removed_score = len(removed) * 0.2
-    modified_score = len(modified) * 0.5
-    drift_score = min(1.0, added_score + removed_score + modified_score)
+    modified_score = len(modified) * 0.2
+    added_rel_score = len(added_rels) * 0.4
+    removed_rel_score = len(removed_rels) * 0.2
+    modified_rel_score = len(modified_rels) * 0.2
+
+    drift_score = min(1.0, added_score + removed_score + modified_score + added_rel_score + removed_rel_score + modified_rel_score)
 
     return {
         "from_snapshot": from_snapshot_id,
@@ -137,6 +198,9 @@ async def compute_temporal_diff(driver, pg_pool, engagement_id: str,
         "added": added,
         "removed": removed,
         "modified": modified,
+        "added_relationships": added_rels,
+        "removed_relationships": removed_rels,
+        "modified_relationships": modified_rels,
         "drift_score": round(drift_score, 4),
         "from_time": from_row["captured_at"].isoformat(),
         "to_time": to_row["captured_at"].isoformat(),
@@ -201,7 +265,6 @@ async def get_exposure_evolution(driver, pg_pool, engagement_id: str) -> List[Di
 
         timeline = []
         for row in rows:
-            meta = json.loads(row["metadata"])
             timeline.append({
                 "snapshot_id": row["id"],
                 "version": row["graph_version"],
@@ -220,6 +283,7 @@ async def get_exposure_evolution(driver, pg_pool, engagement_id: str) -> List[Di
 async def detect_infrastructure_mutations(driver, pg_pool, engagement_id: str) -> List[Dict]:
     """
     Detect significant infrastructure changes between the two most recent snapshots.
+    Identifies new trust relationships, credential spreading, and blast radius mutations.
     """
     async with pg_pool.acquire() as conn:
         snapshots = await conn.fetch(
@@ -243,7 +307,11 @@ async def detect_infrastructure_mutations(driver, pg_pool, engagement_id: str) -
 
     mutations = []
 
-    # New findings appearing
+    # Get a map of node IDs to names/types from the 'to' snapshot for description enrichment
+    to_nodes = diff.get("added", []) + diff.get("modified", [])
+    node_map = {n["id"]: n for n in to_nodes}
+
+    # 1. New findings appearing
     for added in diff.get("added", []):
         if added.get("type") == "finding":
             mutations.append({
@@ -251,10 +319,10 @@ async def detect_infrastructure_mutations(driver, pg_pool, engagement_id: str) -
                 "entity_id": added["id"],
                 "label": added.get("name", "Unknown"),
                 "drift_contribution": 0.3,
-                "description": f"New finding: {added.get('name', 'Unknown')}",
+                "description": f"New finding detected: {added.get('name', 'Unknown')}",
             })
 
-    # Confidence changes on existing nodes
+    # 2. Confidence changes on existing nodes
     for modified in diff.get("modified", []):
         mutations.append({
             "type": "confidence_shift",
@@ -264,8 +332,37 @@ async def detect_infrastructure_mutations(driver, pg_pool, engagement_id: str) -
                 abs(float(modified.get("to_confidence", 0)) - float(modified.get("from_confidence", 0))), 4
             ),
             "description": (
-                f"Confidence shift: {modified.get('from_confidence')} → {modified.get('to_confidence')}"
+                f"Confidence shift on {modified.get('from_name')}: {modified.get('from_confidence')} → {modified.get('to_confidence')}"
             ),
         })
 
+    # 3. Trust mutations and credential spreads from added relationships
+    for added_rel in diff.get("added_relationships", []):
+        src_id = added_rel["src_id"]
+        dst_id = added_rel["dst_id"]
+        rel_type = added_rel["type"]
+
+        if rel_type == "TRUSTS":
+            mutations.append({
+                "type": "trust_mutation",
+                "entity_id": src_id,
+                "drift_contribution": 0.5,
+                "description": f"New trust relationship established: {src_id} trusts {dst_id}",
+            })
+        elif rel_type == "AUTHENTICATES_TO":
+            mutations.append({
+                "type": "credential_spread",
+                "entity_id": src_id,
+                "drift_contribution": 0.4,
+                "description": f"Credential {src_id} spread detected: newly authenticates to target {dst_id}",
+            })
+        elif rel_type == "PRIVILEGE_ESCALATION":
+            mutations.append({
+                "type": "blast_radius_expansion",
+                "entity_id": src_id,
+                "drift_contribution": 0.6,
+                "description": f"Blast radius expansion: new privilege escalation path from {src_id} to {dst_id}",
+            })
+
     return mutations
+
