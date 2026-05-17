@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@page { size: 1200px auto; margin: 0; }
+html, body { margin: 0; padding: 0; width: 1200px; background: #fff; }
+* { box-sizing: border-box; }
+body { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace; }
+svg text { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace; }
+</style>
+</head>
+<body>
+<svg width="1200" height="750" viewBox="0 0 1200 750" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrG" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="none" stroke="#999" stroke-width="0.7"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="750" fill="#fff"/>
+
+  <!-- Title -->
+  <text x="600" y="26" text-anchor="middle" font-size="11" fill="#2c3e6b" font-weight="bold" letter-spacing="2">EVIDENCE LINEAGE DAG — PROVENANCE CHAIN</text>
+  <line x1="80" y1="36" x2="1120" y2="36" stroke="#ccc" stroke-width="0.5"/>
+
+  <!-- Level labels on the left -->
+  <text x="30" y="690" font-size="7" fill="#ccc" letter-spacing="1">RAW</text>
+  <text x="30" y="530" font-size="7" fill="#ccc" letter-spacing="1">INFER</text>
+  <text x="30" y="360" font-size="7" fill="#ccc" letter-spacing="1">ASSERT</text>
+  <text x="30" y="180" font-size="7" fill="#ccc" letter-spacing="1">TARGET</text>
+
+  <!-- Level separator lines -->
+  <line x1="60" y1="610" x2="1140" y2="610" stroke="#f0f0f0" stroke-width="0.5" stroke-dasharray="4,3"/>
+  <line x1="60" y1="440" x2="1140" y2="440" stroke="#f0f0f0" stroke-width="0.5" stroke-dasharray="4,3"/>
+  <line x1="60" y1="260" x2="1140" y2="260" stroke="#f0f0f0" stroke-width="0.5" stroke-dasharray="4,3"/>
+
+  <!-- ===== LEVEL 4 (top): Target ===== -->
+  <!-- Attack Pathway -->
+  <rect x="350" y="100" width="200" height="55" rx="3" fill="#000" stroke="#000" stroke-width="1"/>
+  <text x="450" y="122" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">Attack Pathway</text>
+  <text x="450" y="136" text-anchor="middle" font-size="7" fill="#ccc">path_id: PATH-0x7A3F</text>
+  <text x="450" y="148" text-anchor="middle" font-size="7" fill="#999">confidence: 0.92</text>
+
+  <!-- Domain Controller -->
+  <rect x="700" y="100" width="200" height="55" rx="3" fill="#000" stroke="#000" stroke-width="1.5"/>
+  <text x="800" y="122" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">Domain Controller</text>
+  <text x="800" y="136" text-anchor="middle" font-size="7" fill="#ccc">asset_id: DC-01</text>
+  <text x="800" y="148" text-anchor="middle" font-size="7" fill="#999">criticality: P1</text>
+
+  <!-- Edge: Attack Pathway → Domain Controller -->
+  <line x1="550" y1="127" x2="700" y2="127" stroke="#999" stroke-width="1" marker-end="url(#arrG)"/>
+  <text x="625" y="120" text-anchor="middle" font-size="6" fill="#888">compromises</text>
+
+  <!-- ===== LEVEL 3: Assertions ===== -->
+  <!-- AUTHENTICATES_TO edge -->
+  <rect x="200" y="290" width="230" height="55" rx="3" fill="#f5f5f5" stroke="#000" stroke-width="1"/>
+  <text x="315" y="312" text-anchor="middle" font-size="9" fill="#000" font-weight="bold">AUTHENTICATES_TO</text>
+  <text x="315" y="326" text-anchor="middle" font-size="7" fill="#888">edge_type: credential</text>
+  <text x="315" y="338" text-anchor="middle" font-size="7" fill="#aaa">weight: 0.87 · evidence: 3</text>
+
+  <!-- EXPLOITS edge -->
+  <rect x="530" y="290" width="230" height="55" rx="3" fill="#f5f5f5" stroke="#000" stroke-width="1"/>
+  <text x="645" y="312" text-anchor="middle" font-size="9" fill="#000" font-weight="bold">EXPLOITS</text>
+  <text x="645" y="326" text-anchor="middle" font-size="7" fill="#888">edge_type: vulnerability</text>
+  <text x="645" y="338" text-anchor="middle" font-size="7" fill="#aaa">weight: 0.91 · evidence: 2</text>
+
+  <!-- HAS_ACCESS edge -->
+  <rect x="850" y="290" width="200" height="55" rx="3" fill="#f5f5f5" stroke="#000" stroke-width="1"/>
+  <text x="950" y="312" text-anchor="middle" font-size="9" fill="#000" font-weight="bold">HAS_ACCESS</text>
+  <text x="950" y="326" text-anchor="middle" font-size="7" fill="#888">edge_type: lateral</text>
+  <text x="950" y="338" text-anchor="middle" font-size="7" fill="#aaa">weight: 0.73 · evidence: 2</text>
+
+  <!-- Edges: Assertions → Target -->
+  <path d="M315,290 Q350,220 420,155" fill="none" stroke="#999" stroke-width="0.8" marker-end="url(#arrG)"/>
+  <text x="340" y="215" font-size="6" fill="#aaa">supports</text>
+
+  <path d="M645,290 Q560,220 490,155" fill="none" stroke="#999" stroke-width="0.8" marker-end="url(#arrG)"/>
+  <text x="580" y="210" font-size="6" fill="#aaa">supports</text>
+
+  <path d="M950,290 Q890,220 830,155" fill="none" stroke="#999" stroke-width="0.8" marker-end="url(#arrG)"/>
+  <text x="905" y="215" font-size="6" fill="#aaa">targets</text>
+
+  <!-- ===== LEVEL 2: Inferred findings ===== -->
+  <!-- Exposed Key -->
+  <rect x="100" y="470" width="200" height="65" rx="3" fill="#fff" stroke="#000" stroke-width="0.8"/>
+  <text x="200" y="490" text-anchor="middle" font-size="9" fill="#000" font-weight="bold">Exposed Key</text>
+  <text x="200" y="504" text-anchor="middle" font-size="7" fill="#888">type: credential_exposure</text>
+  <text x="200" y="516" text-anchor="middle" font-size="7" fill="#aaa">severity: HIGH</text>
+  <text x="200" y="528" text-anchor="middle" font-size="7" fill="#aaa">inferred_from: 2 sources</text>
+
+  <!-- Open Port -->
+  <rect x="380" y="470" width="200" height="65" rx="3" fill="#fff" stroke="#000" stroke-width="0.8"/>
+  <text x="480" y="490" text-anchor="middle" font-size="9" fill="#000" font-weight="bold">Open Port</text>
+  <text x="480" y="504" text-anchor="middle" font-size="7" fill="#888">type: network_exposure</text>
+  <text x="480" y="516" text-anchor="middle" font-size="7" fill="#aaa">severity: MEDIUM</text>
+  <text x="480" y="528" text-anchor="middle" font-size="7" fill="#aaa">inferred_from: 2 sources</text>
+
+  <!-- Active Session -->
+  <rect x="660" y="470" width="200" height="65" rx="3" fill="#fff" stroke="#000" stroke-width="0.8"/>
+  <text x="760" y="490" text-anchor="middle" font-size="9" fill="#000" font-weight="bold">Active Session</text>
+  <text x="760" y="504" text-anchor="middle" font-size="7" fill="#888">type: session_hijack</text>
+  <text x="760" y="516" text-anchor="middle" font-size="7" fill="#aaa">severity: CRITICAL</text>
+  <text x="760" y="528" text-anchor="middle" font-size="7" fill="#aaa">inferred_from: 2 sources</text>
+
+  <!-- Edges: Inferred → Assertions -->
+  <path d="M200,470 Q230,400 280,345" fill="none" stroke="#999" stroke-width="0.8" marker-end="url(#arrG)"/>
+  <text x="220" y="395" font-size="6" fill="#aaa">infers</text>
+
+  <path d="M440,470 Q400,400 350,345" fill="none" stroke="#999" stroke-width="0.8" marker-end="url(#arrG)"/>
+  <text x="375" y="400" font-size="6" fill="#aaa">infers</text>
+
+  <path d="M520,470 Q580,400 610,345" fill="none" stroke="#999" stroke-width="0.8" marker-end="url(#arrG)"/>
+  <text x="575" y="395" font-size="6" fill="#aaa">infers</text>
+
+  <path d="M720,470 Q680,400 660,345" fill="none" stroke="#999" stroke-width="0.8" marker-end="url(#arrG)"/>
+  <text x="670" y="395" font-size="6" fill="#aaa">infers</text>
+
+  <path d="M800,470 Q870,400 920,345" fill="none" stroke="#999" stroke-width="0.8" marker-end="url(#arrG)"/>
+  <text x="870" y="395" font-size="6" fill="#aaa">infers</text>
+
+  <!-- ===== LEVEL 1 (bottom): Raw findings ===== -->
+  <!-- Scan Output -->
+  <rect x="60" y="630" width="200" height="75" rx="3" fill="#fff" stroke="#000" stroke-width="0.5"/>
+  <text x="160" y="648" text-anchor="middle" font-size="8" fill="#000" font-weight="bold">Scan Output</text>
+  <line x1="75" y1="654" x2="245" y2="654" stroke="#eee" stroke-width="0.5"/>
+  <text x="75" y="667" font-size="6" fill="#888">raw_payload: nmap XML</text>
+  <text x="75" y="679" font-size="6" fill="#888">tool_provenance: nmap 7.94</text>
+  <text x="75" y="691" font-size="6" fill="#888">timestamp: 2024-01-15T08:30Z</text>
+  <text x="75" y="703" font-size="6" fill="#aaa">sha256: a3f2…8b1c</text>
+
+  <!-- API Response -->
+  <rect x="290" y="630" width="200" height="75" rx="3" fill="#fff" stroke="#000" stroke-width="0.5"/>
+  <text x="390" y="648" text-anchor="middle" font-size="8" fill="#000" font-weight="bold">API Response</text>
+  <line x1="305" y1="654" x2="475" y2="654" stroke="#eee" stroke-width="0.5"/>
+  <text x="305" y="667" font-size="6" fill="#888">raw_payload: JSON body</text>
+  <text x="305" y="679" font-size="6" fill="#888">tool_provenance: curl 8.4</text>
+  <text x="305" y="691" font-size="6" fill="#888">timestamp: 2024-01-15T09:12Z</text>
+  <text x="305" y="703" font-size="6" fill="#aaa">sha256: 7d1e…4f9a</text>
+
+  <!-- Syslog Event -->
+  <rect x="520" y="630" width="200" height="75" rx="3" fill="#fff" stroke="#000" stroke-width="0.5"/>
+  <text x="620" y="648" text-anchor="middle" font-size="8" fill="#000" font-weight="bold">Syslog Event</text>
+  <line x1="535" y1="654" x2="705" y2="654" stroke="#eee" stroke-width="0.5"/>
+  <text x="535" y="667" font-size="6" fill="#888">raw_payload: syslog RFC5424</text>
+  <text x="535" y="679" font-size="6" fill="#888">tool_provenance: rsyslog 8.23</text>
+  <text x="535" y="691" font-size="6" fill="#888">timestamp: 2024-01-15T10:05Z</text>
+  <text x="535" y="703" font-size="6" fill="#aaa">sha256: b9c4…2e7d</text>
+
+  <!-- Hex Dump -->
+  <rect x="750" y="630" width="200" height="75" rx="3" fill="#fff" stroke="#000" stroke-width="0.5"/>
+  <text x="850" y="648" text-anchor="middle" font-size="8" fill="#000" font-weight="bold">Hex Dump</text>
+  <line x1="765" y1="654" x2="935" y2="654" stroke="#eee" stroke-width="0.5"/>
+  <text x="765" y="667" font-size="6" fill="#888">raw_payload: pcap extract</text>
+  <text x="765" y="679" font-size="6" fill="#888">tool_provenance: wireshark 4.2</text>
+  <text x="765" y="691" font-size="6" fill="#888">timestamp: 2024-01-15T10:47Z</text>
+  <text x="765" y="703" font-size="6" fill="#aaa">sha256: e5a1…c3b8</text>
+
+  <!-- Edges: Raw → Inferred -->
+  <path d="M180,630 Q180,570 195,535" fill="none" stroke="#999" stroke-width="0.7" marker-end="url(#arrG)"/>
+  <path d="M350,630 Q280,570 220,535" fill="none" stroke="#999" stroke-width="0.7" marker-end="url(#arrG)"/>
+
+  <path d="M420,630 Q440,570 465,535" fill="none" stroke="#999" stroke-width="0.7" marker-end="url(#arrG)"/>
+  <path d="M580,630 Q530,570 495,535" fill="none" stroke="#999" stroke-width="0.7" marker-end="url(#arrG)"/>
+
+  <path d="M660,630 Q700,570 730,535" fill="none" stroke="#999" stroke-width="0.7" marker-end="url(#arrG)"/>
+  <path d="M820,630 Q790,570 775,535" fill="none" stroke="#999" stroke-width="0.7" marker-end="url(#arrG)"/>
+
+  <!-- Footer -->
+  <line x1="80" y1="730" x2="1120" y2="730" stroke="#e0e0e0" stroke-width="0.5"/>
+  <text x="600" y="744" text-anchor="middle" font-size="7" fill="#bbb">Lattice9 Evidence Lineage · 4 raw → 3 inferred → 3 asserted → 2 target · Provenance DAG</text>
+</svg>
+</body>
+</html>

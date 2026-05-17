@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0A0E17; --surface: #0F1520; --grid: #141C2B;
+    --line: #3A4A5C; --dim: #253040; --accent: #4A6FA5;
+    --bright: #6B8FC2; --muted: #2E4A6E;
+    --text: #C8D6E5; --sub: #7B8FA3; --faint: #4A5E72;
+    --teal: #3A7A6A; --amber: #8B7340; --red: #9A4A4A;
+    --math: #5E7A9E;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; -webkit-font-smoothing: antialiased; overflow: hidden; }
+  #root { width: 1600px; height: 1000px; position: relative; padding: 40px; }
+  .bp { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.5; pointer-events: none; }
+  .bpf { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: linear-gradient(var(--grid) 0.5px, transparent 0.5px), linear-gradient(90deg, var(--grid) 0.5px, transparent 0.5px); background-size: 10px 10px; opacity: 0.25; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="bp"></div>
+  <div class="bpf"></div>
+
+  <svg width="1520" height="920" viewBox="0 0 1520 920">
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#6B8FC2"/></marker>
+      <marker id="arrR" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#9A4A4A"/></marker>
+      <marker id="arrG" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><polygon points="0 0,6 2,0 4" fill="#3A4A5C"/></marker>
+      <radialGradient id="wave1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#9A4A4A" stop-opacity="0.25"/><stop offset="100%" stop-color="#9A4A4A" stop-opacity="0"/></radialGradient>
+      <radialGradient id="wave2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#8B7340" stop-opacity="0.15"/><stop offset="100%" stop-color="#8B7340" stop-opacity="0"/></radialGradient>
+      <radialGradient id="wave3" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#4A6FA5" stop-opacity="0.1"/><stop offset="100%" stop-color="#4A6FA5" stop-opacity="0"/></radialGradient>
+    </defs>
+
+    <!-- Title -->
+    <text x="40" y="30" fill="#6B8FC2" font-size="18" font-family="Georgia" font-weight="700" letter-spacing="3">ATTACK-PATH SYNTHESIS & FIELD DIFFUSION</text>
+    <text x="40" y="48" fill="#7B8FA3" font-size="11" font-family="Courier New" letter-spacing="1">Constraint-Aware Dijkstra + Pressure Field Propagation — Multi-Algorithm Path Ranking</text>
+    <text x="40" y="62" fill="#4A5E72" font-size="9" font-family="Courier New" letter-spacing="1.5">FIGURE 7.1 | ATTACK PATH COMPUTATION — FIELD THEORY + UTILITY OPTIMIZATION</text>
+
+    <!-- Wave diffusion rings from entry point -->
+    <circle cx="140" cy="400" r="60" fill="url(#wave1)"/>
+    <circle cx="140" cy="400" r="120" fill="none" stroke="#9A4A4A" stroke-width="0.5" opacity="0.3" stroke-dasharray="3 4"/>
+    <circle cx="140" cy="400" r="180" fill="none" stroke="#9A4A4A" stroke-width="0.4" opacity="0.2" stroke-dasharray="2 5"/>
+    <circle cx="140" cy="400" r="240" fill="none" stroke="#8B7340" stroke-width="0.3" opacity="0.15" stroke-dasharray="2 6"/>
+
+    <!-- Entry node -->
+    <circle cx="140" cy="400" r="28" fill="rgba(154,74,74,0.3)" stroke="#9A4A4A" stroke-width="2.5"/>
+    <text x="140" y="396" fill="#C86A6A" font-size="11" font-family="Courier New" text-anchor="middle" font-weight="700">ENTRY</text>
+    <text x="140" y="410" fill="#9A6A6A" font-size="7" font-family="Courier New" text-anchor="middle">10.100.0.1</text>
+
+    <!-- Lateral hop 1 -->
+    <rect x="290" y="260" width="110" height="50" rx="4" fill="rgba(154,74,74,0.2)" stroke="#9A4A4A" stroke-width="2"/>
+    <text x="345" y="280" fill="#C8D6E5" font-size="9" font-family="Courier New" text-anchor="middle">DMZ-NGINX</text>
+    <text x="345" y="294" fill="#9A6A6A" font-size="7" font-family="Courier New" text-anchor="middle">CVE-2024-24989</text>
+
+    <rect x="290" y="380" width="110" height="50" rx="4" fill="rgba(139,115,64,0.15)" stroke="#8B7340" stroke-width="1.5"/>
+    <text x="345" y="400" fill="#C8D6E5" font-size="9" font-family="Courier New" text-anchor="middle">VPN-GW</text>
+    <text x="345" y="414" fill="#8B7340" font-size="7" font-family="Courier New" text-anchor="middle">MISCONFIG</text>
+
+    <rect x="290" y="500" width="110" height="50" rx="4" fill="rgba(58,122,106,0.15)" stroke="#3A7A6A" stroke-width="1.5"/>
+    <text x="345" y="520" fill="#5EB8A0" font-size="9" font-family="Courier New" text-anchor="middle">SENSOR</text>
+    <text x="345" y="534" fill="#4A5E72" font-size="7" font-family="Courier New" text-anchor="middle">MONITORED</text>
+
+    <!-- Lateral hop 2 -->
+    <rect x="490" y="200" width="110" height="50" rx="4" fill="rgba(154,74,74,0.15)" stroke="#8B5A5A" stroke-width="1.5"/>
+    <text x="545" y="220" fill="#C8D6E5" font-size="9" font-family="Courier New" text-anchor="middle">WEB-SVC</text>
+    <text x="545" y="234" fill="#7B8FA3" font-size="7" font-family="Courier New" text-anchor="middle">RCE possible</text>
+
+    <rect x="490" y="320" width="110" height="50" rx="4" fill="rgba(139,115,64,0.15)" stroke="#8B7340" stroke-width="1.5"/>
+    <text x="545" y="340" fill="#C8D6E5" font-size="9" font-family="Courier New" text-anchor="middle">AD-SVC</text>
+    <text x="545" y="354" fill="#8B7340" font-size="7" font-family="Courier New" text-anchor="middle">CREDS DUMP</text>
+
+    <rect x="490" y="440" width="110" height="50" rx="4" fill="rgba(74,111,165,0.15)" stroke="#4A6FA5" stroke-width="1.5"/>
+    <text x="545" y="460" fill="#6B8FC2" font-size="9" font-family="Courier New" text-anchor="middle">AUTH-SVC</text>
+    <text x="545" y="474" fill="#7B8FA3" font-size="7" font-family="Courier New" text-anchor="middle">MFA enabled</text>
+
+    <!-- Lateral hop 3 -->
+    <rect x="690" y="260" width="120" height="50" rx="4" fill="rgba(139,115,64,0.15)" stroke="#8B7340" stroke-width="1.5"/>
+    <text x="750" y="280" fill="#C8D6E5" font-size="9" font-family="Courier New" text-anchor="middle">DB-SERVER</text>
+    <text x="750" y="294" fill="#8B7340" font-size="7" font-family="Courier New" text-anchor="middle">SA CREDS</text>
+
+    <rect x="690" y="380" width="120" height="50" rx="4" fill="rgba(74,111,165,0.2)" stroke="#4A6FA5" stroke-width="2"/>
+    <text x="750" y="400" fill="#6B8FC2" font-size="9" font-family="Courier New" text-anchor="middle">DOMAIN-CTRL</text>
+    <text x="750" y="414" fill="#4A6FA5" font-size="7" font-family="Courier New" text-anchor="middle">HIGH VALUE</text>
+
+    <!-- Crown jewel -->
+    <rect x="900" y="350" width="140" height="60" rx="6" fill="rgba(107,143,194,0.25)" stroke="#6B8FC2" stroke-width="2.5"/>
+    <text x="970" y="376" fill="#8BAACC" font-size="12" font-family="Georgia" text-anchor="middle" font-weight="700">CROWN JEWEL</text>
+    <text x="970" y="394" fill="#6B8FC2" font-size="8" font-family="Courier New" text-anchor="middle">R_topo = 0.95 | L9 PROTECTED</text>
+
+    <!-- ATTACK PATHS -->
+    <!-- Path A: Critical (entry → DMZ → AD-SVC → DC → Crown) -->
+    <path d="M 168 390 L 290 290" stroke="#9A4A4A" stroke-width="2.5" fill="none" marker-end="url(#arrR)"/>
+    <path d="M 400 285 L 490 335" stroke="#9A4A4A" stroke-width="2.5" fill="none" marker-end="url(#arrR)"/>
+    <path d="M 600 345 L 690 400" stroke="#9A4A4A" stroke-width="2" fill="none" marker-end="url(#arrR)"/>
+    <path d="M 810 405 L 900 380" stroke="#9A4A4A" stroke-width="2" fill="none" marker-end="url(#arrR)"/>
+
+    <!-- Path A labels -->
+    <text x="225" y="328" fill="#9A6A6A" font-size="7" font-family="Georgia" font-style="italic">P=0.85</text>
+    <text x="445" y="303" fill="#9A6A6A" font-size="7" font-family="Georgia" font-style="italic">P=0.72</text>
+    <text x="640" y="363" fill="#9A6A6A" font-size="7" font-family="Georgia" font-style="italic">P=0.68</text>
+    <text x="845" y="386" fill="#9A6A6A" font-size="7" font-family="Georgia" font-style="italic">P=0.55</text>
+
+    <!-- Path B: Alternative (entry → VPN → Auth → DC → Crown) -->
+    <path d="M 168 405 L 290 400" stroke="#8B7340" stroke-width="1.8" fill="none" marker-end="url(#arrR)"/>
+    <path d="M 400 405 L 490 460" stroke="#8B7340" stroke-width="1.5" fill="none" marker-end="url(#arrR)"/>
+    <path d="M 600 465 L 690 415" stroke="#8B7340" stroke-width="1.5" fill="none" marker-end="url(#arrR)"/>
+
+    <!-- Path C: Stealth (entry → Sensor → ... blocked) -->
+    <path d="M 168 420 L 290 520" stroke="#3A4A5C" stroke-width="1" fill="none" marker-end="url(#arrG)" stroke-dasharray="4 3"/>
+    <text x="220" y="480" fill="#4A5E72" font-size="6" font-family="Courier New">BLOCKED: EDR</text>
+
+    <!-- Pressure field overlay at DC -->
+    <circle cx="750" cy="405" r="80" fill="url(#wave2)"/>
+    <circle cx="750" cy="405" r="120" fill="none" stroke="#8B7340" stroke-width="0.4" opacity="0.2" stroke-dasharray="2 4"/>
+
+    <!-- Pressure field overlay at Crown -->
+    <circle cx="970" cy="380" r="100" fill="url(#wave3)"/>
+
+    <!-- UTILITY RANKING PANEL -->
+    <rect x="1100" y="100" width="380" height="250" rx="4" fill="rgba(15,21,32,0.85)" stroke="#3A4A5C" stroke-width="0.5"/>
+    <text x="1115" y="122" fill="#6B8FC2" font-size="10" font-family="Georgia" letter-spacing="1.5">PATH UTILITY RANKING</text>
+
+    <!-- Path A ranking -->
+    <rect x="1115" y="135" width="350" height="55" rx="3" fill="rgba(154,74,74,0.1)" stroke="#9A4A4A" stroke-width="1"/>
+    <text x="1125" y="152" fill="#C86A6A" font-size="9" font-family="Courier New" font-weight="700">PATH-A: CRITICAL</text>
+    <text x="1125" y="166" fill="#7B8FA3" font-size="7" font-family="Courier New">Entry→DMZ→AD→DC→Crown | 4 hops</text>
+    <text x="1125" y="180" fill="#5E7A9E" font-size="7" font-family="Georgia" font-style="italic">U(P) = 0.72 | Cost: $200K | ROI: 12.5x</text>
+
+    <!-- Path B ranking -->
+    <rect x="1115" y="198" width="350" height="55" rx="3" fill="rgba(139,115,64,0.1)" stroke="#8B7340" stroke-width="1"/>
+    <text x="1125" y="215" fill="#B89A50" font-size="9" font-family="Courier New" font-weight="700">PATH-B: MODERATE</text>
+    <text x="1125" y="229" fill="#7B8FA3" font-size="7" font-family="Courier New">Entry→VPN→Auth→DC→Crown | 4 hops</text>
+    <text x="1125" y="243" fill="#5E7A9E" font-size="7" font-family="Georgia" font-style="italic">U(P) = 0.48 | Cost: $350K | ROI: 7.1x</text>
+
+    <!-- Blocked path -->
+    <rect x="1115" y="261" width="350" height="40" rx="3" fill="rgba(58,122,106,0.08)" stroke="#3A7A6A" stroke-width="0.8"/>
+    <text x="1125" y="278" fill="#5EB8A0" font-size="9" font-family="Courier New">PATH-C: BLOCKED</text>
+    <text x="1125" y="292" fill="#4A5E72" font-size="7" font-family="Courier New">Entry→Sensor→EDR detection | ∞ cost</text>
+
+    <!-- Equations panel -->
+    <rect x="1100" y="380" width="380" height="200" rx="4" fill="rgba(94,122,158,0.06)" stroke="#5E7A9E" stroke-width="0.5"/>
+    <text x="1115" y="400" fill="#5E7A9E" font-size="9" font-family="Georgia" letter-spacing="1">ATTACK ECONOMICS</text>
+
+    <text x="1115" y="422" fill="#5E7A9E" font-size="8" font-family="Georgia" font-style="italic">Utility Function:</text>
+    <text x="1115" y="438" fill="#6B8FC2" font-size="7.5" font-family="Georgia" font-style="italic">U(P) = Σ Gain(v) · ∏P_trav(e)</text>
+    <text x="1115" y="452" fill="#6B8FC2" font-size="7.5" font-family="Georgia" font-style="italic">      / (Risk_det(P) · ΣCost_op(e))</text>
+
+    <text x="1115" y="474" fill="#5E7A9E" font-size="8" font-family="Georgia" font-style="italic">Field Pressure:</text>
+    <text x="1115" y="490" fill="#6B8FC2" font-size="7.5" font-family="Georgia" font-style="italic">Φ(v) = Σ Risk(u)·Trust(u,v) / d(u,v)^α</text>
+
+    <text x="1115" y="512" fill="#5E7A9E" font-size="8" font-family="Georgia" font-style="italic">Wave Propagation:</text>
+    <text x="1115" y="528" fill="#6B8FC2" font-size="7.5" font-family="Georgia" font-style="italic">∂C/∂t = D∇²C − λC + S(x,t)</text>
+
+    <text x="1115" y="550" fill="#5E7A9E" font-size="8" font-family="Georgia" font-style="italic">Constraint Gate:</text>
+    <text x="1115" y="566" fill="#6B8FC2" font-size="7.5" font-family="Georgia" font-style="italic">w(e) = ∞ if ¬precondition(e)</text>
+
+    <!-- Temporal decay panel -->
+    <rect x="1100" y="600" width="380" height="130" rx="4" fill="rgba(94,122,158,0.06)" stroke="#5E7A9E" stroke-width="0.5"/>
+    <text x="1115" y="620" fill="#5E7A9E" font-size="9" font-family="Georgia" letter-spacing="1">TEMPORAL COGNITION</text>
+
+    <text x="1115" y="642" fill="#6B8FC2" font-size="7.5" font-family="Georgia" font-style="italic">C_t(e) = C_0(e) · e^(−λΔt)</text>
+    <text x="1115" y="660" fill="#4A5E72" font-size="6.5" font-family="Courier New">λ = ln(2)/half_life | half_life = 30 days</text>
+
+    <!-- Mini decay chart -->
+    <line x1="1120" y1="710" x2="1460" y2="710" stroke="#253040" stroke-width="0.5"/>
+    <line x1="1120" y1="680" x2="1120" y2="710" stroke="#253040" stroke-width="0.5"/>
+    <path d="M 1120 680 Q 1180 682 1240 690 Q 1300 698 1360 705 Q 1420 708 1460 709" stroke="#6B8FC2" stroke-width="1.5" fill="none"/>
+    <text x="1120" y="678" fill="#4A5E72" font-size="5" font-family="Courier New">1.0</text>
+    <text x="1120" y="718" fill="#4A5E72" font-size="5" font-family="Courier New">0</text>
+    <text x="1120" y="724" fill="#4A5E72" font-size="5" font-family="Courier New">t₀</text>
+    <text x="1300" y="724" fill="#4A5E72" font-size="5" font-family="Courier New">t₀+30d</text>
+    <text x="1440" y="724" fill="#4A5E72" font-size="5" font-family="Courier New">t₀+90d</text>
+
+    <!-- Legend -->
+    <rect x="1100" y="760" width="380" height="120" rx="4" fill="rgba(15,21,32,0.85)" stroke="#253040" stroke-width="0.5"/>
+    <text x="1115" y="780" fill="#4A5E72" font-size="7" font-family="Courier New" letter-spacing="1.5">LEGEND</text>
+    <line x1="1115" y1="795" x2="1135" y2="795" stroke="#9A4A4A" stroke-width="2.5"/>
+    <text x="1142" y="798" fill="#7B8FA3" font-size="7" font-family="Courier New">Critical attack path (high utility)</text>
+    <line x1="1115" y1="812" x2="1135" y2="812" stroke="#8B7340" stroke-width="1.8"/>
+    <text x="1142" y="815" fill="#7B8FA3" font-size="7" font-family="Courier New">Moderate path (medium utility)</text>
+    <line x1="1115" y1="829" x2="1135" y2="829" stroke="#3A4A5C" stroke-width="1" stroke-dasharray="4 3"/>
+    <text x="1142" y="832" fill="#7B8FA3" font-size="7" font-family="Courier New">Blocked / detected path (∞ cost)</text>
+    <circle cx="1125" cy="849" r="5" fill="none" stroke="#8B7340" stroke-width="0.5" stroke-dasharray="2 3"/>
+    <text x="1142" y="852" fill="#7B8FA3" font-size="7" font-family="Courier New">Pressure field diffusion contour</text>
+    <circle cx="1125" cy="866" r="5" fill="none" stroke="#9A4A4A" stroke-width="0.5" stroke-dasharray="2 3"/>
+    <text x="1142" y="869" fill="#7B8FA3" font-size="7" font-family="Courier New">Wave propagation ring (∂C/∂t)</text>
+
+    <!-- Bottom stats -->
+    <text x="40" y="890" fill="#253040" font-size="6" font-family="Courier New">PATHS ENUMERATED: 7 | VIABLE: 2 | BLOCKED: 5 | C_MIN(A→ν) = $200K | FIELD PEAK: Φ(DC) = 0.87 | WAVE FRONT: t=12ms to DC</text>
+  </svg>
+</div>
+</body>
+</html>
