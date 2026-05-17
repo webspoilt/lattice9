@@ -588,3 +588,50 @@ async def exposure_diffusion(driver, engagement_id: str,
                 "diffusion_probability": round(record["diffusion_probability"], 4),
             })
         return exposures
+
+
+async def get_full_topology(driver, engagement_id: str) -> Dict[str, Any]:
+    """
+    Retrieve full graph topology (nodes + inferred relationships) for an engagement.
+    """
+    async with driver.session(database="neo4j") as session:
+        # Get all nodes
+        nodes_result = await session.run(
+            """
+            MATCH (n:L9 {engagement_id: $engagement_id})
+            RETURN n.id AS id, n.display_name AS display_name, n.entity_type AS entity_type, 
+                   coalesce(toFloat(n.confidence), 0.5) AS confidence
+            """,
+            engagement_id=engagement_id
+        )
+        nodes = []
+        node_ids = set()
+        async for record in nodes_result:
+            nid = record["id"]
+            node_ids.add(nid)
+            nodes.append({
+                "id": nid,
+                "display_name": record["display_name"],
+                "entity_type": record["entity_type"],
+                "confidence": round(record["confidence"], 4)
+            })
+
+        # Get all relationships between these nodes
+        links_result = await session.run(
+            """
+            MATCH (src:L9 {engagement_id: $engagement_id})-[r]->(dst:L9 {engagement_id: $engagement_id})
+            RETURN src.id AS source, dst.id AS target, type(r) AS type, coalesce(toFloat(r.weight), 0.5) AS weight
+            """,
+            engagement_id=engagement_id
+        )
+        links = []
+        async for record in links_result:
+            if record["source"] in node_ids and record["target"] in node_ids:
+                links.append({
+                    "source": record["source"],
+                    "target": record["target"],
+                    "type": record["type"],
+                    "weight": round(record["weight"], 4)
+                })
+
+        return {"nodes": nodes, "links": links}

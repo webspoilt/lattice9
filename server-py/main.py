@@ -35,7 +35,7 @@ from graph.engine import (
 from graph.algorithms import (
     shortest_attack_paths, bfs_traversal, influence_propagation_fallback,
     blast_radius_analysis, centrality_analysis, privilege_chain_synthesis,
-    exposure_diffusion,
+    exposure_diffusion, get_full_topology,
 )
 from graph.temporal import (
     create_snapshot, compute_temporal_diff, record_diffs,
@@ -72,6 +72,43 @@ from graph.blast import (
     compute_blast_radius, compute_topological_blast_all,
     compute_credential_cascade_risk,
 )
+from graph.field_theory import (
+    compute_field_density, compute_field_gradients,
+    compute_privilege_diffusion, recompute_field_after_mutation,
+)
+from graph.resistance import (
+    compute_edge_resistance, compute_resistance_map,
+    resistance_weighted_paths, compute_segmentation_conductivity,
+)
+from graph.wave_propagation import (
+    simulate_wave_propagation, compute_propagation_velocity,
+    compute_wave_amplification_regions,
+)
+from reasoning.adversarial_game import (
+    compute_minimax_traversal, approximate_nash_equilibrium,
+    adaptive_attack_path_recomputation,
+)
+from reasoning.attack_economics import (
+    compute_path_economics, rank_paths_by_utility,
+    compute_stealth_optimal_paths, compute_attack_campaign_economics,
+)
+from graph.topological_da import (
+    compute_persistent_homology, compute_simplicial_complexes,
+    detect_graph_voids,
+)
+from graph.gnn_reasoning import (
+    compute_node_embeddings, predict_hidden_relationships,
+    compute_privilege_escalation_prediction,
+)
+from graph.attractor_theory import (
+    compute_compromise_attractors, compute_attractor_instability,
+    compute_compromise_inevitability,
+)
+from graph.information_geometry import (
+    compute_geodesic_paths, compute_manifold_curvature,
+    compute_gradient_descent_path,
+)
+from proxima.api import router as proxima_router
 
 
 class IntelligenceEngine:
@@ -316,6 +353,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.include_router(proxima_router)
+
 
 def verify_engine_key(x_lattice9_key: Optional[str] = Header(None)):
     if x_lattice9_key != LATTICE9_ENGINE_KEY:
@@ -463,6 +502,20 @@ async def get_algorithm_results(
         raise HTTPException(status_code=400, detail=f"Unknown algorithm or missing node_id")
 
     return {"engagement_id": engagement_id, "algorithm": algorithm, "result": result}
+
+
+@app.get("/algorithms/{engagement_id}/topology")
+async def get_topology(engagement_id: str, x_lattice9_key: Optional[str] = Header(None)):
+    """Retrieve full graph nodes and link connections for high-density UI rendering."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        topo = await get_full_topology(engine.driver, engagement_id)
+        return topo
+    except Exception as e:
+        logger.error(f"Error fetching full topology: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/algorithms/{engagement_id}/paths")
@@ -853,6 +906,569 @@ async def blast_credential_cascade(
     except Exception as e:
         logger.error(f"Credential cascade failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==== Graph Field Theory Endpoints ====
+
+@app.get("/field/{engagement_id}/density")
+async def get_field_density(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Attack pressure field density Φ(v) across all nodes."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_field_density(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Field density failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/field/{engagement_id}/gradients/{node_id}")
+async def get_field_gradients(
+    engagement_id: str,
+    node_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Attack field gradient ∇Φ(v) at a specific node."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_field_gradients(engine.driver, engagement_id, node_id)
+        return result
+    except Exception as e:
+        logger.error(f"Field gradients failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/field/{engagement_id}/privilege-diffusion")
+async def get_privilege_diffusion(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Privilege energy density diffusion across graph."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_privilege_diffusion(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Privilege diffusion failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==== Topological Resistance Endpoints ====
+
+@app.get("/resistance/{engagement_id}/map")
+async def get_resistance_map(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Complete resistance map of all edges."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_resistance_map(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Resistance map failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/resistance/{engagement_id}/paths")
+async def get_resistance_paths(
+    engagement_id: str,
+    source_id: str = Query(...),
+    target_id: str = Query(...),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Lowest-resistance attack paths between nodes."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await resistance_weighted_paths(
+            engine.driver, engagement_id, source_id, target_id
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Resistance paths failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/resistance/{engagement_id}/segmentation")
+async def get_segmentation_conductivity(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Segmentation conductivity analysis."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_segmentation_conductivity(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Segmentation analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==== Attack Wave Propagation Endpoints ====
+
+@app.post("/wave/{engagement_id}/simulate")
+async def get_wave_simulation(
+    engagement_id: str,
+    source_node_ids: str = Query(None, description="Comma-separated source node IDs"),
+    steps: int = Query(50, description="Simulation time steps"),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Simulate compromise wave propagation through the graph."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        sources = source_node_ids.split(",") if source_node_ids else None
+        result = await simulate_wave_propagation(
+            engine.driver, engagement_id, source_node_ids=sources, steps=steps
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Wave simulation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/wave/{engagement_id}/velocity")
+async def get_propagation_velocity(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Compromise propagation velocity profile."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_propagation_velocity(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Propagation velocity failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/wave/{engagement_id}/amplification")
+async def get_wave_amplification(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Wave amplification regions in the graph."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_wave_amplification_regions(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Wave amplification failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==== Adversarial Game Theory Endpoints ====
+
+@app.get("/game/{engagement_id}/minimax")
+async def get_minimax_traversal(
+    engagement_id: str,
+    source_id: str = Query(...),
+    target_id: str = Query(...),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Minimax-optimal attack path accounting for defender reactions."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_minimax_traversal(
+            engine.driver, engagement_id, source_id, target_id
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Minimax traversal failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/game/{engagement_id}/nash")
+async def get_nash_equilibrium(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Approximate Nash equilibrium for attack vs defense."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await approximate_nash_equilibrium(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Nash equilibrium failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/game/{engagement_id}/adaptive")
+async def get_adaptive_paths(
+    engagement_id: str,
+    source_id: str = Query(...),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Adaptive path recomputation under defender pressure."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await adaptive_attack_path_recomputation(
+            engine.driver, engagement_id, source_id
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Adaptive paths failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==== Attack Economics Endpoints ====
+
+@app.get("/economics/{engagement_id}/paths")
+async def get_path_economics(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Rank attack paths by economic utility."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    pg_pool = await get_pg_pool()
+    try:
+        result = await rank_paths_by_utility(engine.driver, pg_pool, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Path economics failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
+
+
+@app.get("/economics/{engagement_id}/stealth")
+async def get_stealth_paths(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Stealth-optimal attack paths."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    pg_pool = await get_pg_pool()
+    try:
+        result = await compute_stealth_optimal_paths(
+            engine.driver, pg_pool, engagement_id
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Stealth paths failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
+
+
+@app.get("/economics/{engagement_id}/campaign")
+async def get_campaign_economics(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Full attack campaign economic analysis."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    pg_pool = await get_pg_pool()
+    try:
+        result = await compute_attack_campaign_economics(
+            engine.driver, pg_pool, engagement_id
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Campaign economics failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
+
+
+# ==== Topological Data Analysis Endpoints ====
+
+@app.get("/topology/{engagement_id}/homology")
+async def get_persistent_homology(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Persistent homology (topological features) of the infrastructure graph."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_persistent_homology(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Persistent homology failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/topology/{engagement_id}/simplices")
+async def get_simplicial_complexes(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Simplicial complex structure of the graph."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_simplicial_complexes(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Simplicial complexes failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/topology/{engagement_id}/voids")
+async def get_graph_voids(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Topological voids (monitoring blind spots) in the graph."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await detect_graph_voids(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Graph voids failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==== Graph Neural Reasoning Endpoints ====
+
+@app.get("/gnn/{engagement_id}/embeddings")
+async def get_node_embeddings(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Node2Vec-style embeddings for all graph nodes."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_node_embeddings(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Node embeddings failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/gnn/{engagement_id}/predict-relationships")
+async def get_predicted_relationships(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Predict undocumented trust/privilege relationships."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await predict_hidden_relationships(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Relationship predictions failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/gnn/{engagement_id}/escalation-predictions")
+async def get_escalation_predictions(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Predict likely privilege escalation paths."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_privilege_escalation_prediction(
+            engine.driver, engagement_id
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Escalation predictions failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==== Attack Attractor Theory Endpoints ====
+
+@app.get("/attractor/{engagement_id}")
+async def get_compromise_attractors(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Compromise attractors — nodes where attack flow converges."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_compromise_attractors(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Attractor analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/attractor/{engagement_id}/instability")
+async def get_attractor_instability(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Topological instability regions."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_attractor_instability(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Attractor instability failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/attractor/{engagement_id}/inevitability")
+async def get_compromise_inevitability(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Compromise inevitability scores."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_compromise_inevitability(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Compromise inevitability failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==== Information Geometry Endpoints ====
+
+@app.get("/geometry/{engagement_id}/geodesic")
+async def get_geodesic_path(
+    engagement_id: str,
+    source_id: str = Query(...),
+    target_id: str = Query(...),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Geodesic (manifold-shortest) attack path between nodes."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_geodesic_paths(
+            engine.driver, engagement_id, source_id, target_id
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Geodesic path failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/geometry/{engagement_id}/curvature")
+async def get_manifold_curvature(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Manifold curvature at each node."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_manifold_curvature(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Manifold curvature failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/geometry/{engagement_id}/gradient-descent")
+async def get_gradient_descent(
+    engagement_id: str,
+    source_id: str = Query(...),
+    objective: str = Query("privilege", description="privilege, risk, pressure"),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Gradient descent traversal path in information space."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_gradient_descent_path(
+            engine.driver, engagement_id, source_id, objective
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Gradient descent failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==== Unified Intelligence Query ====
+
+@app.get("/intelligence/{engagement_id}/all")
+async def get_all_intelligence(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Aggregate all computational intelligence modules in a single response."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+
+    import asyncio
+    pg_pool = await get_pg_pool()
+    try:
+        field_task = asyncio.create_task(
+            compute_field_density(engine.driver, engagement_id)
+        )
+        resistance_task = asyncio.create_task(
+            compute_resistance_map(engine.driver, engagement_id)
+        )
+        attractor_task = asyncio.create_task(
+            compute_compromise_attractors(engine.driver, engagement_id)
+        )
+        inevitability_task = asyncio.create_task(
+            compute_compromise_inevitability(engine.driver, engagement_id)
+        )
+
+        field, resistance, attractor, inevitability = await asyncio.gather(
+            field_task, resistance_task, attractor_task, inevitability_task,
+            return_exceptions=True,
+        )
+
+        return {
+            "field_theory": field if not isinstance(field, Exception) else {"error": str(field)},
+            "resistance": resistance if not isinstance(resistance, Exception) else {"error": str(resistance)},
+            "attractor": attractor if not isinstance(attractor, Exception) else {"error": str(attractor)},
+            "inevitability": inevitability if not isinstance(inevitability, Exception) else {"error": str(inevitability)},
+        }
+    except Exception as e:
+        logger.error(f"Unified intelligence failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
 
 
 @app.get("/health")

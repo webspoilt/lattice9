@@ -19,23 +19,25 @@ export const IntelligenceNavigator: React.FC<Props> = ({ data, className = "", o
 
   const graphData = useMemo(() => {
     // Transform engine data into Influence-Weighted format
-    const nodes = data?.entities?.map((e: any) => ({
+    const rawNodes = data?.nodes || data?.entities || [];
+    const nodes = rawNodes.map((e: any) => ({
       id: e.id,
       label: e.display_name || e.id,
       type: e.entity_type,
       // Scale by influence score (PageRank) or confidence
-      val: (e.influence_score ? e.influence_score * 20 : 4) + (e.confidence * 2),
-      color: e.entity_type === 'vuln' ? '#f59e0b' : (e.entity_type === 'identity' ? '#06b6d4' : '#3b82f6'),
+      val: (e.influence_score ? e.influence_score * 20 : 4) + ((e.confidence || 0.5) * 2),
+      color: e.entity_type === 'vuln' || e.entity_type === 'finding' ? '#f59e0b' : (e.entity_type === 'identity' || e.entity_type === 'credential' ? '#06b6d4' : '#3b82f6'),
       confidence: e.confidence || 0.5
-    })) || [];
+    }));
 
-    const links = data?.inferences?.map((i: any) => ({
-      source: i.sourceId,
-      target: i.targetEntityId,
+    const rawLinks = data?.links || data?.inferences || [];
+    const links = rawLinks.map((i: any) => ({
+      source: i.source || i.sourceId,
+      target: i.target || i.targetEntityId,
       label: i.type,
       weight: i.weight || 1,
-      color: '#27272a'
-    })) || [];
+      color: i.type === 'TRUSTS' ? 'rgba(16, 185, 129, 0.4)' : (i.type === 'AUTHENTICATES_TO' ? 'rgba(6, 182, 212, 0.4)' : 'rgba(39, 39, 42, 0.4)')
+    }));
 
     return { nodes, links };
   }, [data]);

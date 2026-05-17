@@ -38,7 +38,7 @@ export function HeroGraph() {
 
   // Initialize nodes at (0,0) with minor random jitter for a stable "explosion"
   const data = useMemo(() => {
-    const nodes: Node[] = [
+    const nodes: Node[] = ([
       { id: '0', name: 'api.lattice9.io', type: 'api', val: 12, confidence: 0.95, entropy: 0.1, cluster: 0, group: 'recon' },
       { id: '1', name: 'auth.v5', type: 'auth', val: 15, confidence: 0.98, entropy: 0.05, cluster: 2, group: 'auth' },
       { id: '2', name: 'lattice-db-01', type: 'cloud', val: 10, confidence: 0.92, entropy: 0.08, cluster: 3, group: 'infra' },
@@ -54,11 +54,11 @@ export function HeroGraph() {
       { id: '12', name: 'l9-intelligence', type: 'vuln', val: 9, confidence: 0.1, entropy: 0.95, cluster: 1, group: 'exploit' },
       { id: '13', name: 'l9-collection', type: 'api', val: 5, confidence: 0.5, entropy: 0.6, cluster: 0, group: 'recon' },
       { id: '14', name: 'l9-exposure', type: 'domain', val: 4, confidence: 0.92, entropy: 0.1, cluster: 0, group: 'recon' },
-    ].map(n => ({
+    ] as const).map(n => ({
       ...n,
       x: (Math.random() - 0.5) * 5,
       y: (Math.random() - 0.5) * 5
-    }));
+    })) as Node[];
 
     const links = [
       { source: '0', target: '1' }, { source: '1', target: '7' }, { source: '1', target: '3' },

@@ -7,6 +7,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { engagementsRouter } from "./routers/engagements";
 import { reconRouter } from "./routers/recon";
 import { vulnerabilityRouter } from "./routers/vulnerability";
+import { intelligenceRouter } from "./routers/intelligence";
 import { reportsRouter } from "./routers/reports";
 import { chatRouter } from "./routers/chat";
 import { owaspRouter } from "./routers/owasp";
@@ -27,6 +28,7 @@ export const appRouter = router({
   engagements: engagementsRouter,
   collection: reconRouter,
   exposure: vulnerabilityRouter,
+  intelligence: intelligenceRouter,
   reports: reportsRouter,
   advisor: chatRouter,
   owasp: owaspRouter,
