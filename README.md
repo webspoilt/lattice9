@@ -4,9 +4,9 @@
 
 **Graph-native offensive intelligence infrastructure for probabilistic attack-path reasoning, temporal topology cognition, and distributed adversarial computation.**
 
-[![Topology: Graph Native](https://img.shields.io/badge/Topology-Graph%20Native-black?style=for-the-badge)](#) [![Reasoning: Bayesian](https://img.shields.io/badge/Reasoning-Bayesian-black?style=for-the-badge)](#) [![Infrastructure: Distributed](https://img.shields.io/badge/Infrastructure-Distributed-black?style=for-the-badge)](#) [![Model: Temporal](https://img.shields.io/badge/Model-Temporal-black?style=for-the-badge)](#)
+![Topology: Graph Native](https://img.shields.io/badge/Topology-Graph%20Native-black?style=for-the-badge) ![Reasoning: Bayesian](https://img.shields.io/badge/Reasoning-Bayesian-black?style=for-the-badge) ![Infrastructure: Distributed](https://img.shields.io/badge/Infrastructure-Distributed-black?style=for-the-badge) ![Model: Temporal](https://img.shields.io/badge/Model-Temporal-black?style=for-the-badge)
 
-[![Version](https://img.shields.io/badge/version-9.0.0--RC1-blue?style=flat-square)](#) [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](#) [![Python](https://img.shields.io/badge/python-3.11+-orange?style=flat-square)](#) [![Neo4j](https://img.shields.io/badge/neo4j-5.x-cyan?style=flat-square)](#) [![Proxima](https://img.shields.io/badge/proxima-4.1.0--compatible-purple?style=flat-square)](#) [![MCP](https://img.shields.io/badge/MCP-ready-ff6b35?style=flat-square)](#)
+![Version](https://img.shields.io/badge/version-9.0.0--RC1-blue?style=flat-square) ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square) ![Python](https://img.shields.io/badge/python-3.11+-orange?style=flat-square) ![Neo4j](https://img.shields.io/badge/neo4j-5.x-cyan?style=flat-square) ![Proxima](https://img.shields.io/badge/proxima-4.1.0--compatible-purple?style=flat-square) ![MCP](https://img.shields.io/badge/MCP-ready-ff6b35?style=flat-square)
 
 ---
 

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@page { size: 1200px auto; margin: 0; }
+html, body { margin: 0; padding: 0; width: 1200px; background: #fff; }
+* { box-sizing: border-box; }
+body { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace; }
+svg text { font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace; }
+</style>
+</head>
+<body>
+<svg width="1200" height="720" viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrG" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="none" stroke="#999" stroke-width="0.7"/>
+    </marker>
+    <marker id="arrB" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="none" stroke="#2c3e6b" stroke-width="0.7"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="720" fill="#fff"/>
+
+  <!-- Title -->
+  <text x="600" y="26" text-anchor="middle" font-size="11" fill="#2c3e6b" font-weight="bold" letter-spacing="2">DISTRIBUTED ARCHITECTURE — CONSISTENT HASH RING &amp; QUORUM</text>
+  <line x1="80" y1="36" x2="1120" y2="36" stroke="#ccc" stroke-width="0.5"/>
+
+  <!-- LEFT SIDE: Hash Ring -->
+  <text x="300" y="70" text-anchor="middle" font-size="9" fill="#888" letter-spacing="1">CONSISTENT HASH RING</text>
+
+  <!-- Ring circle -->
+  <circle cx="300" cy="290" r="170" fill="none" stroke="#000" stroke-width="1"/>
+  <circle cx="300" cy="290" r="170" fill="none" stroke="#eee" stroke-width="20"/>
+
+  <!-- Partition markers on ring (p1-p4 at 0°, 90°, 180°, 270°) -->
+  <!-- p1 at top (0°) -->
+  <circle cx="300" cy="120" r="5" fill="#000"/>
+  <text x="300" y="110" text-anchor="middle" font-size="8" fill="#000" font-weight="bold">p1</text>
+  <text x="300" y="100" text-anchor="middle" font-size="6" fill="#888">0x0000</text>
+
+  <!-- p2 at right (90°) -->
+  <circle cx="470" cy="290" r="5" fill="#000"/>
+  <text x="488" y="287" font-size="8" fill="#000" font-weight="bold">p2</text>
+  <text x="488" y="298" font-size="6" fill="#888">0x4000</text>
+
+  <!-- p3 at bottom (180°) -->
+  <circle cx="300" cy="460" r="5" fill="#000"/>
+  <text x="300" y="478" text-anchor="middle" font-size="8" fill="#000" font-weight="bold">p3</text>
+  <text x="300" y="488" text-anchor="middle" font-size="6" fill="#888">0x8000</text>
+
+  <!-- p4 at left (270°) -->
+  <circle cx="130" cy="290" r="5" fill="#000"/>
+  <text x="96" y="287" font-size="8" fill="#000" font-weight="bold">p4</text>
+  <text x="96" y="298" font-size="6" fill="#888">0xC000</text>
+
+  <!-- Worker nodes on ring (between partitions) -->
+  <!-- W1 between p1 and p2 (45°) -->
+  <rect x="388" y="140" width="56" height="28" rx="3" fill="#f5f5f5" stroke="#000" stroke-width="0.8"/>
+  <text x="416" y="158" text-anchor="middle" font-size="8" fill="#000">W-01</text>
+  <line x1="400" y1="168" x2="370" y2="180" stroke="#888" stroke-width="0.5" stroke-dasharray="2,2"/>
+
+  <!-- W2 between p2 and p3 (135°) -->
+  <rect x="388" y="400" width="56" height="28" rx="3" fill="#f5f5f5" stroke="#000" stroke-width="0.8"/>
+  <text x="416" y="418" text-anchor="middle" font-size="8" fill="#000">W-02</text>
+  <line x1="400" y1="400" x2="370" y2="390" stroke="#888" stroke-width="0.5" stroke-dasharray="2,2"/>
+
+  <!-- W3 between p3 and p4 (225°) -->
+  <rect x="148" y="400" width="56" height="28" rx="3" fill="#f5f5f5" stroke="#000" stroke-width="0.8"/>
+  <text x="176" y="418" text-anchor="middle" font-size="8" fill="#000">W-03</text>
+  <line x1="176" y1="400" x2="200" y2="390" stroke="#888" stroke-width="0.5" stroke-dasharray="2,2"/>
+
+  <!-- W4 (replica) between p4 and p1 (315°) -->
+  <rect x="148" y="140" width="56" height="28" rx="3" fill="#f5f5f5" stroke="#000" stroke-width="0.8"/>
+  <text x="176" y="158" text-anchor="middle" font-size="8" fill="#000">W-04</text>
+  <line x1="176" y1="168" x2="200" y2="180" stroke="#888" stroke-width="0.5" stroke-dasharray="2,2"/>
+
+  <!-- Ring center label -->
+  <text x="300" y="285" text-anchor="middle" font-size="8" fill="#ccc">hash(key)</text>
+  <text x="300" y="298" text-anchor="middle" font-size="7" fill="#ddd">→ partition</text>
+
+  <!-- Replication arcs (showing N=3) -->
+  <!-- Arc from p1 spanning to p2 area -->
+  <path d="M310,120 Q400,100 470,275" fill="none" stroke="#2c3e6b" stroke-width="0.8" stroke-dasharray="3,2"/>
+  <text x="420" y="175" font-size="7" fill="#2c3e6b">replica 1</text>
+
+  <path d="M320,125 Q450,200 465,280" fill="none" stroke="#999" stroke-width="0.6" stroke-dasharray="3,2"/>
+  <text x="445" y="225" font-size="7" fill="#999">replica 2</text>
+
+  <!-- RIGHT SIDE: Quorum Config & Primary-Replica -->
+  <text x="850" y="70" text-anchor="middle" font-size="9" fill="#888" letter-spacing="1">QUORUM CONFIGURATION</text>
+
+  <!-- Quorum box -->
+  <rect x="720" y="90" width="260" height="120" rx="3" fill="#fff" stroke="#000" stroke-width="1"/>
+  <text x="850" y="112" text-anchor="middle" font-size="9" fill="#000" font-weight="bold">Quorum Config</text>
+  <line x1="740" y1="120" x2="960" y2="120" stroke="#eee" stroke-width="0.5"/>
+  <text x="750" y="140" font-size="9" fill="#000">N = 3</text>
+  <text x="830" y="140" font-size="7" fill="#888">replication factor</text>
+  <text x="750" y="158" font-size="9" fill="#000">W = 2</text>
+  <text x="830" y="158" font-size="7" fill="#888">write quorum</text>
+  <text x="750" y="176" font-size="9" fill="#000">R = 2</text>
+  <text x="830" y="176" font-size="7" fill="#888">read quorum</text>
+  <text x="750" y="196" font-size="7" fill="#888">W + R &gt; N → strong consistency</text>
+
+  <!-- Primary-Replica Diagram -->
+  <text x="850" y="250" text-anchor="middle" font-size="9" fill="#888" letter-spacing="1">PRIMARY-REPLICA TOPOLOGY</text>
+
+  <!-- Primary node -->
+  <rect x="790" y="270" width="120" height="44" rx="3" fill="#000" stroke="#000" stroke-width="1"/>
+  <text x="850" y="289" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">PRIMARY</text>
+  <text x="850" y="304" text-anchor="middle" font-size="7" fill="#ccc">partition leader</text>
+
+  <!-- Replica nodes -->
+  <rect x="660" y="360" width="100" height="36" rx="3" fill="#f5f5f5" stroke="#000" stroke-width="0.8"/>
+  <text x="710" y="377" text-anchor="middle" font-size="8" fill="#000">REPLICA-A</text>
+  <text x="710" y="390" text-anchor="middle" font-size="6" fill="#888">W-02</text>
+
+  <rect x="800" y="360" width="100" height="36" rx="3" fill="#f5f5f5" stroke="#000" stroke-width="0.8"/>
+  <text x="850" y="377" text-anchor="middle" font-size="8" fill="#000">REPLICA-B</text>
+  <text x="850" y="390" text-anchor="middle" font-size="6" fill="#888">W-03</text>
+
+  <rect x="940" y="360" width="100" height="36" rx="3" fill="#f5f5f5" stroke="#000" stroke-width="0.8"/>
+  <text x="990" y="377" text-anchor="middle" font-size="8" fill="#000">REPLICA-C</text>
+  <text x="990" y="390" text-anchor="middle" font-size="6" fill="#888">W-04</text>
+
+  <!-- Arrows from primary to replicas -->
+  <line x1="810" y1="314" x2="710" y2="360" stroke="#999" stroke-width="0.8" marker-end="url(#arrG)"/>
+  <line x1="850" y1="314" x2="850" y2="360" stroke="#999" stroke-width="0.8" marker-end="url(#arrG)"/>
+  <line x1="890" y1="314" x2="990" y2="360" stroke="#999" stroke-width="0.8" marker-end="url(#arrG)"/>
+
+  <text x="740" y="335" font-size="6" fill="#888">sync</text>
+  <text x="850" y="340" font-size="6" fill="#888">sync</text>
+  <text x="950" y="335" font-size="6" fill="#888">async</text>
+
+  <!-- Write path -->
+  <text x="850" y="430" text-anchor="middle" font-size="9" fill="#888" letter-spacing="1">WRITE PATH (W=2)</text>
+  <rect x="700" y="445" width="300" height="70" rx="2" fill="none" stroke="#ccc" stroke-width="0.5"/>
+  <text x="715" y="462" font-size="7" fill="#666">1. Client → PRIMARY (write)</text>
+  <text x="715" y="476" font-size="7" fill="#666">2. PRIMARY → REPLICA-A (sync write)</text>
+  <text x="715" y="490" font-size="7" fill="#666">3. ACK from 2/3 nodes → commit</text>
+  <text x="715" y="504" font-size="7" fill="#888">4. REPLICA-C (async replication)</text>
+
+  <!-- Read path -->
+  <text x="850" y="540" text-anchor="middle" font-size="9" fill="#888" letter-spacing="1">READ PATH (R=2)</text>
+  <rect x="700" y="555" width="300" height="70" rx="2" fill="none" stroke="#ccc" stroke-width="0.5"/>
+  <text x="715" y="572" font-size="7" fill="#666">1. Client → PRIMARY (read)</text>
+  <text x="715" y="586" font-size="7" fill="#666">2. PRIMARY → REPLICA-B (read repair)</text>
+  <text x="715" y="600" font-size="7" fill="#666">3. Compare vector clocks → resolve</text>
+  <text x="715" y="614" font-size="7" fill="#888">4. Return latest consistent value</text>
+
+  <!-- Bottom: Anti-entropy -->
+  <rect x="80" y="540" width="540" height="100" rx="3" fill="#fff" stroke="#000" stroke-width="1"/>
+  <text x="350" y="562" text-anchor="middle" font-size="9" fill="#000" font-weight="bold">ANTI-ENTROPY &amp; GOSSIP</text>
+  <line x1="100" y1="570" x2="600" y2="570" stroke="#eee" stroke-width="0.5"/>
+  <text x="100" y="588" font-size="7" fill="#666">Gossip interval: 100ms</text>
+  <text x="100" y="602" font-size="7" fill="#666">Merkle tree exchange per partition</text>
+  <text x="100" y="616" font-size="7" fill="#666">Hinted handoff on node failure</text>
+  <text x="350" y="630" font-size="7" fill="#888">Φ accrual failure detector · threshold=8</text>
+
+  <!-- Connection between ring and quorum -->
+  <line x1="470" y1="250" x2="720" y2="150" stroke="#ddd" stroke-width="0.5" stroke-dasharray="4,3"/>
+
+  <line x1="80" y1="670" x2="1120" y2="670" stroke="#e0e0e0" stroke-width="0.5"/>
+  <text x="600" y="685" text-anchor="middle" font-size="7" fill="#bbb">Lattice9 Distributed Runtime · Consistent Hashing + Quorum Replication · 4 partitions · N=3 RF</text>
+
+  <!-- Small formula -->
+  <text x="80" y="695" font-size="7" fill="#ccc">partition = hash(key) % ring_size</text>
+  <text x="500" y="695" font-size="7" fill="#ccc">replicas = ring.walk(partition, N)</text>
+  <text x="900" y="695" font-size="7" fill="#ccc">commit = W acks received</text>
+</svg>
+</body>
+</html>

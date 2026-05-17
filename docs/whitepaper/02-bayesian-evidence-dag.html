@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --blueprint-bg: #0A0E17;
+    --blueprint-surface: #0F1520;
+    --blueprint-grid: #141C2B;
+    --graphite-line: #3A4A5C;
+    --graphite-dim: #253040;
+    --indigo-accent: #4A6FA5;
+    --indigo-bright: #6B8FC2;
+    --indigo-muted: #2E4A6E;
+    --text-primary: #C8D6E5;
+    --text-secondary: #7B8FA3;
+    --text-dim: #4A5E72;
+    --annotation: #5A7A9A;
+    --teal-accent: #4A9A8A;
+    --amber-warn: #8B7340;
+    --math-overlay: #5E7A9E;
+    --evidence-hi: #6B8FC2;
+    --evidence-mid: #4A6FA5;
+    --evidence-lo: #2E4A6E;
+  }
+
+  body {
+    background: var(--blueprint-bg);
+    color: var(--text-primary);
+    font-family: 'Courier New', 'SFMono-Regular', Consolas, monospace;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  #root {
+    width: 1600px;
+    height: 1100px;
+    position: relative;
+    padding: 40px;
+  }
+
+  .blueprint-grid {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      linear-gradient(var(--blueprint-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--blueprint-grid) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .blueprint-grid-fine {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      linear-gradient(var(--blueprint-grid) 0.5px, transparent 0.5px),
+      linear-gradient(90deg, var(--blueprint-grid) 0.5px, transparent 0.5px);
+    background-size: 10px 10px;
+    opacity: 0.25;
+    pointer-events: none;
+  }
+
+  .classification-banner {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    background: #1A1A1A;
+    color: #8B7340;
+    font-size: 10px;
+    letter-spacing: 4px;
+    padding: 4px 32px;
+    border-bottom: 1px solid #333;
+    z-index: 10;
+  }
+
+  .doc-header {
+    position: absolute;
+    top: 12px; right: 40px;
+    text-align: right;
+    z-index: 10;
+  }
+  .doc-header .doc-id { font-size: 9px; color: var(--text-dim); letter-spacing: 2px; }
+  .doc-header .doc-rev { font-size: 8px; color: var(--text-dim); letter-spacing: 1px; margin-top: 2px; }
+
+  .title-block {
+    position: relative;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--graphite-dim);
+    z-index: 10;
+  }
+  .title-block h1 {
+    font-size: 18px; font-weight: 700; color: var(--indigo-bright);
+    letter-spacing: 3px; font-family: 'Georgia', 'Times New Roman', serif;
+  }
+  .title-block .subtitle { font-size: 11px; color: var(--text-secondary); margin-top: 4px; letter-spacing: 1px; }
+  .title-block .figure-ref { font-size: 9px; color: var(--text-dim); margin-top: 6px; letter-spacing: 1.5px; }
+
+  .topology-canvas { position: relative; z-index: 5; }
+
+  /* Node styles */
+  .dag-node-hypothesis {
+    fill: rgba(74, 111, 165, 0.2);
+    stroke: var(--indigo-bright);
+    stroke-width: 2;
+    rx: 4;
+  }
+  .dag-node-evidence {
+    fill: rgba(74, 154, 138, 0.15);
+    stroke: var(--teal-accent);
+    stroke-width: 1.5;
+    rx: 3;
+  }
+  .dag-node-prior {
+    fill: rgba(139, 115, 64, 0.12);
+    stroke: var(--amber-warn);
+    stroke-width: 1;
+    stroke-dasharray: 4 2;
+    rx: 3;
+  }
+  .dag-node-inferred {
+    fill: rgba(107, 143, 194, 0.12);
+    stroke: var(--indigo-accent);
+    stroke-width: 1.5;
+    stroke-dasharray: 6 3;
+    rx: 3;
+  }
+
+  .dag-label {
+    fill: var(--text-primary);
+    font-size: 9.5px;
+    font-family: 'Courier New', monospace;
+    text-anchor: middle;
+    dominant-baseline: central;
+    letter-spacing: 0.5px;
+  }
+  .dag-sublabel {
+    fill: var(--text-secondary);
+    font-size: 7px;
+    font-family: 'Courier New', monospace;
+    text-anchor: middle;
+  }
+  .dag-id {
+    fill: var(--text-dim);
+    font-size: 6px;
+    font-family: 'Courier New', monospace;
+    text-anchor: middle;
+  }
+
+  /* Edge styles */
+  .dag-edge-strong {
+    stroke: var(--indigo-bright);
+    stroke-width: 2;
+    fill: none;
+    marker-end: url(#arrowBright);
+    opacity: 0.9;
+  }
+  .dag-edge-medium {
+    stroke: var(--indigo-accent);
+    stroke-width: 1.2;
+    fill: none;
+    marker-end: url(#arrowAccent);
+    opacity: 0.7;
+  }
+  .dag-edge-weak {
+    stroke: var(--graphite-line);
+    stroke-width: 0.8;
+    fill: none;
+    marker-end: url(#arrowGraphite);
+    opacity: 0.5;
+    stroke-dasharray: 4 3;
+  }
+  .dag-edge-prior {
+    stroke: var(--amber-warn);
+    stroke-width: 1;
+    fill: none;
+    marker-end: url(#arrowAmber);
+    opacity: 0.6;
+    stroke-dasharray: 3 3;
+  }
+
+  .edge-weight {
+    fill: var(--math-overlay);
+    font-size: 7px;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    text-anchor: middle;
+  }
+
+  .math-box {
+    fill: rgba(94, 122, 158, 0.08);
+    stroke: var(--math-overlay);
+    stroke-width: 0.5;
+    rx: 3;
+  }
+  .math-annotation {
+    fill: var(--math-overlay);
+    font-size: 7.5px;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-style: italic;
+  }
+
+  .zone-boundary {
+    fill: none;
+    stroke: var(--graphite-dim);
+    stroke-width: 1;
+    stroke-dasharray: 3 6;
+  }
+  .zone-label {
+    fill: var(--text-dim);
+    font-size: 8px;
+    font-family: 'Georgia', serif;
+    letter-spacing: 2px;
+  }
+  .zone-sublabel {
+    fill: var(--text-dim);
+    font-size: 6px;
+    font-family: 'Courier New', monospace;
+  }
+
+  .arch-annotation {
+    fill: var(--text-dim);
+    font-size: 6px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+  }
+  .arch-line {
+    stroke: var(--text-dim);
+    stroke-width: 0.4;
+    stroke-dasharray: 2 2;
+  }
+
+  /* Pressure field gradients */
+  .pressure-field-high {
+    fill: rgba(107, 143, 194, 0.08);
+    stroke: none;
+  }
+  .pressure-field-low {
+    fill: rgba(74, 154, 138, 0.04);
+    stroke: none;
+  }
+
+  /* Probability bar inside nodes */
+  .prob-bar-bg {
+    fill: var(--graphite-dim);
+    rx: 1;
+  }
+  .prob-bar-fill-high {
+    fill: var(--indigo-bright);
+    rx: 1;
+  }
+  .prob-bar-fill-med {
+    fill: var(--indigo-accent);
+    rx: 1;
+  }
+  .prob-bar-fill-low {
+    fill: var(--graphite-line);
+    rx: 1;
+  }
+
+  .legend-box {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    background: rgba(15, 21, 32, 0.9);
+    border: 1px solid var(--graphite-dim);
+    padding: 12px 16px;
+    z-index: 10;
+  }
+  .legend-title { font-size: 8px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 8px; text-transform: uppercase; }
+  .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 8px; color: var(--text-secondary); }
+  .legend-swatch { width: 20px; height: 2px; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="blueprint-grid"></div>
+  <div class="blueprint-grid-fine"></div>
+  <div class="classification-banner">DISTRIBUTION STATE C — LATTICE9 PROGRAM</div>
+  <div class="doc-header">
+    <div class="doc-id">L9-BAYES-DAG-002</div>
+    <div class="doc-rev">REV 2.8 | 2026-05-17 | CLASSIFIED</div>
+  </div>
+
+  <div class="title-block">
+    <h1>BAYESIAN EVIDENCE PROPAGATION DAG</h1>
+    <div class="subtitle">Directed Acyclic Graph — Evidence Lineage with Probabilistic Inference Flow</div>
+    <div class="figure-ref">FIGURE 2.1 | BAYESIAN NETWORK TOPOLOGY — EVIDENCE ACCUMULATION PATHS</div>
+  </div>
+
+  <div class="topology-canvas">
+    <svg width="1520" height="880" viewBox="0 0 1520 880">
+      <defs>
+        <marker id="arrowBright" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#6B8FC2" />
+        </marker>
+        <marker id="arrowAccent" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+          <polygon points="0 0, 7 2.5, 0 5" fill="#4A6FA5" />
+        </marker>
+        <marker id="arrowGraphite" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+          <polygon points="0 0, 6 2, 0 4" fill="#3A4A5C" />
+        </marker>
+        <marker id="arrowAmber" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+          <polygon points="0 0, 6 2, 0 4" fill="#8B7340" />
+        </marker>
+
+        <radialGradient id="pressureH1" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#6B8FC2" stop-opacity="0.15" />
+          <stop offset="100%" stop-color="#6B8FC2" stop-opacity="0" />
+        </radialGradient>
+        <radialGradient id="pressureH2" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#4A9A8A" stop-opacity="0.1" />
+          <stop offset="100%" stop-color="#4A9A8A" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <!-- Layer separation zones -->
+      <rect class="zone-boundary" x="40" y="20" width="1440" height="130" />
+      <text class="zone-label" x="55" y="38">LAYER 0 — PRIOR DISTRIBUTIONS</text>
+      <text class="zone-sublabel" x="55" y="48">π(Hᵢ) | Unconditional prior beliefs before evidence observation</text>
+
+      <rect class="zone-boundary" x="40" y="170" width="1440" height="160" />
+      <text class="zone-label" x="55" y="188">LAYER 1 — EVIDENCE OBSERVATION NODES</text>
+      <text class="zone-sublabel" x="55" y="198">Eⱼ | Observed evidence with reliability weight r(Eⱼ) ∈ [0,1]</text>
+
+      <rect class="zone-boundary" x="40" y="350" width="1440" height="160" />
+      <text class="zone-label" x="55" y="368">LAYER 2 — INTERMEDIATE HYPOTHESES</text>
+      <text class="zone-sublabel" x="55" y="378">Hₖ | Derived hypotheses from evidence aggregation</text>
+
+      <rect class="zone-boundary" x="40" y="530" width="1440" height="150" />
+      <text class="zone-label" x="55" y="548">LAYER 3 — INFERRED CONCLUSIONS</text>
+      <text class="zone-sublabel" x="55" y="558">P(Hₘ|E₁...Eₙ) | Posterior probability after full propagation</text>
+
+      <rect class="zone-boundary" x="40" y="700" width="1440" height="150" />
+      <text class="zone-label" x="55" y="718">LAYER 4 — DECISION THRESHOLD</text>
+      <text class="zone-sublabel" x="55" y="728">δ(P) → {COMMIT, DEFER, REJECT} | Action threshold at τ = 0.85</text>
+
+      <!-- Pressure fields -->
+      <ellipse cx="760" cy="440" rx="500" ry="120" fill="url(#pressureH1)" />
+      <ellipse cx="760" cy="260" rx="400" ry="80" fill="url(#pressureH2)" />
+
+      <!-- ===== LAYER 0: PRIOR NODES ===== -->
+      <rect class="dag-node-prior" x="120" y="50" width="120" height="44" />
+      <text class="dag-label" x="180" y="68">π(H₁)</text>
+      <text class="dag-sublabel" x="180" y="82">PRIOR: THREAT-α</text>
+      <text class="dag-id" x="180" y="90">0.30 | r=0.7</text>
+
+      <rect class="dag-node-prior" x="320" y="50" width="120" height="44" />
+      <text class="dag-label" x="380" y="68">π(H₂)</text>
+      <text class="dag-sublabel" x="380" y="82">PRIOR: THREAT-β</text>
+      <text class="dag-id" x="380" y="90">0.15 | r=0.5</text>
+
+      <rect class="dag-node-prior" x="520" y="50" width="120" height="44" />
+      <text class="dag-label" x="580" y="68">π(H₃)</text>
+      <text class="dag-sublabel" x="580" y="82">PRIOR: ANOMALY</text>
+      <text class="dag-id" x="580" y="90">0.25 | r=0.6</text>
+
+      <rect class="dag-node-prior" x="720" y="50" width="120" height="44" />
+      <text class="dag-label" x="780" y="68">π(H₄)</text>
+      <text class="dag-sublabel" x="780" y="82">PRIOR: COMPROMISE</text>
+      <text class="dag-id" x="780" y="90">0.10 | r=0.4</text>
+
+      <rect class="dag-node-prior" x="920" y="50" width="120" height="44" />
+      <text class="dag-label" x="980" y="68">π(H₅)</text>
+      <text class="dag-sublabel" x="980" y="82">PRIOR: DECEPTION</text>
+      <text class="dag-id" x="980" y="90">0.20 | r=0.8</text>
+
+      <!-- ===== LAYER 1: EVIDENCE NODES ===== -->
+      <rect class="dag-node-evidence" x="80" y="195" width="130" height="50" />
+      <text class="dag-label" x="145" y="214" style="fill:#5EB8A0;">E₁</text>
+      <text class="dag-sublabel" x="145" y="228">SIGINT INTERCEPT</text>
+      <text class="dag-id" x="145" y="238">r(E₁)=0.92 | t₁</text>
+      <rect class="prob-bar-bg" x="100" y="232" width="90" height="4" />
+      <rect class="prob-bar-fill-high" x="100" y="232" width="83" height="4" />
+
+      <rect class="dag-node-evidence" x="260" y="195" width="130" height="50" />
+      <text class="dag-label" x="325" y="214" style="fill:#5EB8A0;">E₂</text>
+      <text class="dag-sublabel" x="325" y="228">OSINT CORRELATION</text>
+      <text class="dag-id" x="325" y="238">r(E₂)=0.78 | t₂</text>
+      <rect class="prob-bar-bg" x="280" y="232" width="90" height="4" />
+      <rect class="prob-bar-fill-med" x="280" y="232" width="70" height="4" />
+
+      <rect class="dag-node-evidence" x="440" y="195" width="130" height="50" />
+      <text class="dag-label" x="505" y="214" style="fill:#5EB8A0;">E₃</text>
+      <text class="dag-sublabel" x="505" y="228">NETWORK ANOMALY</text>
+      <text class="dag-id" x="505" y="238">r(E₃)=0.85 | t₃</text>
+      <rect class="prob-bar-bg" x="460" y="232" width="90" height="4" />
+      <rect class="prob-bar-fill-high" x="460" y="232" width="77" height="4" />
+
+      <rect class="dag-node-evidence" x="620" y="195" width="130" height="50" />
+      <text class="dag-label" x="685" y="214" style="fill:#5EB8A0;">E₄</text>
+      <text class="dag-sublabel" x="685" y="228">HUMINT REPORT</text>
+      <text class="dag-id" x="685" y="238">r(E₄)=0.65 | t₄</text>
+      <rect class="prob-bar-bg" x="640" y="232" width="90" height="4" />
+      <rect class="prob-bar-fill-med" x="640" y="232" width="59" height="4" />
+
+      <rect class="dag-node-evidence" x="800" y="195" width="130" height="50" />
+      <text class="dag-label" x="865" y="214" style="fill:#5EB8A0;">E₅</text>
+      <text class="dag-sublabel" x="865" y="228">CYBER FORENSIC</text>
+      <text class="dag-id" x="865" y="238">r(E₅)=0.88 | t₅</text>
+      <rect class="prob-bar-bg" x="820" y="232" width="90" height="4" />
+      <rect class="prob-bar-fill-high" x="820" y="232" width="79" height="4" />
+
+      <rect class="dag-node-evidence" x="980" y="195" width="130" height="50" />
+      <text class="dag-label" x="1045" y="214" style="fill:#5EB8A0;">E₆</text>
+      <text class="dag-sublabel" x="1045" y="228">BEHAVIORAL Δ</text>
+      <text class="dag-id" x="1045" y="238">r(E₆)=0.72 | t₆</text>
+      <rect class="prob-bar-bg" x="1000" y="232" width="90" height="4" />
+      <rect class="prob-bar-fill-med" x="1000" y="232" width="65" height="4" />
+
+      <rect class="dag-node-evidence" x="1160" y="195" width="130" height="50" />
+      <text class="dag-label" x="1225" y="214" style="fill:#5EB8A0;">E₇</text>
+      <text class="dag-sublabel" x="1225" y="228">TEMPORAL PATTERN</text>
+      <text class="dag-id" x="1225" y="238">r(E₇)=0.80 | t₇</text>
+      <rect class="prob-bar-bg" x="1180" y="232" width="90" height="4" />
+      <rect class="prob-bar-fill-med" x="1180" y="232" width="72" height="4" />
+
+      <!-- ===== LAYER 2: INTERMEDIATE HYPOTHESES ===== -->
+      <rect class="dag-node-hypothesis" x="200" y="375" width="150" height="55" />
+      <text class="dag-label" x="275" y="394">H₁: ACTIVE ATTACK</text>
+      <text class="dag-sublabel" x="275" y="408">P(H₁|E₁,E₂,E₅)</text>
+      <text class="dag-id" x="275" y="420">0.87 | HIGH CONF</text>
+      <rect class="prob-bar-bg" x="220" y="416" width="110" height="4" />
+      <rect class="prob-bar-fill-high" x="220" y="416" width="96" height="4" />
+
+      <rect class="dag-node-hypothesis" x="430" y="375" width="150" height="55" />
+      <text class="dag-label" x="505" y="394">H₂: RECON PHASE</text>
+      <text class="dag-sublabel" x="505" y="408">P(H₂|E₃,E₄,E₆)</text>
+      <text class="dag-id" x="505" y="420">0.62 | MODERATE</text>
+      <rect class="prob-bar-bg" x="450" y="416" width="110" height="4" />
+      <rect class="prob-bar-fill-med" x="450" y="416" width="68" height="4" />
+
+      <rect class="dag-node-hypothesis" x="660" y="375" width="150" height="55" />
+      <text class="dag-label" x="735" y="394">H₃: INSIDER THREAT</text>
+      <text class="dag-sublabel" x="735" y="408">P(H₃|E₄,E₆,E₇)</text>
+      <text class="dag-id" x="735" y="420">0.44 | LOW-MOD</text>
+      <rect class="prob-bar-bg" x="680" y="416" width="110" height="4" />
+      <rect class="prob-bar-fill-med" x="680" y="416" width="48" height="4" />
+
+      <rect class="dag-node-hypothesis" x="890" y="375" width="150" height="55" />
+      <text class="dag-label" x="965" y="394">H₄: DECEPTION OP</text>
+      <text class="dag-sublabel" x="965" y="408">P(H₄|E₁,E₅,E₇)</text>
+      <text class="dag-id" x="965" y="420">0.31 | LOW</text>
+      <rect class="prob-bar-bg" x="910" y="416" width="110" height="4" />
+      <rect class="prob-bar-fill-low" x="910" y="416" width="34" height="4" />
+
+      <rect class="dag-node-hypothesis" x="1120" y="375" width="150" height="55" />
+      <text class="dag-label" x="1195" y="394">H₅: FALSE POSITIVE</text>
+      <text class="dag-sublabel" x="1195" y="408">P(H₅|E₂,E₆)</text>
+      <text class="dag-id" x="1195" y="420">0.18 | VERY LOW</text>
+      <rect class="prob-bar-bg" x="1140" y="416" width="110" height="4" />
+      <rect class="prob-bar-fill-low" x="1140" y="416" width="20" height="4" />
+
+      <!-- ===== LAYER 3: INFERRED CONCLUSIONS ===== -->
+      <rect class="dag-node-inferred" x="280" y="555" width="180" height="55" />
+      <text class="dag-label" x="370" y="573" style="fill:#8BAACC;">C₁: HOSTILE ACTOR</text>
+      <text class="dag-sublabel" x="370" y="587">P(C₁|H₁,H₂) = 0.82</text>
+      <text class="dag-id" x="370" y="599">ABOVE THRESHOLD τ=0.85? NO → DEFER</text>
+
+      <rect class="dag-node-inferred" x="540" y="555" width="180" height="55" />
+      <text class="dag-label" x="630" y="573" style="fill:#8BAACC;">C₂: IMMEDIATE RISK</text>
+      <text class="dag-sublabel" x="630" y="587">P(C₂|H₁,H₃) = 0.71</text>
+      <text class="dag-id" x="630" y="599">ABOVE THRESHOLD τ=0.85? NO → DEFER</text>
+
+      <rect class="dag-node-inferred" x="800" y="555" width="180" height="55" />
+      <text class="dag-label" x="890" y="573" style="fill:#8BAACC;">C₃: CONFIRMED BREACH</text>
+      <text class="dag-sublabel" x="890" y="587">P(C₃|H₁,H₂,H₄) = 0.91</text>
+      <text class="dag-id" x="890" y="599">ABOVE THRESHOLD τ=0.85? YES → COMMIT</text>
+
+      <!-- ===== LAYER 4: DECISION ===== -->
+      <rect x="600" y="725" width="240" height="55" rx="4"
+            fill="rgba(107, 143, 194, 0.25)" stroke="#6B8FC2" stroke-width="2.5" />
+      <text class="dag-label" x="720" y="745" style="fill:#6B8FC2; font-size:12px;">δ: COMMIT</text>
+      <text class="dag-sublabel" x="720" y="760">ACTION: COUNTERMEASURE DEPLOY</text>
+      <text class="dag-id" x="720" y="772">P = 0.91 > τ = 0.85 | CONF: HIGH</text>
+
+      <rect x="900" y="725" width="180" height="55" rx="4"
+            fill="rgba(58, 122, 106, 0.15)" stroke="#4A9A8A" stroke-width="1.5" />
+      <text class="dag-label" x="990" y="745" style="fill:#5EB8A0;">δ: DEFER</text>
+      <text class="dag-sublabel" x="990" y="760">MONITOR: COLLECT MORE EVIDENCE</text>
+      <text class="dag-id" x="990" y="772">P < τ → Await E₈, E₉</text>
+
+      <rect x="1120" y="725" width="180" height="55" rx="4"
+            fill="rgba(139, 115, 64, 0.12)" stroke="#8B7340" stroke-width="1" />
+      <text class="dag-label" x="1210" y="745" style="fill:#B89A50;">δ: REJECT</text>
+      <text class="dag-sublabel" x="1210" y="760">DISCARD: INSUFFICIENT EVIDENCE</text>
+      <text class="dag-id" x="1210" y="772">P < 0.20 → Hypothesis closed</text>
+
+      <!-- ===== EDGES: LAYER 0 → LAYER 1 (Prior → Evidence) ===== -->
+      <line class="dag-edge-prior" x1="180" y1="94" x2="145" y2="195" />
+      <text class="edge-weight" x="152" y="148">π₁→E₁</text>
+
+      <line class="dag-edge-prior" x1="380" y1="94" x2="325" y2="195" />
+      <text class="edge-weight" x="342" y="148">π₂→E₂</text>
+
+      <line class="dag-edge-prior" x1="580" y1="94" x2="505" y2="195" />
+      <text class="edge-weight" x="532" y="148">π₃→E₃</text>
+
+      <line class="dag-edge-prior" x1="780" y1="94" x2="685" y2="195" />
+      <text class="edge-weight" x="722" y="148">π₄→E₄</text>
+
+      <line class="dag-edge-prior" x1="980" y1="94" x2="865" y2="195" />
+      <text class="edge-weight" x="912" y="148">π₅→E₅</text>
+
+      <line class="dag-edge-prior" x1="380" y1="94" x2="1045" y2="195" />
+      <line class="dag-edge-prior" x1="780" y1="94" x2="1225" y2="195" />
+
+      <!-- ===== EDGES: LAYER 1 → LAYER 2 (Evidence → Hypothesis) ===== -->
+      <!-- E1 → H1 (strong) -->
+      <line class="dag-edge-strong" x1="145" y1="245" x2="275" y2="375" />
+      <text class="edge-weight" x="195" y="314">P(E₁|H₁)=0.92</text>
+
+      <!-- E2 → H1 -->
+      <line class="dag-edge-medium" x1="325" y1="245" x2="275" y2="375" />
+      <text class="edge-weight" x="288" y="314">P(E₂|H₁)=0.78</text>
+
+      <!-- E5 → H1 -->
+      <line class="dag-edge-strong" x1="865" y1="245" x2="350" y2="390" />
+
+      <!-- E3 → H2 -->
+      <line class="dag-edge-strong" x1="505" y1="245" x2="505" y2="375" />
+      <text class="edge-weight" x="520" y="314">P(E₃|H₂)=0.85</text>
+
+      <!-- E4 → H2 -->
+      <line class="dag-edge-medium" x1="685" y1="245" x2="540" y2="385" />
+
+      <!-- E4 → H3 -->
+      <line class="dag-edge-medium" x1="700" y1="245" x2="735" y2="375" />
+      <text class="edge-weight" x="730" y="314">P(E₄|H₃)=0.65</text>
+
+      <!-- E6 → H3 -->
+      <line class="dag-edge-medium" x1="1045" y1="245" x2="770" y2="390" />
+
+      <!-- E6 → H2 (weak) -->
+      <line class="dag-edge-weak" x1="1060" y1="245" x2="560" y2="395" />
+
+      <!-- E1 → H4 -->
+      <line class="dag-edge-medium" x1="160" y1="245" x2="965" y2="385" />
+
+      <!-- E5 → H4 -->
+      <line class="dag-edge-medium" x1="880" y1="245" x2="965" y2="375" />
+
+      <!-- E7 → H4 -->
+      <line class="dag-edge-medium" x1="1225" y1="245" x2="1000" y2="375" />
+
+      <!-- E2 → H5 -->
+      <line class="dag-edge-weak" x1="340" y1="245" x2="1195" y2="390" />
+
+      <!-- E7 → H3 -->
+      <line class="dag-edge-weak" x1="1225" y1="245" x2="770" y2="395" />
+
+      <!-- ===== EDGES: LAYER 2 → LAYER 3 (Hypothesis → Conclusion) ===== -->
+      <line class="dag-edge-strong" x1="275" y1="430" x2="370" y2="555" />
+      <text class="edge-weight" x="310" y="496">w=0.87</text>
+
+      <line class="dag-edge-medium" x1="505" y1="430" x2="400" y2="555" />
+
+      <line class="dag-edge-medium" x1="275" y1="430" x2="630" y2="555" />
+      <text class="edge-weight" x="440" y="496">w=0.44</text>
+
+      <line class="dag-edge-medium" x1="735" y1="430" x2="660" y2="555" />
+
+      <line class="dag-edge-strong" x1="275" y1="430" x2="860" y2="565" />
+      <text class="edge-weight" x="560" y="500">w=0.87</text>
+
+      <line class="dag-edge-medium" x1="505" y1="430" x2="870" y2="560" />
+
+      <line class="dag-edge-weak" x1="965" y1="430" x2="890" y2="555" />
+      <text class="edge-weight" x="940" y="496">w=0.31</text>
+
+      <!-- ===== EDGES: LAYER 3 → LAYER 4 (Conclusion → Decision) ===== -->
+      <line class="dag-edge-strong" x1="890" y1="610" x2="720" y2="725" />
+      <text class="edge-weight" x="790" y="672">P=0.91 > τ</text>
+
+      <line class="dag-edge-medium" x1="370" y1="610" x2="990" y2="725" />
+      <text class="edge-weight" x="660" y="672">P=0.82 < τ</text>
+
+      <line class="dag-edge-medium" x1="630" y1="610" x2="990" y2="730" />
+
+      <!-- ===== MATHEMATICAL OVERLAYS ===== -->
+      <rect class="math-box" x="1270" y="375" width="200" height="80" rx="3" />
+      <text class="math-annotation" x="1280" y="394">Bayes' Theorem:</text>
+      <text class="math-annotation" x="1280" y="412">P(Hᵢ|Eⱼ) =</text>
+      <text class="math-annotation" x="1280" y="428">  P(Eⱼ|Hᵢ) · π(Hᵢ)</text>
+      <text class="math-annotation" x="1280" y="444">  ──────────────────</text>
+      <text class="math-annotation" x="1280" y="460">      P(Eⱼ)</text>
+
+      <rect class="math-box" x="1270" y="490" width="200" height="60" rx="3" />
+      <text class="math-annotation" x="1280" y="508">Chain Rule (DAG):</text>
+      <text class="math-annotation" x="1280" y="526">P(H|E₁...Eₙ) =</text>
+      <text class="math-annotation" x="1280" y="542">  ∏ⱼ P(Eⱼ|pa(Eⱼ)) · P(H)</text>
+
+      <rect class="math-box" x="1270" y="580" width="200" height="60" rx="3" />
+      <text class="math-annotation" x="1280" y="598">D-Evidence Update:</text>
+      <text class="math-annotation" x="1280" y="616">π'(Hᵢ) = π(Hᵢ) ·</text>
+      <text class="math-annotation" x="1280" y="632">  ∏ⱼ λⱼ(Hᵢ) · r(Eⱼ)</text>
+
+      <!-- Evidence propagation flow annotation -->
+      <rect class="math-box" x="1270" y="660" width="200" height="80" rx="3" />
+      <text class="math-annotation" x="1280" y="678">Decision Function:</text>
+      <text class="math-annotation" x="1280" y="696">δ(P) =</text>
+      <text class="math-annotation" x="1280" y="712">  COMMIT  if P ≥ τ</text>
+      <text class="math-annotation" x="1280" y="728">  DEFER   if τ/2 ≤ P < τ</text>
+      <text class="math-annotation" x="1280" y="742">  REJECT  if P < τ/2</text>
+
+      <!-- Topology annotations -->
+      <line class="arch-line" x1="60" y1="860" x2="1460" y2="860" />
+      <text class="arch-annotation" x="60" y="874">DAG DEPTH: 5 | NODE COUNT: 18 | EDGE COUNT: 24 | ACYCLIC: VERIFIED | TOPOLOGICAL ORDER: VERIFIED | EVIDENCE LINEAGE: IMMUTABLE</text>
+    </svg>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend-box">
+    <div class="legend-title">LEGEND — EVIDENCE FLOW</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#6B8FC2;"></div> Strong inference (P ≥ 0.8)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#4A6FA5;"></div> Medium inference (0.5 ≤ P < 0.8)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#3A4A5C; border-top:1px dashed #3A4A5C;"></div> Weak inference (P < 0.5)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#8B7340; border-top:1px dashed #8B7340;"></div> Prior distribution flow</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#4A9A8A;"></div> Evidence observation node</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#6B8FC2; border-top:2px solid #6B8FC2;"></div> Hypothesis node</div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=794, height=1123">
+<title>LATTICE9 — Cover</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Noto+Serif:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+  @page { size: 794px 1123px; margin: 0; }
+  html {
+    margin: 0; padding: 0;
+    width: 794px; height: 1123px;
+    background: #0a0e1a;
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    margin: 0; padding: 0;
+    width: 794px; height: 1123px;
+    background: #0a0e1a;
+    overflow: visible;
+  }
+
+  .page {
+    position: relative;
+    width: 794px;
+    height: 1123px;
+    overflow: hidden;
+    clip-path: inset(0);
+  }
+
+  /* ==================== BACKGROUND GRID ==================== */
+  .bg-grid {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 29px, #1a2040 29px, #1a2040 29.3px),
+      repeating-linear-gradient(90deg, transparent, transparent 29px, #1a2040 29px, #1a2040 29.3px);
+    opacity: 1;
+  }
+
+  /* ==================== WATERMARK ==================== */
+  .watermark-wrap {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-12deg);
+    font-family: 'Noto Serif', Georgia, serif;
+    font-size: 200pt;
+    font-weight: 900;
+    color: #ffffff;
+    opacity: 0.03;
+    letter-spacing: 12pt;
+    white-space: nowrap;
+    z-index: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* ==================== LAYER 1 — GRAPH NETWORK ==================== */
+  .graph-network {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .graph-network svg {
+    width: 794px;
+    height: 1123px;
+  }
+
+  /* ==================== LAYER 2 — STRUCTURE LINES ==================== */
+  .structure-lines {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .h-rule-38 {
+    position: absolute;
+    top: 38%;
+    left: 20%;
+    width: 60%;
+    height: 1px;
+    background: #2c3e6b;
+  }
+
+  .h-rule-72 {
+    position: absolute;
+    top: 72%;
+    left: 30%;
+    width: 40%;
+    height: 1px;
+    background: #2c3e6b;
+  }
+
+  .v-line-left {
+    position: absolute;
+    left: 6%;
+    top: 15%;
+    width: 1px;
+    height: 70%;
+    background: #2c3e6b;
+  }
+
+  /* ==================== LAYER 3 — TEXT CONTENT ==================== */
+  .content {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+  }
+
+  /* TOP SECTION */
+  .kicker {
+    position: absolute;
+    top: 12%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    font-size: 10pt;
+    font-weight: 500;
+    letter-spacing: 4pt;
+    color: #5a6a9a;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  /* MIDDLE SECTION — HERO */
+  .hero-title {
+    position: absolute;
+    top: 28%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: 'Noto Serif', Georgia, serif;
+    font-size: 72pt;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 8pt;
+    line-height: 1;
+    text-indent: 8pt;
+  }
+
+  .hero-subtitle {
+    position: absolute;
+    top: 44%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: 'Noto Serif', Georgia, serif;
+    font-size: 20pt;
+    font-weight: 300;
+    color: #8a9ac0;
+    line-height: 1.3;
+  }
+
+  /* SUMMARY SECTION */
+  .summary {
+    position: absolute;
+    top: 52%;
+    left: 20%;
+    right: 20%;
+    text-align: center;
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    font-size: 12pt;
+    font-weight: 400;
+    line-height: 1.7;
+    color: #7a8ab0;
+  }
+
+  /* META SECTION */
+  .meta-top {
+    position: absolute;
+    top: 74%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    font-size: 11pt;
+    font-weight: 500;
+    color: #5a6a9a;
+    line-height: 1;
+  }
+
+  .meta-classification {
+    position: absolute;
+    top: 77%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    font-size: 10pt;
+    font-weight: 400;
+    color: #4a5a8a;
+    line-height: 1;
+  }
+
+  /* BOTTOM SECTION */
+  .bottom-team {
+    position: absolute;
+    top: 88%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    font-size: 12pt;
+    font-weight: 500;
+    color: #8a9ac0;
+    line-height: 1;
+  }
+
+  .bottom-ref {
+    position: absolute;
+    top: 91%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    font-size: 10pt;
+    font-weight: 400;
+    color: #5a6a9a;
+    line-height: 1;
+  }
+
+  /* ==================== DECORATIVE ACCENTS ==================== */
+  .accent-dot-tl {
+    position: absolute;
+    top: 14.5%;
+    left: 6.5%;
+    width: 4px;
+    height: 4px;
+    background: #2c3e6b;
+    border-radius: 50%;
+    z-index: 3;
+  }
+
+  .accent-dot-bl {
+    position: absolute;
+    bottom: 14%;
+    left: 6.5%;
+    width: 4px;
+    height: 4px;
+    background: #2c3e6b;
+    border-radius: 50%;
+    z-index: 3;
+  }
+
+  /* Small classification banner top-right */
+  .class-banner {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    font-size: 8pt;
+    letter-spacing: 2pt;
+    color: #2c3e6b;
+    text-transform: uppercase;
+    z-index: 4;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+
+  /* Corner marks */
+  .corner-mark {
+    position: absolute;
+    z-index: 3;
+  }
+  .corner-mark.tl {
+    top: 15px;
+    left: 15px;
+    width: 20px;
+    height: 20px;
+    border-top: 1px solid #1e2a4a;
+    border-left: 1px solid #1e2a4a;
+  }
+  .corner-mark.tr {
+    top: 15px;
+    right: 15px;
+    width: 20px;
+    height: 20px;
+    border-top: 1px solid #1e2a4a;
+    border-right: 1px solid #1e2a4a;
+  }
+  .corner-mark.bl {
+    bottom: 15px;
+    left: 15px;
+    width: 20px;
+    height: 20px;
+    border-bottom: 1px solid #1e2a4a;
+    border-left: 1px solid #1e2a4a;
+  }
+  .corner-mark.br {
+    bottom: 15px;
+    right: 15px;
+    width: 20px;
+    height: 20px;
+    border-bottom: 1px solid #1e2a4a;
+    border-right: 1px solid #1e2a4a;
+  }
+
+  @media screen {
+    html { height: auto; display: flex; justify-content: center; }
+    body { transform-origin: top center; scale: min(1, calc(100vh / 1123)); margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- BACKGROUND GRID -->
+  <div class="bg-grid"></div>
+
+  <!-- WATERMARK -->
+  <div class="watermark-wrap">
+    <div class="watermark">LATTICE9</div>
+  </div>
+
+  <!-- LAYER 1: GRAPH NETWORK PATTERN -->
+  <div class="graph-network">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 794 1123" fill="none">
+      <!-- Upper-right quadrant graph nodes & edges -->
+      <!-- Edges first (behind nodes) -->
+      <line x1="560" y1="95" x2="640" y2="60" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="640" y1="60" x2="720" y2="110" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="720" y1="110" x2="700" y2="200" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="560" y1="95" x2="520" y2="180" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="520" y1="180" x2="610" y2="220" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="610" y1="220" x2="700" y2="200" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="640" y1="60" x2="750" y2="50" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="700" y1="200" x2="760" y2="280" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="610" y1="220" x2="550" y2="300" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="550" y1="300" x2="650" y2="310" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="650" y1="310" x2="760" y2="280" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="520" y1="180" x2="480" y2="95" stroke="#141c35" stroke-width="0.5"/>
+      <!-- Upper-right nodes -->
+      <circle cx="560" cy="95" r="2" fill="#1e2a4a"/>
+      <circle cx="640" cy="60" r="2.5" fill="#1e2a4a"/>
+      <circle cx="720" cy="110" r="2" fill="#1e2a4a"/>
+      <circle cx="700" cy="200" r="2.5" fill="#1e2a4a"/>
+      <circle cx="520" cy="180" r="2" fill="#1e2a4a"/>
+      <circle cx="610" cy="220" r="2" fill="#1e2a4a"/>
+      <circle cx="750" cy="50" r="1.5" fill="#1e2a4a"/>
+      <circle cx="760" cy="280" r="2" fill="#1e2a4a"/>
+      <circle cx="550" cy="300" r="2" fill="#1e2a4a"/>
+      <circle cx="650" cy="310" r="2.5" fill="#1e2a4a"/>
+      <circle cx="480" cy="95" r="1.5" fill="#1e2a4a"/>
+
+      <!-- Lower-left quadrant graph nodes & edges -->
+      <line x1="60" y1="780" x2="140" y2="750" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="140" y1="750" x2="200" y2="820" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="200" y1="820" x2="130" y2="880" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="60" y1="780" x2="80" y2="870" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="80" y1="870" x2="130" y2="880" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="140" y1="750" x2="240" y2="730" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="200" y1="820" x2="280" y2="860" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="280" y1="860" x2="230" y2="940" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="130" y1="880" x2="170" y2="960" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="170" y1="960" x2="230" y2="940" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="240" y1="730" x2="300" y2="790" stroke="#141c35" stroke-width="0.5"/>
+      <line x1="300" y1="790" x2="280" y2="860" stroke="#141c35" stroke-width="0.5"/>
+      <!-- Lower-left nodes -->
+      <circle cx="60" cy="780" r="2" fill="#1e2a4a"/>
+      <circle cx="140" cy="750" r="2.5" fill="#1e2a4a"/>
+      <circle cx="200" cy="820" r="2" fill="#1e2a4a"/>
+      <circle cx="130" cy="880" r="2.5" fill="#1e2a4a"/>
+      <circle cx="80" cy="870" r="2" fill="#1e2a4a"/>
+      <circle cx="240" cy="730" r="2" fill="#1e2a4a"/>
+      <circle cx="280" cy="860" r="2" fill="#1e2a4a"/>
+      <circle cx="230" cy="940" r="2.5" fill="#1e2a4a"/>
+      <circle cx="170" cy="960" r="2" fill="#1e2a4a"/>
+      <circle cx="300" cy="790" r="2" fill="#1e2a4a"/>
+    </svg>
+  </div>
+
+  <!-- LAYER 2: STRUCTURE LINES -->
+  <div class="structure-lines">
+    <div class="h-rule-38"></div>
+    <div class="h-rule-72"></div>
+    <div class="v-line-left"></div>
+  </div>
+
+  <!-- DECORATIVE ACCENTS -->
+  <div class="accent-dot-tl"></div>
+  <div class="accent-dot-bl"></div>
+  <div class="corner-mark tl"></div>
+  <div class="corner-mark tr"></div>
+  <div class="corner-mark bl"></div>
+  <div class="corner-mark br"></div>
+  <div class="class-banner">OSA-R//OPEN SYSTEMS ARCHITECTURE</div>
+
+  <!-- LAYER 3: TEXT CONTENT -->
+  <div class="content">
+    <!-- TOP SECTION -->
+    <div class="kicker">Distributed Adversarial Graph-Computation Engine</div>
+
+    <!-- MIDDLE SECTION — HERO -->
+    <div class="hero-title">LATTICE9</div>
+    <div class="hero-subtitle">Probabilistic Topology Reasoning Framework</div>
+
+    <!-- SUMMARY SECTION -->
+    <div class="summary">
+      A formal specification of the mathematical, structural, and operational foundations for automated graph cognition in adversarial infrastructure. Presenting Graph Field Theory, loopy belief confidence propagation, attack economics optimization, Pearlian causal interventions, and distributed quorum-based computation.
+    </div>
+
+    <!-- META SECTION -->
+    <div class="meta-top">Technical Whitepaper v9.0.0-PRO-CLAW</div>
+    <div class="meta-classification">Classification: Open Systems Architecture Research</div>
+
+    <!-- BOTTOM SECTION -->
+    <div class="bottom-team">Lattice9 Core Research &amp; Engineering Team</div>
+    <div class="bottom-ref">Reference Architecture Specification</div>
+  </div>
+
+</div>
+</body>
+</html>

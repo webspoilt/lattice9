@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --blueprint-bg: #0A0E17;
+    --blueprint-surface: #0F1520;
+    --blueprint-grid: #141C2B;
+    --graphite-line: #3A4A5C;
+    --graphite-dim: #253040;
+    --indigo-accent: #4A6FA5;
+    --indigo-bright: #6B8FC2;
+    --indigo-muted: #2E4A6E;
+    --text-primary: #C8D6E5;
+    --text-secondary: #7B8FA3;
+    --text-dim: #4A5E72;
+    --annotation: #5A7A9A;
+    --warn-amber: #8B7340;
+    --success-teal: #3A7A6A;
+    --math-overlay: #5E7A9E;
+  }
+
+  body {
+    background: var(--blueprint-bg);
+    color: var(--text-primary);
+    font-family: 'Courier New', 'SFMono-Regular', Consolas, monospace;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  #root {
+    width: 1600px;
+    height: 1100px;
+    position: relative;
+    padding: 40px;
+  }
+
+  /* Blueprint grid background */
+  .blueprint-grid {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      linear-gradient(var(--blueprint-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--blueprint-grid) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .blueprint-grid-fine {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      linear-gradient(var(--blueprint-grid) 0.5px, transparent 0.5px),
+      linear-gradient(90deg, var(--blueprint-grid) 0.5px, transparent 0.5px);
+    background-size: 10px 10px;
+    opacity: 0.25;
+    pointer-events: none;
+  }
+
+  /* Classification banner */
+  .classification-banner {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    background: #1A1A1A;
+    color: #8B7340;
+    font-size: 10px;
+    letter-spacing: 4px;
+    padding: 4px 32px;
+    border-bottom: 1px solid #333;
+    z-index: 10;
+  }
+
+  /* Document header */
+  .doc-header {
+    position: absolute;
+    top: 12px; right: 40px;
+    text-align: right;
+    z-index: 10;
+  }
+  .doc-header .doc-id {
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+  }
+  .doc-header .doc-rev {
+    font-size: 8px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  /* Title block */
+  .title-block {
+    position: relative;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--graphite-dim);
+    z-index: 10;
+  }
+  .title-block h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--indigo-bright);
+    letter-spacing: 3px;
+    font-family: 'Georgia', 'Times New Roman', serif;
+  }
+  .title-block .subtitle {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+  .title-block .figure-ref {
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    letter-spacing: 1.5px;
+  }
+
+  /* SVG Canvas */
+  .topology-canvas {
+    position: relative;
+    width: 1520px;
+    height: 880px;
+    z-index: 5;
+  }
+
+  /* Graph nodes */
+  .node-core {
+    fill: var(--blueprint-surface);
+    stroke: var(--indigo-accent);
+    stroke-width: 2;
+  }
+  .node-satellite {
+    fill: var(--blueprint-surface);
+    stroke: var(--graphite-line);
+    stroke-width: 1.5;
+  }
+  .node-quorum {
+    fill: rgba(58, 122, 106, 0.15);
+    stroke: var(--success-teal);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 2;
+  }
+  .node-external {
+    fill: rgba(139, 115, 64, 0.1);
+    stroke: var(--warn-amber);
+    stroke-width: 1;
+    stroke-dasharray: 6 3;
+  }
+
+  .node-label {
+    fill: var(--text-primary);
+    font-size: 10px;
+    font-family: 'Courier New', monospace;
+    text-anchor: middle;
+    dominant-baseline: central;
+    letter-spacing: 1px;
+  }
+  .node-sublabel {
+    fill: var(--text-secondary);
+    font-size: 7px;
+    font-family: 'Courier New', monospace;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+  .node-id {
+    fill: var(--text-dim);
+    font-size: 6.5px;
+    font-family: 'Courier New', monospace;
+    text-anchor: middle;
+  }
+
+  /* Edges */
+  .edge-primary {
+    stroke: var(--indigo-accent);
+    stroke-width: 1.5;
+    fill: none;
+    marker-end: url(#arrowIndigo);
+  }
+  .edge-secondary {
+    stroke: var(--graphite-line);
+    stroke-width: 1;
+    fill: none;
+    marker-end: url(#arrowGraphite);
+  }
+  .edge-bidirectional {
+    stroke: var(--indigo-muted);
+    stroke-width: 1.2;
+    fill: none;
+    marker-start: url(#arrowGraphiteRev);
+    marker-end: url(#arrowIndigo);
+  }
+  .edge-fallback {
+    stroke: var(--graphite-dim);
+    stroke-width: 0.8;
+    stroke-dasharray: 6 3;
+    fill: none;
+    marker-end: url(#arrowDim);
+  }
+
+  .edge-label {
+    fill: var(--annotation);
+    font-size: 7px;
+    font-family: 'Courier New', monospace;
+    text-anchor: middle;
+  }
+
+  /* Zone boundaries */
+  .zone-boundary {
+    fill: none;
+    stroke: var(--graphite-dim);
+    stroke-width: 1;
+    stroke-dasharray: 3 6;
+    rx: 8;
+  }
+  .zone-label {
+    fill: var(--text-dim);
+    font-size: 8px;
+    font-family: 'Georgia', serif;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .zone-sublabel {
+    fill: var(--text-dim);
+    font-size: 6px;
+    font-family: 'Courier New', monospace;
+  }
+
+  /* Mathematical overlays */
+  .math-annotation {
+    fill: var(--math-overlay);
+    font-size: 7.5px;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-style: italic;
+  }
+  .math-box {
+    fill: rgba(94, 122, 158, 0.08);
+    stroke: var(--math-overlay);
+    stroke-width: 0.5;
+    rx: 3;
+  }
+
+  /* Architectural annotations */
+  .arch-annotation {
+    fill: var(--text-dim);
+    font-size: 6px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+  }
+  .arch-line {
+    stroke: var(--text-dim);
+    stroke-width: 0.4;
+    stroke-dasharray: 2 2;
+  }
+
+  /* Pressure gradient indicators */
+  .pressure-indicator {
+    fill: none;
+    stroke-width: 2;
+    opacity: 0.6;
+  }
+
+  /* Legend */
+  .legend-box {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    background: rgba(15, 21, 32, 0.9);
+    border: 1px solid var(--graphite-dim);
+    padding: 12px 16px;
+    z-index: 10;
+  }
+  .legend-title {
+    font-size: 8px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-size: 8px;
+    color: var(--text-secondary);
+  }
+  .legend-swatch {
+    width: 20px;
+    height: 2px;
+  }
+
+  /* Coordinate marks */
+  .coord-mark {
+    fill: var(--text-dim);
+    font-size: 6px;
+    font-family: 'Courier New', monospace;
+  }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="blueprint-grid"></div>
+  <div class="blueprint-grid-fine"></div>
+  <div class="classification-banner">DISTRIBUTION STATE C — LATTICE9 PROGRAM</div>
+  <div class="doc-header">
+    <div class="doc-id">L9-ARCH-TOPO-001</div>
+    <div class="doc-rev">REV 3.2 | 2026-05-17 | CLASSIFIED</div>
+  </div>
+
+  <div class="title-block">
+    <h1>LATTICE9 CORE ARCHITECTURE TOPOLOGY</h1>
+    <div class="subtitle">Distributed Graph-Native Intelligence Architecture — L9-Tier Deployment Configuration</div>
+    <div class="figure-ref">FIGURE 1.1 | SYSTEM TOPOLOGY MAP — PRIMARY CLUSTER CONFIGURATION</div>
+  </div>
+
+  <div class="topology-canvas">
+    <svg width="1520" height="880" viewBox="0 0 1520 880">
+      <defs>
+        <marker id="arrowIndigo" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#4A6FA5" />
+        </marker>
+        <marker id="arrowGraphite" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+          <polygon points="0 0, 7 2.5, 0 5" fill="#3A4A5C" />
+        </marker>
+        <marker id="arrowGraphiteRev" markerWidth="7" markerHeight="5" refX="1" refY="2.5" orient="auto">
+          <polygon points="7 0, 0 2.5, 7 5" fill="#3A4A5C" />
+        </marker>
+        <marker id="arrowDim" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+          <polygon points="0 0, 6 2, 0 4" fill="#253040" />
+        </marker>
+
+        <!-- Subtle radial gradients for pressure visualization -->
+        <radialGradient id="pressureCore" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#4A6FA5" stop-opacity="0.12" />
+          <stop offset="100%" stop-color="#4A6FA5" stop-opacity="0" />
+        </radialGradient>
+        <radialGradient id="pressureQuorum" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#3A7A6A" stop-opacity="0.08" />
+          <stop offset="100%" stop-color="#3A7A6A" stop-opacity="0" />
+        </radialGradient>
+        <radialGradient id="pressureExternal" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#8B7340" stop-opacity="0.06" />
+          <stop offset="100%" stop-color="#8B7340" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <!-- Zone boundaries -->
+      <rect class="zone-boundary" x="60" y="40" width="580" height="420" />
+      <text class="zone-label" x="75" y="58">CORE LATTICE</text>
+      <text class="zone-sublabel" x="75" y="68">G = (V, E) | |V| = 9 | |E| = 14</text>
+
+      <rect class="zone-boundary" x="700" y="40" width="500" height="420" />
+      <text class="zone-label" x="715" y="58">QUORUM PERIMETER</text>
+      <text class="zone-sublabel" x="715" y="68">Q(n, f) = C(n, 2f+1) | f = ⌊(n-1)/3⌋</text>
+
+      <rect class="zone-boundary" x="60" y="500" width="1140" height="340" />
+      <text class="zone-label" x="75" y="518">EXTERNAL INTERFACE / ADVERSARIAL SURFACE</text>
+      <text class="zone-sublabel" x="75" y="528">R_topo(G, A) = λ₂ · Φ(A) / |V|</text>
+
+      <!-- Pressure fields -->
+      <ellipse cx="350" cy="250" rx="240" ry="170" fill="url(#pressureCore)" />
+      <ellipse cx="950" cy="250" rx="200" ry="160" fill="url(#pressureQuorum)" />
+      <ellipse cx="630" cy="670" rx="450" ry="140" fill="url(#pressureExternal)" />
+
+      <!-- ===== CORE LATTICE NODES ===== -->
+      <!-- L9-ORCH: Central Orchestrator -->
+      <rect class="node-core" x="270" y="120" width="140" height="56" rx="4" />
+      <text class="node-label" x="340" y="143">L9-ORCH</text>
+      <text class="node-sublabel" x="340" y="158">ORCHESTRATOR</text>
+      <text class="node-id" x="340" y="170">v₃.2.1 | deg=5</text>
+
+      <!-- L9-GRAPH: Graph Engine -->
+      <rect class="node-core" x="100" y="220" width="130" height="50" rx="4" />
+      <text class="node-label" x="165" y="242">L9-GRAPH</text>
+      <text class="node-sublabel" x="165" y="256">GRAPH ENGINE</text>
+      <text class="node-id" x="165" y="264">deg=4 | Δ(G)</text>
+
+      <!-- L9-BAYES: Bayesian Inference -->
+      <rect class="node-core" x="290" y="230" width="130" height="50" rx="4" />
+      <text class="node-label" x="355" y="252">L9-BAYES</text>
+      <text class="node-sublabel" x="355" y="266">BAYESIAN INFER.</text>
+      <text class="node-id" x="355" y="274">P(H|E) engine</text>
+
+      <!-- L9-ENTROPY: Entropy Calculator -->
+      <rect class="node-core" x="470" y="220" width="130" height="50" rx="4" />
+      <text class="node-label" x="535" y="242">L9-ENTROPY</text>
+      <text class="node-sublabel" x="535" y="256">ENTROPY CALC.</text>
+      <text class="node-id" x="535" y="264">H(X) = −Σ p·log p</text>
+
+      <!-- L9-LAPLACIAN: Spectral Analysis -->
+      <rect class="node-core" x="100" y="330" width="130" height="50" rx="4" />
+      <text class="node-label" x="165" y="352">L9-LAPL</text>
+      <text class="node-sublabel" x="165" y="366">SPECTRAL ANAL.</text>
+      <text class="node-id" x="165" y="374">L = D − A | λ₂</text>
+
+      <!-- L9-GEO: Geodesic Path Engine -->
+      <rect class="node-core" x="290" y="340" width="130" height="50" rx="4" />
+      <text class="node-label" x="355" y="362">L9-GEO</text>
+      <text class="node-sublabel" x="355" y="376">GEODESIC PATH</text>
+      <text class="node-id" x="355" y="384">∫ ds metrics</text>
+
+      <!-- L9-MUTATE: Temporal Mutation -->
+      <rect class="node-core" x="470" y="330" width="130" height="50" rx="4" />
+      <text class="node-label" x="535" y="352">L9-MUTATE</text>
+      <text class="node-sublabel" x="535" y="366">TEMPORAL MUT.</text>
+      <text class="node-id" x="535" y="374">μ(t) operators</text>
+
+      <!-- L9-EVIDENCE: Evidence Store -->
+      <rect class="node-core" x="170" y="420" width="130" height="46" rx="4" />
+      <text class="node-label" x="235" y="440">L9-EVID</text>
+      <text class="node-sublabel" x="235" y="454">EVIDENCE STORE</text>
+      <text class="node-id" x="235" y="461">DAG lineage</text>
+
+      <!-- L9-RESIST: Topology Resistance -->
+      <rect class="node-core" x="380" y="420" width="130" height="46" rx="4" />
+      <text class="node-label" x="445" y="440">L9-RESIST</text>
+      <text class="node-sublabel" x="445" y="454">TOPO RESISTANCE</text>
+      <text class="node-id" x="445" y="461">R_topo metrics</text>
+
+      <!-- ===== CORE LATTICE EDGES ===== -->
+      <line class="edge-primary" x1="340" y1="176" x2="165" y2="220" />
+      <text class="edge-label" x="240" y="192">graph queries</text>
+
+      <line class="edge-primary" x1="340" y1="176" x2="355" y2="230" />
+      <text class="edge-label" x="358" y="206">P(H|E)</text>
+
+      <line class="edge-primary" x1="340" y1="176" x2="535" y2="220" />
+      <text class="edge-label" x="452" y="192">H(X) requests</text>
+
+      <line class="edge-primary" x1="165" y1="270" x2="165" y2="330" />
+      <text class="edge-label" x="180" y="302">Δ(G)</text>
+
+      <line class="edge-secondary" x1="230" y1="258" x2="290" y2="255" />
+      <text class="edge-label" x="260" y="249">adj(A)</text>
+
+      <line class="edge-secondary" x1="420" y1="258" x2="470" y2="248" />
+      <text class="edge-label" x="448" y="248">p(x)</text>
+
+      <line class="edge-secondary" x1="165" y1="380" x2="290" y2="360" />
+      <text class="edge-label" x="218" y="374">L·f = λf</text>
+
+      <line class="edge-secondary" x1="420" y1="360" x2="470" y2="355" />
+      <text class="edge-label" x="448" y="352">μ(t)</text>
+
+      <line class="edge-secondary" x1="355" y1="280" x2="355" y2="340" />
+      <text class="edge-label" x="370" y="312">inference path</text>
+
+      <line class="edge-secondary" x1="235" y1="280" x2="235" y2="420" />
+      <text class="edge-label" x="248" y="354">evidence DAG</text>
+
+      <line class="edge-secondary" x1="355" y1="390" x2="445" y2="420" />
+      <text class="edge-label" x="408" y="404">R_topo</text>
+
+      <line class="edge-secondary" x1="445" y1="420" x2="535" y2="380" />
+      <text class="edge-label" x="502" y="396">resist score</text>
+
+      <line class="edge-bidirectional" x1="230" y1="450" x2="380" y2="445" />
+      <text class="edge-label" x="305" y="458">lineage ↔ resistance</text>
+
+      <!-- ===== QUORUM PERIMETER NODES ===== -->
+      <!-- Q1-Q5: Quorum Nodes -->
+      <rect class="node-quorum" x="730" y="100" width="110" height="44" rx="3" />
+      <text class="node-label" x="785" y="118" style="fill:#5EB8A0;">Q₁</text>
+      <text class="node-sublabel" x="785" y="132">PRIMARY LEAD</text>
+      <text class="node-id" x="785" y="139">f=0 | epoch=47</text>
+
+      <rect class="node-quorum" x="900" y="100" width="110" height="44" rx="3" />
+      <text class="node-label" x="955" y="118" style="fill:#5EB8A0;">Q₂</text>
+      <text class="node-sublabel" x="955" y="132">REPLICA-α</text>
+      <text class="node-id" x="955" y="139">f=1 | lag=2ms</text>
+
+      <rect class="node-quorum" x="1070" y="100" width="110" height="44" rx="3" />
+      <text class="node-label" x="1125" y="118" style="fill:#5EB8A0;">Q₃</text>
+      <text class="node-sublabel" x="1125" y="132">REPLICA-β</text>
+      <text class="node-id" x="1125" y="139">f=1 | lag=5ms</text>
+
+      <rect class="node-quorum" x="780" y="210" width="110" height="44" rx="3" />
+      <text class="node-label" x="835" y="228" style="fill:#5EB8A0;">Q₄</text>
+      <text class="node-sublabel" x="835" y="242">WITNESS-γ</text>
+      <text class="node-id" x="835" y="249">f=2 | verify</text>
+
+      <rect class="node-quorum" x="980" y="210" width="110" height="44" rx="3" />
+      <text class="node-label" x="1035" y="228" style="fill:#5EB8A0;">Q₅</text>
+      <text class="node-sublabel" x="1035" y="242">WITNESS-δ</text>
+      <text class="node-id" x="1035" y="249">f=2 | verify</text>
+
+      <!-- Quorum consensus cluster -->
+      <rect class="node-quorum" x="830" y="310" width="150" height="50" rx="3" />
+      <text class="node-label" x="905" y="330" style="fill:#5EB8A0;">Q-CONSENSUS</text>
+      <text class="node-sublabel" x="905" y="344">BFT AGREEMENT</text>
+      <text class="node-id" x="905" y="354">2f+1 = 3 threshold</text>
+
+      <!-- Partition sync -->
+      <rect class="node-quorum" x="830" y="400" width="150" height="46" rx="3" />
+      <text class="node-label" x="905" y="418" style="fill:#5EB8A0;">P-SYNC</text>
+      <text class="node-sublabel" x="905" y="432">PARTITION SYNC</text>
+      <text class="node-id" x="905" y="440">Δt = 50ms window</text>
+
+      <!-- ===== QUORUM EDGES ===== -->
+      <line class="edge-primary" x1="785" y1="144" x2="835" y2="210" />
+      <line class="edge-primary" x1="955" y1="144" x2="835" y2="210" />
+      <line class="edge-primary" x1="1125" y1="144" x2="1035" y2="210" />
+      <line class="edge-primary" x1="785" y1="144" x2="905" y2="310" />
+      <line class="edge-primary" x1="955" y1="144" x2="905" y2="310" />
+      <line class="edge-primary" x1="1125" y1="144" x2="905" y2="310" />
+      <line class="edge-primary" x1="835" y1="254" x2="905" y2="310" />
+      <line class="edge-primary" x1="1035" y1="254" x2="905" y2="310" />
+      <line class="edge-primary" x1="905" y1="360" x2="905" y2="400" />
+      <text class="edge-label" x="920" y="384">sync Δ</text>
+
+      <!-- Cross-zone: Core → Quorum -->
+      <line class="edge-primary" x1="600" y1="148" x2="730" y2="122" />
+      <text class="edge-label" x="665" y="128">orchestration cmd</text>
+
+      <line class="edge-primary" x1="535" y1="270" x2="780" y2="230" />
+      <text class="edge-label" x="660" y="244">entropy sync</text>
+
+      <line class="edge-primary" x1="535" y1="380" x2="830" y2="420" />
+      <text class="edge-label" x="690" y="404">mutation commit</text>
+
+      <line class="edge-secondary" x1="445" y1="466" x2="830" y2="430" />
+      <text class="edge-label" x="640" y="452">resistance metrics</text>
+
+      <!-- ===== EXTERNAL INTERFACE NODES ===== -->
+      <!-- Adversarial Surface Nodes -->
+      <circle class="node-external" cx="140" cy="600" r="32" />
+      <text class="node-label" x="140" y="596" style="fill:#B89A50;">A₁</text>
+      <text class="node-sublabel" x="140" y="610" style="font-size:6px;">ADVERSARY-α</text>
+
+      <circle class="node-external" cx="280" cy="640" r="32" />
+      <text class="node-label" x="280" y="636" style="fill:#B89A50;">A₂</text>
+      <text class="node-sublabel" x="280" y="650" style="font-size:6px;">ADVERSARY-β</text>
+
+      <circle class="node-external" cx="430" cy="600" r="32" />
+      <text class="node-label" x="430" y="596" style="fill:#B89A50;">A₃</text>
+      <text class="node-sublabel" x="430" y="610" style="font-size:6px;">ADVERSARY-γ</text>
+
+      <!-- Sensor / Data Feed Nodes -->
+      <rect class="node-satellite" x="580" y="570" width="110" height="40" rx="3" />
+      <text class="node-label" x="635" y="588" style="font-size:9px;">S₁-SIGINT</text>
+      <text class="node-sublabel" x="635" y="600">SIGNAL FEED</text>
+
+      <rect class="node-satellite" x="720" y="570" width="110" height="40" rx="3" />
+      <text class="node-label" x="775" y="588" style="font-size:9px;">S₂-OSINT</text>
+      <text class="node-sublabel" x="775" y="600">OPEN FEED</text>
+
+      <rect class="node-satellite" x="860" y="570" width="110" height="40" rx="3" />
+      <text class="node-label" x="915" y="588" style="font-size:9px;">S₃-HUMINT</text>
+      <text class="node-sublabel" x="915" y="600">HUMAN FEED</text>
+
+      <rect class="node-satellite" x="1000" y="570" width="110" height="40" rx="3" />
+      <text class="node-label" x="1055" y="588" style="font-size:9px;">S₄-CYBER</text>
+      <text class="node-sublabel" x="1055" y="600">CYBER FEED</text>
+
+      <!-- Decision Output -->
+      <rect class="node-core" x="580" y="680" width="110" height="40" rx="3" />
+      <text class="node-label" x="635" y="698" style="font-size:9px;">DECISION</text>
+      <text class="node-sublabel" x="635" y="710">ACTION OUT</text>
+
+      <rect class="node-core" x="730" y="680" width="110" height="40" rx="3" />
+      <text class="node-label" x="785" y="698" style="font-size:9px;">COUNTER</text>
+      <text class="node-sublabel" x="785" y="710">COUNTERMEAS.</text>
+
+      <rect class="node-core" x="880" y="680" width="110" height="40" rx="3" />
+      <text class="node-label" x="935" y="698" style="font-size:9px;">REPORT</text>
+      <text class="node-sublabel" x="935" y="710">INTEL REPORT</text>
+
+      <!-- Resilience metrics display -->
+      <rect class="node-satellite" x="580" y="760" width="410" height="60" rx="3" />
+      <text class="node-label" x="785" y="782" style="font-size:10px;">RESILIENCE DASHBOARD</text>
+      <text class="node-sublabel" x="785" y="798">λ₂ = 2.41 | R_topo = 0.87 | Φ(A) = 0.13 | H(X) = 3.72 bits</text>
+      <text class="node-id" x="785" y="812">Connectivity: STRONG | Entropy: MODERATE | Adversarial Cost: HIGH</text>
+
+      <!-- External edges -->
+      <line class="edge-fallback" x1="140" y1="568" x2="165" y2="420" />
+      <text class="edge-label" x="138" y="498" style="fill:#5A5040;">attack vector</text>
+
+      <line class="edge-fallback" x1="280" y1="608" x2="235" y2="466" />
+      <text class="edge-label" x="246" y="542" style="fill:#5A5040;">evidence inject</text>
+
+      <line class="edge-fallback" x1="430" y1="568" x2="445" y2="466" />
+      <text class="edge-label" x="448" y="522" style="fill:#5A5040;">topo attack</text>
+
+      <line class="edge-primary" x1="635" y1="570" x2="355" y2="280" />
+      <line class="edge-primary" x1="775" y1="570" x2="535" y2="270" />
+      <line class="edge-primary" x1="915" y1="570" x2="355" y2="390" />
+      <line class="edge-primary" x1="1055" y1="570" x2="905" y2="400" />
+
+      <line class="edge-secondary" x1="635" y1="610" x2="635" y2="680" />
+      <line class="edge-secondary" x1="775" y1="610" x2="785" y2="680" />
+      <line class="edge-secondary" x1="915" y1="610" x2="935" y2="680" />
+
+      <line class="edge-primary" x1="635" y1="720" x2="635" y2="760" />
+      <line class="edge-primary" x1="785" y1="720" x2="785" y2="760" />
+      <line class="edge-primary" x1="935" y1="720" x2="935" y2="760" />
+
+      <!-- ===== MATHEMATICAL OVERLAYS ===== -->
+      <rect class="math-box" x="62" y="82" width="180" height="28" rx="3" />
+      <text class="math-annotation" x="72" y="100">λ₂(G) ≥ 2 ⇒ G is 2-connected</text>
+
+      <rect class="math-box" x="700" y="74" width="200" height="28" rx="3" />
+      <text class="math-annotation" x="710" y="92">Quorum: n ≥ 3f+1 | f = ⌊(5−1)/3⌋ = 1</text>
+
+      <rect class="math-box" x="1020" y="300" width="170" height="44" rx="3" />
+      <text class="math-annotation" x="1030" y="318">BFT threshold:</text>
+      <text class="math-annotation" x="1030" y="336">|Q_commit| ≥ ⌈2(n+f)/3⌉</text>
+
+      <rect class="math-box" x="1240" y="500" width="200" height="60" rx="3" />
+      <text class="math-annotation" x="1250" y="518">Adversarial cost model:</text>
+      <text class="math-annotation" x="1250" y="536">C(A) = Σ cᵢ · R_topo(eᵢ)</text>
+      <text class="math-annotation" x="1250" y="552">C_min = Φ(G) · |V| / α</text>
+
+      <!-- ===== ARCHITECTURAL ANNOTATIONS ===== -->
+      <!-- Annotation lines with callouts -->
+      <line class="arch-line" x1="1220" y1="120" x2="1220" y2="200" />
+      <text class="arch-annotation" x="1228" y="140">↳ Hot-standby failover</text>
+      <text class="arch-annotation" x="1228" y="152">↳ <50ms reconfiguration</text>
+      <text class="arch-annotation" x="1228" y="164">↳ Byzantine fault class</text>
+
+      <line class="arch-line" x1="1220" y1="310" x2="1220" y2="370" />
+      <text class="arch-annotation" x="1228" y="330">↳ Consensus latency: O(n²)</text>
+      <text class="arch-annotation" x="1228" y="342">↳ Finality: probabilistic</text>
+      <text class="arch-annotation" x="1228" y="354">↳ Epoch rotation: 100ms</text>
+
+      <line class="arch-line" x1="1140" y1="680" x2="1180" y2="680" />
+      <text class="arch-annotation" x="1188" y="680">↳ Decision latency ≤ 200ms</text>
+      <text class="arch-annotation" x="1188" y="692">↳ False positive rate < 0.3%</text>
+      <text class="arch-annotation" x="1188" y="704">↳ Confidence threshold: 0.85</text>
+
+      <!-- Topology layer separation indicator -->
+      <text class="coord-mark" x="62" y="866">LAYER-0: INFRASTRUCTURE</text>
+      <text class="coord-mark" x="420" y="866">LAYER-1: GRAPH COMPUTATION</text>
+      <text class="coord-mark" x="780" y="866">LAYER-2: INTELLIGENCE</text>
+      <text class="coord-mark" x="1120" y="866">LAYER-3: DECISION</text>
+
+      <!-- Coordinate marks -->
+      <text class="coord-mark" x="50" y="35">0</text>
+      <text class="coord-mark" x="200" y="35">200</text>
+      <text class="coord-mark" x="400" y="35">400</text>
+      <text class="coord-mark" x="600" y="35">600</text>
+      <text class="coord-mark" x="800" y="35">800</text>
+      <text class="coord-mark" x="1000" y="35">1000</text>
+      <text class="coord-mark" x="1200" y="35">1200</text>
+
+      <text class="coord-mark" x="30" y="100" transform="rotate(-90, 30, 100)">100</text>
+      <text class="coord-mark" x="30" y="300" transform="rotate(-90, 30, 300)">300</text>
+      <text class="coord-mark" x="30" y="500" transform="rotate(-90, 30, 500)">500</text>
+      <text class="coord-mark" x="30" y="700" transform="rotate(-90, 30, 700)">700</text>
+    </svg>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend-box">
+    <div class="legend-title">LEGEND — TOPOLOGY ELEMENTS</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#4A6FA5;"></div> Primary data flow (directed)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#3A4A5C;"></div> Secondary flow (directed)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#2E4A6E; border-top:1px dashed #4A6FA5;"></div> Bidirectional sync</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#253040; border-top:1px dashed #3A4A5C;"></div> Fallback / adversarial path</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#3A7A6A; border:1px dashed #3A7A6A;"></div> Quorum boundary (BFT)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#8B7340; border:1px dashed #8B7340;"></div> Adversarial surface</div>
+  </div>
+</div>
+</body>
+</html>
