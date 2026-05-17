@@ -17,8 +17,7 @@ Findings are not intelligence.
 Intelligence is the compression of evidence, relationships, time, and operational consequence.
 ```
 
-<details open>
-<summary><strong>Table Of Contents</strong></summary>
+## Table of Contents
 
 1. [Abstract](#01-abstract)
 2. [Research Motivation](#02-research-motivation)
@@ -71,7 +70,6 @@ Intelligence is the compression of evidence, relationships, time, and operationa
 49. [Limitations](#49-limitations)
 50. [Closing Doctrine](#50-closing-doctrine)
 
-</details>
 
 ---
 
@@ -333,7 +331,7 @@ flowchart TB
 
 The graph intelligence engine (`server-py/`) is organized as a modular Python package:
 
-```
+```text
 server-py/
 ├── main.py                 # FastAPI entry point + pipeline orchestration
 ├── config.py               # Environment configuration
@@ -356,7 +354,7 @@ server-py/
 ### API Endpoints
 
 | Endpoint | Function |
-|---|---|
+| --- | --- |
 | `POST /analyze/{engagement_id}` | Runs full intelligence pipeline analysis (Neo4j mergers, BBP confidence propagation, Dijkstra routing, Postgres prioritization) |
 | `POST /events/{engagement_id}` | Triggers event-driven re-analysis for specific graph operations (e.g. `evidence_added`, `finding_updated` confidence recalculations) |
 | `GET /snapshots/{engagement_id}` | Retrieves historical timeline of captured point-in-time graph snapshots |
@@ -567,7 +565,9 @@ P(u \to v) = \frac{P(\text{node state}) \times \text{relationship\_weight} \time
 $$
 
 #### Exploit Precondition Auditing
+
 During the Dijkstra priority-queue expansion, the engine evaluates step-by-step target preconditions:
+
 1. **Target Operating System Platform**: Evaluates the target host platform compatibility (e.g., executing a Windows-only EternalBlue exploit against a Linux OS targets probability to $0.05$, or $0.01$ dynamic floor).
 2. **Exposure Ingress Port Exposure**: Validates that target service ports are actively exposed and listening (mismatched ports penalize probability to $0.10$, or $0.01$ dynamic floor).
 3. **Active Authentication & Credentials**: Checks the availability of authenticating credentials. If missing, probability is penalized to $0.15$.
@@ -576,6 +576,7 @@ During the Dijkstra priority-queue expansion, the engine evaluates step-by-step 
 Mismatched preconditions generate massive cumulative costs (e.g., $+3.0$ to $+4.6$), forcing Dijkstra to route cleanly around unrealistic vectors in real-time, preferring an operationally sound path.
 
 #### Attacker ROI Traversal Optimization
+
 Path prioritization uses a game-theoretic Attacker Return-on-Investment (ROI) metric representing the efficiency of the traversal path to the objective:
 
 $$
@@ -583,6 +584,7 @@ $$
 $$
 
 Where:
+
 - $\text{ExposureGain}$ represents the cumulative blast radius exposure score of the objective asset.
 - $\text{TotalEconomicCost}$ is the accumulated operational complexity / cost of exploit execution across the path sequence (e.g., $+0.5$ per finding exploit, $+0.1$ per service traversal).
 - $\text{TotalDetectionRisk}$ is the accumulated visibility signature of the attacker on sensors / EDR (e.g., $+0.4$ EDR alert visibility for exploits, $+0.05$ for quiet traversal).
@@ -626,6 +628,7 @@ Where:
 Confidence propagates through modern infrastructure topologies (which contain cycle loop cliques and contradictory priors) using a multi-round **Bayesian Belief Propagation (BBP)** loop. Every direct evidence update acts as a local prior, propagates laterally through trust, exploit, or containment edges, and updates adjacent beliefs.
 
 ### Multi-Round Loopy Belief Propagation & Cyclic Damping
+
 In cyclic topologies, standard belief updates generate infinite feedback runaway. Lattice9 stabilizes sweeps by applying a static damping factor ($\alpha = 0.75$) to subsequent belief iterations:
 
 $$
@@ -633,6 +636,7 @@ $$
 $$
 
 ### Dynamic Oscillation Shield
+
 If BBP sweeps detect fluctuating or increasing delta changes across iterations (indicating cyclic loopy oscillation), the **Dynamic Oscillation Shield** is automatically activated, decaying $\alpha$ by a factor of $0.70$ per step:
 
 $$
@@ -644,6 +648,7 @@ This guarantees mathematical convergence and shields the reasoning engine from l
 For large environments exceeding a scale boundary (500 nodes), running full BBP sweeps across disconnected assets causes database bottlenecks. The engine dynamically partitions the graph, structurally restricting the BBP propagation to a **4-hop neighborhood boundary** centered around active Findings, Credentials, or Vulnerabilities. This shields PG and Neo4j from disconnected noise.
 
 ### Temporal Confidence Decay
+
 Over time, the confidence in a finding or compromise state decays if it is not actively re-observed. Lattice9 models this temporal discount using an exponential decay function:
 
 $$
@@ -651,6 +656,7 @@ P(H)_t = P(H)_0 \cdot e^{-\lambda \cdot t}
 $$
 
 Where:
+
 - $P(H)_0$ is the base prior confidence computed from severity (e.g., Critical = 0.90, High = 0.70).
 - $t$ is the elapsed duration in days since the finding was last observed.
 - $\lambda$ is the decay constant derived from a configured **30-day half-life**:
@@ -662,6 +668,7 @@ $$
 This temporal discount ensures that ancient, unvalidated vulnerability claims gracefully fade out of the active attack path priority queues.
 
 ### Bayesian Fusion & Log-Odds
+
 For independent evidence:
 
 $$
@@ -740,16 +747,17 @@ $$
 Evidence is append-only. Corrections are represented by new evidence or contradiction records.
 
 ### Evidence Provenance & Pedigree Recursion
+
 To prevent "topology cosplay" where findings are visually claimed but unproven, Lattice9 includes an **Evidence Provenance Pedigree Recursion** model. The engine recursively traverses the direct and ancestral lineage back to raw, content-addressed tool outputs (`SHA256` fingerprints):
 
 1. **Pedigree Genealogy Graph Tracing**: Recursively builds an immutable pedigree genealogy tracking the ancestral tree of supporting and contradicting evidence signals ($fe.role \in \{ \text{'supporting'}, \text{'contradicting'} \}$).
-2. **Confidence Delta Propagation**: Propagates the structural confidence delta ($\Delta c$) of all associated evidence ancestors:
+1. **Confidence Delta Propagation**: Propagates the structural confidence delta ($\Delta c$) of all associated evidence ancestors:
 
 $$
 \text{NetConfidence}(F) = \sum_{E_i \in \text{Supporting}} \Delta c(E_i) - \sum_{E_j \in \text{Contradicting}} \Delta c(E_j)
 $$
 
-3. **Depth-Bounded Compilation**: Anchors belief updates with an ancestry depth limit ($D \le 5$) to prevent infinite cycles in complex multi-source correlation.
+1. **Depth-Bounded Compilation**: Anchors belief updates with an ancestry depth limit ($D \le 5$) to prevent infinite cycles in complex multi-source correlation.
 
 This allows security analysts to perform instantaneous click-to-pedigree verification of any composite finding in the operating system.
 
@@ -776,12 +784,15 @@ And:
 - $E_{\text{added}}, E_{\text{removed}}, E_{\text{modified}}$ represent the counts of relationship edges added, removed, or experiencing weight changes (>0.05).
 
 #### Structural Mutation Types
+
 The drift mutation engine classifies topological shifts into the following operational mutation categories:
+
 1. **Trust Mutations (`trust_mutation`)**: Triggered when new trust relationships (`TRUSTS` edges) appear in the graph, representing potential lateral movement extensions (Drift weight = 0.5).
-2. **Credential Spreading (`credential_spread`)**: Triggered when a credential newly authenticates to a target service/host (`AUTHENTICATES_TO` edge), widening compromised surfaces (Drift weight = 0.4).
-3. **Blast Radius Expansion (`blast_radius_expansion`)**: Triggered when a new privilege escalation transition (`PRIVILEGE_ESCALATION` edge) appears, expanding downstream exposure (Drift weight = 0.6).
-4. **Confidence Shifts (`confidence_shift`)**: Triggered by significant belief delta changes, representing newly derived evidence or contradictory signals.
-5. **New Findings (`new_finding`)**: Triggered when a new vulnerability or exposure finding node is merged.
+1. **Credential Spreading (`credential_spread`)**: Triggered when a credential newly authenticates to a target service/host (`AUTHENTICATES_TO` edge), widening compromised surfaces (Drift weight = 0.4).
+1. **Blast Radius Expansion (`blast_radius_expansion`)**: Triggered when a new privilege escalation transition (`PRIVILEGE_ESCALATION` edge) appears, expanding downstream exposure (Drift weight = 0.6).
+1. **Confidence Shifts (`confidence_shift`)**: Triggered by significant belief delta changes, representing newly derived evidence or contradictory signals.
+1. **New Findings (`new_finding`)**: Triggered when a new vulnerability or exposure finding node is merged.
+
 
 ### Drift Types
 
@@ -1421,6 +1432,7 @@ High-centrality services are not automatically exploitable, but weaknesses on th
 Lattice9 models threat progression across structural environments using iterative Bayesian loopy belief propagation. Local findings/evidence act as evidence priors $P(H)$ and propagate laterally over trust, exploit, or containment relations.
 
 ### Noisy-OR Lateral Compromise Model
+
 The lateral propagation probability of a target node $X$ given multiple active compromise vectors $E_1, E_2, \dots, E_k$ is modeled as a Noisy-OR system to account for independent pathways of compromise:
 
 $$
@@ -1428,6 +1440,7 @@ P(X \text{ compromised} \mid E_1, \dots, E_k) = 1 - \prod_{i=1}^{k} (1 - P(E_i \
 $$
 
 ### Iterative Damping & Feedback Stabilization
+
 To prevent mathematical feedback blowouts in cyclic graphs, updates are iteratively smoothed using a dynamic damping factor ($\alpha = 0.75$):
 
 $$
@@ -1435,6 +1448,7 @@ $$
 $$
 
 ### Mathematical Bounds & Convergence
+
 To prevent division-by-zero, floating-point overflows, or mathematical stagnation during sweeps, beliefs are strictly bounded within a mathematical ceiling and floor:
 
 $$
@@ -1780,4 +1794,3 @@ inside real infrastructure.
 If a claim cannot be traced, it is not intelligence.  
 If a path cannot be explained, it is not operational.  
 If a system cannot remember, it cannot reason.
-
