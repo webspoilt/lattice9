@@ -24,77 +24,233 @@ async def shortest_attack_paths(driver, engagement_id: str,
                                  max_paths: int = 15,
                                  min_confidence: float = 0.2) -> List[Dict]:
     """
-    Advanced path analysis using weighted Dijkstra logic.
-    Calculates the 'Path of Least Resistance' by minimizing cumulative cost.
-    
-    Cost(edge) = -log(confidence * weight)
-    A high-confidence, high-weight edge has near-zero cost.
-    A low-confidence edge has near-infinite cost.
+    Advanced path analysis using true weighted Dijkstra search.
+    Calculates the 'Path of Least Resistance' by minimizing cumulative cost:
+    Cost(edge) = -log(confidence * weight * constraint_factor).
     """
     if entry_types is None:
         entry_types = ["service", "host", "endpoint"]
     if terminal_types is None:
         terminal_types = ["finding", "vulnerability", "objective"]
 
+    import heapq
+    import math
+
     async with driver.session(database="neo4j") as session:
-        # Use GDS Dijkstra if available, otherwise use weighted Cypher
-        # Here we implement the weighted Cypher version for maximum compatibility
-        result = await session.run(
+        # A. Fetch dynamic exploit feasibility constraints for all findings in the engagement
+        # This makes our Dijkstra path finder dynamically aware of exploit preconditions!
+        feasibility_result = await session.run(
             """
-            MATCH (entry:L9 {engagement_id: $engagement_id})
-            WHERE entry.entity_type IN $entry_types
+            MATCH (finding:L9 {engagement_id: $engagement_id})
+            WHERE finding.entity_type = 'finding'
             
-            MATCH (terminal:L9 {engagement_id: $engagement_id})
-            WHERE terminal.entity_type IN $terminal_types
+            // Find bound Service / Host
+            OPTIONAL MATCH (finding)<-[:HAS_FINDING]-(svc:L9 {entity_type: 'service'})
+            OPTIONAL MATCH (finding)<-[:HAS_FINDING]-(host:L9 {entity_type: 'host'})
+            OPTIONAL MATCH (svc)<-[:HOSTS]-(svc_host:L9 {entity_type: 'host'})
             
-            MATCH path = shortestPath((entry)-[:HAS_FINDING|HOSTS|RESOLVES_TO|DEPENDS_ON|NETWORK_REACH|PRIVILEGE_ESCALATION|EXPLOITS|AUTHENTICATES_TO*1..$max_depth]->(terminal))
+            // Get credentials authenticating to this target
+            OPTIONAL MATCH (cred:L9 {entity_type: 'credential'})-[:AUTHENTICATES_TO]->(svc)
+            OPTIONAL MATCH (cred_host:L9 {entity_type: 'credential'})-[:AUTHENTICATES_TO]->(host)
             
-            WITH path, entry, terminal,
-                 [n IN nodes(path) | coalesce(toFloat(n.confidence), 0.5)] AS node_confs,
-                 [r IN relationships(path) | coalesce(toFloat(r.weight), 0.5)] AS rel_weights
+            // Check network reachability to the service/host
+            OPTIONAL MATCH (ingress:L9)-[:NETWORK_REACH]->(svc)
+            OPTIONAL MATCH (ingress_host:L9)-[:NETWORK_REACH]->(host)
             
-            UNWIND node_confs AS c
-            WITH path, entry, terminal, node_confs, rel_weights, 
-                 reduce(acc = 1.0, val IN node_confs | acc * val) AS total_conf,
-                 reduce(acc = 0.0, val IN rel_weights | acc + (1.0 - val)) AS total_resistance
-            
-            RETURN
-                [n IN nodes(path) | n.display_name] AS node_names,
-                [n IN nodes(path) | n.entity_type] AS node_types,
-                [n IN nodes(path) | n.id] AS node_ids,
-                node_confs,
-                [r IN relationships(path) | type(r)] AS rel_types,
-                rel_weights,
-                length(path) AS depth,
-                total_conf AS path_confidence,
-                (total_conf / (1.0 + total_resistance)) AS composite_score
-            WHERE total_conf >= $min_confidence
-            ORDER BY composite_score DESC, depth ASC
-            LIMIT $max_paths
+            RETURN 
+                finding.id AS id,
+                finding.display_name AS title,
+                coalesce(finding.description, '') AS description,
+                coalesce(toFloat(finding.confidence), 0.5) AS confidence,
+                coalesce(svc.port, 0) AS svc_port,
+                coalesce(host.os, svc_host.os, '') AS os_platform,
+                collect(distinct coalesce(cred.confidence, cred_host.confidence, 0.0)) AS cred_confs,
+                (ingress IS NOT NULL OR ingress_host IS NOT NULL) AS has_network_reach
             """,
-            engagement_id=engagement_id,
-            entry_types=entry_types,
-            terminal_types=terminal_types,
-            max_depth=max_depth,
-            max_paths=max_paths,
-            min_confidence=min_confidence,
+            engagement_id=engagement_id
         )
 
-        paths = []
-        async for record in result:
-            paths.append({
-                "node_names": record["node_names"],
-                "node_types": record["node_types"],
-                "node_ids": record["node_ids"],
-                "node_confidences": [round(c, 4) for c in record["node_confs"]],
-                "rel_types": record["rel_types"],
-                "rel_weights": [round(w, 4) for w in record["rel_weights"]],
-                "depth": record["depth"],
-                "path_confidence": round(record["path_confidence"], 4),
-                "composite_score": round(record["composite_score"], 4),
-            })
+        from reasoning.exploit_chains import match_exploit_blueprint
+        finding_feasibility = {}
+        async for rec in feasibility_result:
+            fid = rec["id"]
+            title = rec["title"]
+            desc = rec["description"]
+            conf = rec["confidence"]
+            svc_port = rec["svc_port"]
+            os_platform = rec["os_platform"]
+            cred_confs = rec["cred_confs"]
+            has_network = rec["has_network_reach"]
 
-        return paths
+            bp = match_exploit_blueprint(title, desc)
+            score = conf # Base priority is finding confidence
+
+            if bp:
+                # 1. Target OS constraint check
+                if bp["target_os"] and os_platform:
+                    os_lower = os_platform.lower()
+                    if not any(o in os_lower for o in bp["target_os"]):
+                        score *= 0.05  # Severe penalty (95% cost increase) for mismatched OS
+                
+                # 2. Ingress port constraint check
+                if bp["ingress_ports"] and svc_port:
+                    if svc_port not in bp["ingress_ports"]:
+                        score *= 0.10  # Heavy penalty (90% cost increase) for mismatched port
+                
+                # 3. Credentials check
+                if bp["credential_level"] != "none":
+                    has_matching_cred = any(cc > 0.3 for cc in cred_confs)
+                    if not has_matching_cred:
+                        score *= 0.15 # Heavy penalty for lack of authenticating credentials
+
+                # 4. Outbound Egress Proximity proximity check
+                if bp["egress_required"] and not has_network:
+                    score *= 0.40 # Moderate penalty for lack of network adjacency
+            
+            finding_feasibility[fid] = max(0.01, min(0.99, score))
+
+        # 1. Fetch all nodes in the engagement
+        node_result = await session.run(
+            """
+            MATCH (n:L9 {engagement_id: $engagement_id})
+            RETURN n.id AS id, n.display_name AS display_name, n.entity_type AS entity_type, coalesce(toFloat(n.confidence), 0.5) AS confidence
+            """,
+            engagement_id=engagement_id
+        )
+        
+        node_map = {}
+        entry_nodes = set()
+        terminal_nodes = set()
+
+        async for record in node_result:
+            nid = record["id"]
+            node_map[nid] = {
+                "display_name": record["display_name"],
+                "entity_type": record["entity_type"],
+                "confidence": max(0.01, min(0.999, record["confidence"]))
+            }
+            if record["entity_type"] in entry_types:
+                entry_nodes.add(nid)
+            if record["entity_type"] in terminal_types:
+                terminal_nodes.add(nid)
+
+        if not node_map:
+            return []
+
+        # 2. Fetch all directed edges in the engagement
+        edge_result = await session.run(
+            """
+            MATCH (src:L9 {engagement_id: $engagement_id})-[r]->(dst:L9 {engagement_id: $engagement_id})
+            RETURN src.id AS src_id, dst.id AS dst_id, type(r) AS rel_type, coalesce(toFloat(r.weight), 0.5) AS weight
+            """,
+            engagement_id=engagement_id
+        )
+
+        adj = {nid: [] for nid in node_map}
+        edges_map = {} # (src, dst) -> (rel_type, weight)
+
+        async for record in edge_result:
+            src_id = record["src_id"]
+            dst_id = record["dst_id"]
+            if src_id in node_map and dst_id in node_map:
+                adj[src_id].append((dst_id, record["rel_type"], record["weight"]))
+                edges_map[(src_id, dst_id)] = (record["rel_type"], record["weight"])
+
+        # 3. Multi-source Dijkstra to find paths from entry_nodes to terminal_nodes
+        # heap element: (cumulative_cost, path_node_ids)
+        heap = []
+        for start_id in entry_nodes:
+            heapq.heappush(heap, (0.0, [start_id]))
+
+        found_paths = []
+        visited = set()
+
+        # We want to yield distinct paths (different node sequences) to terminals
+        while heap and len(found_paths) < max_paths:
+            cost, path = heapq.heappop(heap)
+            curr = path[-1]
+
+            if len(path) > max_depth + 1:
+                continue
+
+            path_tuple = tuple(path)
+            if path_tuple in visited:
+                continue
+            visited.add(path_tuple)
+
+            # Check if this is a path to a terminal node
+            if curr in terminal_nodes and len(path) > 1:
+                # Calculate path confidence and total resistance
+                node_confs = [node_map[nid]["confidence"] for nid in path]
+                
+                # Fetch edge weights
+                weights = []
+                rel_types = []
+                for u, v in zip(path, path[1:]):
+                    rel_type, weight = edges_map[(u, v)]
+                    weights.append(weight)
+                    rel_types.append(rel_type)
+
+                # Path confidence is product of node confidences
+                path_conf = 1.0
+                for c in node_confs:
+                    path_conf *= c
+
+                # Total resistance is sum of (1 - weight)
+                total_resistance = sum(1.0 - w for w in weights)
+                
+                # Composite score
+                composite_score = path_conf / (1.0 + total_resistance)
+
+                if path_conf >= min_confidence:
+                    found_paths.append({
+                        "node_names": [node_map[nid]["display_name"] for nid in path],
+                        "node_types": [node_map[nid]["entity_type"] for nid in path],
+                        "node_ids": path,
+                        "node_confidences": [round(c, 4) for c in node_confs],
+                        "rel_types": rel_types,
+                        "rel_weights": [round(w, 4) for w in weights],
+                        "depth": len(path) - 1,
+                        "path_confidence": round(path_conf, 4),
+                        "composite_score": round(composite_score, 4),
+                    })
+                continue
+
+            # Traverse neighbors
+            for neighbor_id, rel_type, weight in adj.get(curr, []):
+                if neighbor_id in path:
+                    continue  # Simple loop avoidance
+
+                # Dynamic Feasibility & Empirically Calibrated Cost Calculation:
+                # P(transition) = P(node state) * relationship_weight * exploit_feasibility / rel_penalty
+                # Cost = -ln(P(transition))
+                curr_conf = node_map[curr]["confidence"]
+                
+                # Default relation penalty if target node is not a finding
+                rel_penalty = 1.0
+                if rel_type == "PRIVILEGE_ESCALATION":
+                    rel_penalty = 1.5
+                elif rel_type == "AUTHENTICATES_TO":
+                    rel_penalty = 1.05
+                elif rel_type == "NETWORK_REACH":
+                    rel_penalty = 1.2
+                
+                # Check dynamic exploit preconditions if target is a finding
+                target_feasibility = finding_feasibility.get(neighbor_id, 1.0)
+                
+                p_trans = curr_conf * weight * target_feasibility / rel_penalty
+                
+                # Cost calibration bounds
+                p_trans = max(0.0001, min(0.9999, p_trans))
+                edge_cost = -math.log(p_trans)
+
+                new_cost = cost + edge_cost
+                new_path = path + [neighbor_id]
+                heapq.heappush(heap, (new_cost, new_path))
+
+        # Sort the final found paths by composite score
+        found_paths.sort(key=lambda x: x["composite_score"], reverse=True)
+        return found_paths[:max_paths]
 
 
 async def bfs_traversal(driver, engagement_id: str,
