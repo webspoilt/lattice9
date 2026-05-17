@@ -357,14 +357,30 @@ server-py/
 
 | Endpoint | Function |
 |---|---|
-| `POST /analyze/{id}` | Full intelligence pipeline |
-| `POST /events/{id}` | Event-driven re-analysis |
-| `GET /algorithms/{id}` | Graph algorithm results (centrality, influence, blast, privilege, exposure) |
-| `GET /algorithms/{id}/paths` | Attack path inference |
-| `GET /algorithms/{id}/exploit-chains` | Exploit chain synthesis |
-| `GET /snapshots/{id}` | Temporal snapshot history |
-| `GET /evidence/{id}/lineage` | Evidence provenance |
-| `GET /health` | System health |
+| `POST /analyze/{engagement_id}` | Runs full intelligence pipeline analysis (Neo4j mergers, BBP confidence propagation, Dijkstra routing, Postgres prioritization) |
+| `POST /events/{engagement_id}` | Triggers event-driven re-analysis for specific graph operations (e.g. `evidence_added`, `finding_updated` confidence recalculations) |
+| `GET /snapshots/{engagement_id}` | Retrieves historical timeline of captured point-in-time graph snapshots |
+| `GET /snapshots/{engagement_id}/drift` | Computes topological graph drift and structural mutations between two snapshots |
+| `GET /snapshots/{engagement_id}/replay/{path_id}` | Performs a step-by-step playback simulation of an attack path with dynamic precondition evaluation |
+| `GET /algorithms/{engagement_id}` | Runs and returns graph algorithm metrics (Centrality, Influence Propagation, Blast Radius, Privilege Chains, Exposure Diffusion) |
+| `GET /algorithms/{engagement_id}/paths` | Computes economics-aware Dijkstra shortest attack pathways to target assets |
+| `GET /algorithms/{engagement_id}/exploit-chains` | Synthesizes exploit blueprints matching the target environment constraints |
+| `GET /evidence/{engagement_id}/lineage` | Compiles full evidence provenance graph showing how all evidence items connect to findings |
+| `GET /evidence/{evidence_id}/provenance` | Retrieves recursive provenance chain tracing evidence back to tool outputs and target findings |
+| `GET /evidence/{finding_id}/pedigree` | Computes derived pedigree genealogy, recursively tracing ancestral supporting/contradicting evidence networks |
+| `GET /evolution/{engagement_id}` | Computes infrastructure temporal metrics including surface entropy, trust drift, credential spread, and topology instability |
+| `POST /counterfactual/{engagement_id}/credential-compromise` | What-if scenario: simulate lateral compromise cascade propagation from a compromised credential |
+| `POST /counterfactual/{engagement_id}/edge-removal` | What-if scenario: simulate removal of a relationship edge (trust, authentication, network) |
+| `POST /counterfactual/{engagement_id}/defense-addition` | What-if scenario: simulate adding a defense control (MFA, segment, patching) and compute mitigation effectiveness |
+| `POST /counterfactual/{engagement_id}/comprehensive` | Performs a full comprehensive counterfactual defense sweep across all potential mitigations |
+| `GET /entropy/{engagement_id}` | Computes Attack Path Entropy Collapse (path entropy, privilege inevitability, graph ambiguity, collapse recommendations) |
+| `POST /causal/{engagement_id}/path-analysis` | Performs structural causal inference and Pearlian interventions on an attack path |
+| `GET /causal/{engagement_id}/root-cause` | Conducts cross-path causal root-cause analysis to pinpoint critical choke-points |
+| `POST /causal/{engagement_id}/what-if` | Simulates localized interventions (remove, harden, isolate) on specific nodes |
+| `GET /blast/{engagement_id}/{node_id}` | Computes topological blast radius v2 (exploitability, reach, downstream dependencies) |
+| `GET /blast/{engagement_id}/all` | Ranks all environment nodes by total blast radius risk |
+| `GET /blast/{engagement_id}/credential-cascade` | Analyzes cascading network credential exposure risks |
+| `GET /health` | Checks status of engine components (FastAPI, Neo4j, Redis, PostgreSQL) |
 
 Lattice9 models infrastructure as a directed, typed, weighted multigraph:
 
@@ -538,26 +554,40 @@ Where:
 
 For a path $P$, Lattice9 performs pathfinding using a custom **Constraint-Aware Weighted Dijkstra Shortest Path Engine**. Instead of simple static relationship evaluations, traversal weights dynamically compute transition probabilities on the fly during variable-length queue expansion.
 
-For an edge $e$, the traversal cost is calculated as the negative log-likelihood of successful attack transition:
+For an edge $e = (u, v)$, the traversal cost is calculated as the negative log-likelihood of successful attack transition combined with the economic cost and detection risk associated with the specific operational step:
 
 $$
-Cost(e) = -\ln(P(\text{transition}))
+Cost(u, v) = -\ln(P(u \to v)) + \text{EconomicCost}(u \to v) + \text{DetectionRisk}(u \to v)
 $$
 
-Where the transition probability is dynamically constrained by environmental conditions:
+Where the transition probability $P(u \to v)$ is dynamically constrained by environmental conditions:
 
 $$
-P(\text{transition}) = \frac{P(\text{node state}) \times \text{relationship\_weight} \times \text{exploit\_feasibility}}{\text{relationship\_penalty}}
+P(u \to v) = \frac{P(\text{node state}) \times \text{relationship\_weight} \times \text{exploit\_feasibility}}{\text{relationship\_penalty}}
 $$
 
 #### Exploit Precondition Auditing
 During the Dijkstra priority-queue expansion, the engine evaluates step-by-step target preconditions:
-1. **Target Operating System Platform**: Evaluates the target host platform compatibility (e.g., executing a Windows-only EternalBlue exploit against a Linux OS targets probability to $0.05$).
-2. **Exposure Ingress Port Exposure**: Validates that target service ports are actively exposed and listening (mismatched ports penalize probability to $0.10$).
+1. **Target Operating System Platform**: Evaluates the target host platform compatibility (e.g., executing a Windows-only EternalBlue exploit against a Linux OS targets probability to $0.05$, or $0.01$ dynamic floor).
+2. **Exposure Ingress Port Exposure**: Validates that target service ports are actively exposed and listening (mismatched ports penalize probability to $0.10$, or $0.01$ dynamic floor).
 3. **Active Authentication & Credentials**: Checks the availability of authenticating credentials. If missing, probability is penalized to $0.15$.
 4. **Outbound Egress & Reachability**: Verifies host reachability to prevent routing through air-gapped zones.
 
 Mismatched preconditions generate massive cumulative costs (e.g., $+3.0$ to $+4.6$), forcing Dijkstra to route cleanly around unrealistic vectors in real-time, preferring an operationally sound path.
+
+#### Attacker ROI Traversal Optimization
+Path prioritization uses a game-theoretic Attacker Return-on-Investment (ROI) metric representing the efficiency of the traversal path to the objective:
+
+$$
+\text{ROI} = \frac{\text{ExposureGain}}{\text{TotalEconomicCost} \times (1.0 + \text{TotalDetectionRisk})}
+$$
+
+Where:
+- $\text{ExposureGain}$ represents the cumulative blast radius exposure score of the objective asset.
+- $\text{TotalEconomicCost}$ is the accumulated operational complexity / cost of exploit execution across the path sequence (e.g., $+0.5$ per finding exploit, $+0.1$ per service traversal).
+- $\text{TotalDetectionRisk}$ is the accumulated visibility signature of the attacker on sensors / EDR (e.g., $+0.4$ EDR alert visibility for exploits, $+0.05$ for quiet traversal).
+
+This economic weighting steers the graph reasoning system to prioritize pathways that minimize analyst cognitive overhead while maximizing simulated exploit fidelity.
 
 ---
 
@@ -611,8 +641,25 @@ $$
 
 This guarantees mathematical convergence and shields the reasoning engine from loopy confidence blowout under dense cyclic loops.
 
-### Relevance Subgraph Partitioning
 For large environments exceeding a scale boundary (500 nodes), running full BBP sweeps across disconnected assets causes database bottlenecks. The engine dynamically partitions the graph, structurally restricting the BBP propagation to a **4-hop neighborhood boundary** centered around active Findings, Credentials, or Vulnerabilities. This shields PG and Neo4j from disconnected noise.
+
+### Temporal Confidence Decay
+Over time, the confidence in a finding or compromise state decays if it is not actively re-observed. Lattice9 models this temporal discount using an exponential decay function:
+
+$$
+P(H)_t = P(H)_0 \cdot e^{-\lambda \cdot t}
+$$
+
+Where:
+- $P(H)_0$ is the base prior confidence computed from severity (e.g., Critical = 0.90, High = 0.70).
+- $t$ is the elapsed duration in days since the finding was last observed.
+- $\lambda$ is the decay constant derived from a configured **30-day half-life**:
+
+$$
+\lambda = \frac{\ln(2)}{30} \approx 0.0231
+$$
+
+This temporal discount ensures that ancient, unvalidated vulnerability claims gracefully fade out of the active attack path priority queues.
 
 ### Bayesian Fusion & Log-Odds
 For independent evidence:
@@ -692,23 +739,49 @@ $$
 
 Evidence is append-only. Corrections are represented by new evidence or contradiction records.
 
+### Evidence Provenance & Pedigree Recursion
+To prevent "topology cosplay" where findings are visually claimed but unproven, Lattice9 includes an **Evidence Provenance Pedigree Recursion** model. The engine recursively traverses the direct and ancestral lineage back to raw, content-addressed tool outputs (`SHA256` fingerprints):
+
+1. **Pedigree Genealogy Graph Tracing**: Recursively builds an immutable pedigree genealogy tracking the ancestral tree of supporting and contradicting evidence signals ($fe.role \in \{ \text{'supporting'}, \text{'contradicting'} \}$).
+2. **Confidence Delta Propagation**: Propagates the structural confidence delta ($\Delta c$) of all associated evidence ancestors:
+
+$$
+\text{NetConfidence}(F) = \sum_{E_i \in \text{Supporting}} \Delta c(E_i) - \sum_{E_j \in \text{Contradicting}} \Delta c(E_j)
+$$
+
+3. **Depth-Bounded Compilation**: Anchors belief updates with an ancestry depth limit ($D \le 5$) to prevent infinite cycles in complex multi-source correlation.
+
+This allows security analysts to perform instantaneous click-to-pedigree verification of any composite finding in the operating system.
+
 ---
 
 ## 17. Drift Detection Engine
 
 Drift is the observable change in attack surface state between snapshots.
 
+Lattice9 quantifies topological drift as a multi-dimensional drift score representing the weighted sum of node, relationship, and confidence variations between two captured snapshots $G_a$ and $G_b$:
+
 $$
-Drift(G_a, G_b) = \phi(N_{new}, E_{new}, W_{\Delta}, C_{\Delta}, X_{\Delta})
+\text{DriftScore}(G_a, G_b) = \min\left(1.0, \sum_i w_i \cdot \Delta_i\right)
 $$
 
-Where:
+Where the individual mutation factors and weights are defined as:
 
-- \(N_{new}\) is node emergence.
-- \(E_{new}\) is relationship emergence.
-- \(W_{\Delta}\) is edge weight change.
-- \(C_{\Delta}\) is confidence change.
-- \(X_{\Delta}\) is exploitability change.
+$$
+\sum_i w_i \cdot \Delta_i = 0.3 \cdot N_{\text{added}} + 0.2 \cdot N_{\text{removed}} + 0.2 \cdot N_{\text{modified}} + 0.4 \cdot E_{\text{added}} + 0.2 \cdot E_{\text{removed}} + 0.2 \cdot E_{\text{modified}}
+$$
+
+And:
+- $N_{\text{added}}, N_{\text{removed}}, N_{\text{modified}}$ represent the counts of entities added, removed, or experiencing confidence shifts (>0.05).
+- $E_{\text{added}}, E_{\text{removed}}, E_{\text{modified}}$ represent the counts of relationship edges added, removed, or experiencing weight changes (>0.05).
+
+#### Structural Mutation Types
+The drift mutation engine classifies topological shifts into the following operational mutation categories:
+1. **Trust Mutations (`trust_mutation`)**: Triggered when new trust relationships (`TRUSTS` edges) appear in the graph, representing potential lateral movement extensions (Drift weight = 0.5).
+2. **Credential Spreading (`credential_spread`)**: Triggered when a credential newly authenticates to a target service/host (`AUTHENTICATES_TO` edge), widening compromised surfaces (Drift weight = 0.4).
+3. **Blast Radius Expansion (`blast_radius_expansion`)**: Triggered when a new privilege escalation transition (`PRIVILEGE_ESCALATION` edge) appears, expanding downstream exposure (Drift weight = 0.6).
+4. **Confidence Shifts (`confidence_shift`)**: Triggered by significant belief delta changes, representing newly derived evidence or contradictory signals.
+5. **New Findings (`new_finding`)**: Triggered when a new vulnerability or exposure finding node is merged.
 
 ### Drift Types
 
