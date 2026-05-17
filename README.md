@@ -534,23 +534,30 @@ Where:
 [Objective: customer data plane]
 ```
 
-### Weighted Path Cost
+### Weighted Path Cost & Constraint-Aware Dijkstra
 
-For a path \(P\):
+For a path $P$, Lattice9 performs pathfinding using a custom **Constraint-Aware Weighted Dijkstra Shortest Path Engine**. Instead of simple static relationship evaluations, traversal weights dynamically compute transition probabilities on the fly during variable-length queue expansion.
+
+For an edge $e$, the traversal cost is calculated as the negative log-likelihood of successful attack transition:
 
 $$
-Cost(P) = \sum_{e \in P} \left[-\log(c(e)) + \lambda_a A(e) + \lambda_v V(e) + \lambda_s S(e) - \lambda_i I(e)\right]
+Cost(e) = -\ln(P(\text{transition}))
 $$
 
-Where:
+Where the transition probability is dynamically constrained by environmental conditions:
 
-- \(c(e)\) is confidence.
-- \(A(e)\) is authentication or prerequisite penalty.
-- \(V(e)\) is validation uncertainty.
-- \(S(e)\) is scope ambiguity penalty.
-- \(I(e)\) is impact gain.
+$$
+P(\text{transition}) = \frac{P(\text{node state}) \times \text{relationship\_weight} \times \text{exploit\_feasibility}}{\text{relationship\_penalty}}
+$$
 
-The planner can use Dijkstra or A* over this cost function for initial path discovery.
+#### Exploit Precondition Auditing
+During the Dijkstra priority-queue expansion, the engine evaluates step-by-step target preconditions:
+1. **Target Operating System Platform**: Evaluates the target host platform compatibility (e.g., executing a Windows-only EternalBlue exploit against a Linux OS targets probability to $0.05$).
+2. **Exposure Ingress Port Exposure**: Validates that target service ports are actively exposed and listening (mismatched ports penalize probability to $0.10$).
+3. **Active Authentication & Credentials**: Checks the availability of authenticating credentials. If missing, probability is penalized to $0.15$.
+4. **Outbound Egress & Reachability**: Verifies host reachability to prevent routing through air-gapped zones.
+
+Mismatched preconditions generate massive cumulative costs (e.g., $+3.0$ to $+4.6$), forcing Dijkstra to route cleanly around unrealistic vectors in real-time, preferring an operationally sound path.
 
 ---
 
@@ -586,31 +593,35 @@ Where:
 
 ## 14. Confidence Propagation
 
-Confidence propagates through graph relationships with decay and contradiction penalties.
+Confidence propagates through modern infrastructure topologies (which contain cycle loop cliques and contradictory priors) using a multi-round **Bayesian Belief Propagation (BBP)** loop. Every direct evidence update acts as a local prior, propagates laterally through trust, exploit, or containment edges, and updates adjacent beliefs.
 
+### Multi-Round Loopy Belief Propagation & Cyclic Damping
+In cyclic topologies, standard belief updates generate infinite feedback runaway. Lattice9 stabilizes sweeps by applying a static damping factor ($\alpha = 0.75$) to subsequent belief iterations:
+
+$$
+\text{Bel}_{t+1}(X) = \alpha \cdot \text{Bel}_{\text{new}}(X) + (1 - \alpha) \cdot \text{Bel}_t(X)
+$$
+
+### Dynamic Oscillation Shield
+If BBP sweeps detect fluctuating or increasing delta changes across iterations (indicating cyclic loopy oscillation), the **Dynamic Oscillation Shield** is automatically activated, decaying $\alpha$ by a factor of $0.70$ per step:
+
+$$
+\alpha \leftarrow \alpha \cdot 0.70
+$$
+
+This guarantees mathematical convergence and shields the reasoning engine from loopy confidence blowout under dense cyclic loops.
+
+### Relevance Subgraph Partitioning
+For large environments exceeding a scale boundary (500 nodes), running full BBP sweeps across disconnected assets causes database bottlenecks. The engine dynamically partitions the graph, structurally restricting the BBP propagation to a **4-hop neighborhood boundary** centered around active Findings, Credentials, or Vulnerabilities. This shields PG and Neo4j from disconnected noise.
+
+### Bayesian Fusion & Log-Odds
 For independent evidence:
 
 $$
 P(H \mid E_1, ..., E_n) = 1 - \prod_{i=1}^{n}(1 - P(H \mid E_i))
 $$
 
-For correlated evidence, Lattice9 uses source-family downweighting:
-
-$$
-c'(E_i) = c(E_i) \cdot \rho_{family}^{m_i}
-$$
-
-Where \(\rho_{family} \in [0,1]\) and \(m_i\) is the number of prior observations from the same source family.
-
-### Bayesian Update
-
-$$
-P(H \mid E) = \frac{P(E \mid H)P(H)}{P(E)}
-$$
-
-### Log-Odds Representation
-
-The engine uses log-odds internally to reduce overconfidence:
+The engine uses log-odds internally to prevent floating-point underflow and clamp confidence boundaries safely within $[0.01, 0.999]$:
 
 $$
 logit(p) = \ln\left(\frac{p}{1-p}\right)
@@ -1334,35 +1345,34 @@ High-centrality services are not automatically exploitable, but weaknesses on th
 
 ## 38. Bayesian Confidence Systems
 
-Lattice9 models a finding as a hypothesis \(H\) and evidence as observations \(E\).
+Lattice9 models threat progression across structural environments using iterative Bayesian loopy belief propagation. Local findings/evidence act as evidence priors $P(H)$ and propagate laterally over trust, exploit, or containment relations.
+
+### Noisy-OR Lateral Compromise Model
+The lateral propagation probability of a target node $X$ given multiple active compromise vectors $E_1, E_2, \dots, E_k$ is modeled as a Noisy-OR system to account for independent pathways of compromise:
 
 $$
-P(H|E) = \frac{P(E|H)P(H)}{P(E)}
+P(X \text{ compromised} \mid E_1, \dots, E_k) = 1 - \prod_{i=1}^{k} (1 - P(E_i \text{ propagates}))
 $$
 
-### Evidence Fusion Pseudocode
+### Iterative Damping & Feedback Stabilization
+To prevent mathematical feedback blowouts in cyclic graphs, updates are iteratively smoothed using a dynamic damping factor ($\alpha = 0.75$):
 
-```python
-def bayesian_update(prior, likelihood, evidence_probability):
-    numerator = likelihood * prior
-    denominator = evidence_probability
-    return clamp(numerator / denominator, 0.0, 1.0)
+$$
+\text{Bel}_{t+1}(X) = \alpha \cdot \text{Bel}_{\text{new}}(X) + (1 - \alpha) \cdot \text{Bel}_t(X)
+$$
 
-def fuse_evidence(prior, evidence):
-    logit_score = logit(prior)
-    seen_families = {}
+### Mathematical Bounds & Convergence
+To prevent division-by-zero, floating-point overflows, or mathematical stagnation during sweeps, beliefs are strictly bounded within a mathematical ceiling and floor:
 
-    for item in evidence:
-        independence = family_discount(item.family, seen_families)
-        delta = logit(item.confidence) * independence
-        if item.role == "supporting":
-            logit_score += delta
-        elif item.role == "contradicting":
-            logit_score -= delta
-        seen_families[item.family] = seen_families.get(item.family, 0) + 1
+$$
+\text{Bel}(X) \in [0.01, 0.999]
+$$
 
-    return sigmoid(logit_score)
-```
+Convergence is reached when the maximum delta change across all nodes drops below $\epsilon = 0.001$ or sweeps reach a maximum of 10 rounds:
+
+$$
+\max_{v \in V} |\text{Bel}_{t+1}(v) - \text{Bel}_t(v)| < \epsilon
+$$
 
 ---
 
