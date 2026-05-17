@@ -52,6 +52,26 @@ from evidence.lineage import (
     create_evidence_chain, get_evidence_provenance,
     get_finding_evidence_chain, get_engagement_evidence_lineage,
 )
+from graph.evolution import (
+    compute_infrastructure_evolution, compute_surface_entropy,
+    compute_trust_drift, compute_credential_spread,
+    compute_topology_instability,
+)
+from reasoning.counterfactual import (
+    simulate_credential_compromise, simulate_edge_removal,
+    simulate_defense_addition, simulate_comprehensive_scenario,
+)
+from reasoning.entropy import (
+    compute_path_entropy, compute_privilege_inevitability,
+    compute_graph_ambiguity, collapse_by_entropy_threshold,
+)
+from reasoning.causal import (
+    causal_path_analysis, root_cause_analysis, what_if_intervention,
+)
+from graph.blast import (
+    compute_blast_radius, compute_topological_blast_all,
+    compute_credential_cascade_risk,
+)
 
 
 class IntelligenceEngine:
@@ -518,6 +538,321 @@ async def get_evidence_pedigree(finding_id: str, x_lattice9_key: Optional[str] =
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         await pg_pool.close()
+
+
+# ==== Evolution Engine Endpoints ====
+
+@app.get("/evolution/{engagement_id}")
+async def get_evolution(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Temporal Graph Memory — infrastructure evolution, surface entropy, trust drift."""
+    verify_engine_key(x_lattice9_key)
+    pg_pool = await get_pg_pool()
+    try:
+        evolution = await compute_infrastructure_evolution(
+            engine.driver, pg_pool, engagement_id
+        )
+        surface_entropy = await compute_surface_entropy(
+            engine.driver, engagement_id
+        )
+        trust_drift = await compute_trust_drift(
+            engine.driver, pg_pool, engagement_id
+        )
+        cred_spread = await compute_credential_spread(
+            engine.driver, engagement_id
+        )
+        topo_instability = await compute_topology_instability(
+            engine.driver, pg_pool, engagement_id
+        )
+        return {
+            "infrastructure_evolution": evolution,
+            "surface_entropy": surface_entropy,
+            "trust_drift": trust_drift,
+            "credential_spread": cred_spread,
+            "topology_instability": topo_instability,
+        }
+    except Exception as e:
+        logger.error(f"Evolution analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
+
+
+# ==== Counterfactual Engine Endpoints ====
+
+@app.post("/counterfactual/{engagement_id}/credential-compromise")
+async def cf_credential_compromise(
+    engagement_id: str,
+    credential_id: str = Query(..., description="Credential node ID"),
+    compromised_since: str = Query(None, description="ISO timestamp of compromise"),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """What-if: simulate a credential being compromised."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    pg_pool = await get_pg_pool()
+    try:
+        result = await simulate_credential_compromise(
+            engine.driver, pg_pool, engagement_id, credential_id, compromised_since
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Counterfactual simulation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
+
+
+@app.post("/counterfactual/{engagement_id}/edge-removal")
+async def cf_edge_removal(
+    engagement_id: str,
+    source_id: str = Query(..., description="Source node ID of the edge"),
+    target_id: str = Query(..., description="Target node ID of the edge"),
+    rel_type: str = Query(..., description="Relationship type"),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """What-if: simulate removing a relationship edge."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    pg_pool = await get_pg_pool()
+    try:
+        result = await simulate_edge_removal(
+            engine.driver, pg_pool, engagement_id, source_id, target_id, rel_type
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Edge removal simulation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
+
+
+@app.post("/counterfactual/{engagement_id}/defense-addition")
+async def cf_defense_addition(
+    engagement_id: str,
+    node_id: str = Query(..., description="Node ID to apply defense to"),
+    defense_type: str = Query("mfa", description="Defense type: mfa, patch, segmentation, monitoring"),
+    effectiveness: float = Query(0.8, description="Defense effectiveness [0,1]"),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """What-if: simulate adding a defense control."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    pg_pool = await get_pg_pool()
+    try:
+        result = await simulate_defense_addition(
+            engine.driver, pg_pool, engagement_id, node_id, defense_type, effectiveness
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Defense simulation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
+
+
+@app.post("/counterfactual/{engagement_id}/comprehensive")
+async def cf_comprehensive(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Full counterfactual scenario sweep."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    pg_pool = await get_pg_pool()
+    try:
+        result = await simulate_comprehensive_scenario(
+            engine.driver, pg_pool, engagement_id
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Comprehensive simulation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
+
+
+# ==== Entropy Engine Endpoints ====
+
+@app.get("/entropy/{engagement_id}")
+async def get_entropy_analysis(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Attack Path Entropy Collapse — path entropy, privilege inevitability, graph ambiguity."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    pg_pool = await get_pg_pool()
+    try:
+        path_entropy = await compute_path_entropy(
+            engine.driver, pg_pool, engagement_id
+        )
+        privilege_inevitability = await compute_privilege_inevitability(
+            engine.driver, engagement_id
+        )
+        ambiguity = await compute_graph_ambiguity(
+            engine.driver, engagement_id
+        )
+        collapsed = await collapse_by_entropy_threshold(
+            engine.driver, pg_pool, engagement_id, threshold=0.5
+        )
+        return {
+            "path_entropy": path_entropy,
+            "privilege_inevitability": privilege_inevitability,
+            "graph_ambiguity": ambiguity,
+            "collapse_recommendations": collapsed,
+        }
+    except Exception as e:
+        logger.error(f"Entropy analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
+
+
+# ==== Causal Engine Endpoints ====
+
+@app.post("/causal/{engagement_id}/path-analysis")
+async def causal_path(
+    engagement_id: str,
+    path_id: str = Query(..., description="Attack path ID for causal chain analysis"),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Causal inference on an attack path."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    pg_pool = await get_pg_pool()
+    try:
+        async with pg_pool.acquire() as conn:
+            path_row = await conn.fetchrow(
+                """SELECT reasoning_trace FROM attack_paths
+                   WHERE id = $1 AND engagement_id = $2""",
+                path_id, engagement_id,
+            )
+            if not path_row:
+                raise HTTPException(status_code=404, detail="Path not found")
+            trace_data = path_row["reasoning_trace"]
+            if isinstance(trace_data, str):
+                trace_data = json.loads(trace_data)
+
+        result = await causal_path_analysis(
+            engine.driver, engagement_id, trace_data
+        )
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Causal analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
+
+
+@app.get("/causal/{engagement_id}/root-cause")
+async def causal_root_cause(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Root cause analysis across all attack paths."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    pg_pool = await get_pg_pool()
+    try:
+        result = await root_cause_analysis(
+            engine.driver, pg_pool, engagement_id
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Root cause analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
+
+
+@app.post("/causal/{engagement_id}/what-if")
+async def causal_what_if(
+    engagement_id: str,
+    node_id: str = Query(..., description="Node ID to intervene on"),
+    action: str = Query("remove", description="remove, harden, isolate"),
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """What-if intervention analysis for a specific node."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    pg_pool = await get_pg_pool()
+    try:
+        result = await what_if_intervention(
+            engine.driver, pg_pool, engagement_id, node_id, action
+        )
+        return result
+    except Exception as e:
+        logger.error(f"What-if intervention failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await pg_pool.close()
+
+
+# ==== Blast Radius v2 Endpoints ====
+
+@app.get("/blast/{engagement_id}/{node_id}")
+async def blast_radius_v2(
+    engagement_id: str,
+    node_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Topological blast radius v2 for a specific node."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_blast_radius(engine.driver, engagement_id, node_id)
+        return result
+    except Exception as e:
+        logger.error(f"Blast radius v2 failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/blast/{engagement_id}/all")
+async def blast_radius_all(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Topological blast radius for all critical nodes."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_topological_blast_all(engine.driver, engagement_id)
+        return {"engagement_id": engagement_id, "ranked_nodes": result}
+    except Exception as e:
+        logger.error(f"Blast radius all failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/blast/{engagement_id}/credential-cascade")
+async def blast_credential_cascade(
+    engagement_id: str,
+    x_lattice9_key: Optional[str] = Header(None),
+):
+    """Credential cascade risk analysis."""
+    verify_engine_key(x_lattice9_key)
+    if not engine.driver:
+        raise HTTPException(status_code=503, detail="Graph database unavailable")
+    try:
+        result = await compute_credential_cascade_risk(engine.driver, engagement_id)
+        return result
+    except Exception as e:
+        logger.error(f"Credential cascade failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/health")

@@ -5,6 +5,7 @@ import { CorrelationGraph3D } from "@/components/CorrelationGraph3D";
 import {
   Activity, Fingerprint, Shield, ChevronRight,
   AlertTriangle, Server, Database, Clock,
+  GitBranch, Atom, Brain, Siren, Dices,
 } from "lucide-react";
 
 interface IntelligencePanelProps {
@@ -35,6 +36,30 @@ export function IntelligencePanel({ engagementId }: IntelligencePanelProps) {
     { enabled: !!engagementId },
   );
 
+  const evolutionQuery = trpc.exposure.getEvolution.useQuery(
+    { engagementId },
+    { enabled: !!engagementId && activeSubTab === "evolution" },
+  );
+
+  const entropyQuery = trpc.exposure.getEntropy.useQuery(
+    { engagementId },
+    { enabled: !!engagementId && activeSubTab === "entropy" },
+  );
+
+  const causalQuery = trpc.exposure.getCausalAnalysis.useQuery(
+    { engagementId, mode: "root_cause" },
+    { enabled: !!engagementId && activeSubTab === "causal" },
+  );
+
+  const blastQuery = trpc.exposure.getBlastRadius.useQuery(
+    { engagementId, mode: "all" },
+    { enabled: !!engagementId && activeSubTab === "blast" },
+  );
+
+  const [cfScenario, setCfScenario] = useState<string>("comprehensive");
+  const [cfResult, setCfResult] = useState<any>(null);
+  const simulateCf = trpc.exposure.simulateCounterfactual.useMutation();
+
   const totalRuns = useRunsCount(engagementId);
 
   const findings = findingsQuery.data || [];
@@ -42,8 +67,10 @@ export function IntelligencePanel({ engagementId }: IntelligencePanelProps) {
   const exploitChains = exploitChainsQuery.data?.exploit_chains || [];
   const snapshots = temporalHistoryQuery.data?.snapshots || [];
   const drifts = temporalHistoryQuery.data?.drifts || [];
-
-  const severityWeights = { critical: 1.0, high: 0.8, medium: 0.5, low: 0.3, info: 0.1 };
+  const evolution = evolutionQuery.data || null;
+  const entropy = entropyQuery.data || null;
+  const causal = causalQuery.data || null;
+  const blast = blastQuery.data || null;
 
   return (
     <div className="h-full flex flex-col bg-[#0a0a0b]">
@@ -82,6 +109,11 @@ export function IntelligencePanel({ engagementId }: IntelligencePanelProps) {
           { id: "findingQueue", label: "FINDING_QUEUE", icon: Shield },
           { id: "exploitChains", label: "EXPLOIT_CHAINS", icon: AlertTriangle },
           { id: "timeline", label: "TEMPORAL", icon: Clock },
+          { id: "evolution", label: "EVOLUTION", icon: GitBranch },
+          { id: "counterfactual", label: "COUNTERFACTUAL", icon: Dices },
+          { id: "entropy", label: "ENTROPY", icon: Brain },
+          { id: "causal", label: "CAUSAL", icon: Atom },
+          { id: "blast", label: "BLAST", icon: Siren },
         ].map(tab => (
           <button
             key={tab.id}
@@ -98,7 +130,7 @@ export function IntelligencePanel({ engagementId }: IntelligencePanelProps) {
         ))}
         <div className="ml-auto flex items-center gap-2">
           <span className="text-[8px] font-mono text-zinc-800">
-            TOPO: {findings.length}n {findings.length * 2}e
+
           </span>
         </div>
       </div>
@@ -108,7 +140,6 @@ export function IntelligencePanel({ engagementId }: IntelligencePanelProps) {
         {/* GRAPH VIEW */}
         {activeSubTab === "graph" && (
           <div className="h-full flex">
-            {/* Finding queue — left sidebar in graph view */}
             <div className="w-72 shrink-0 border-r border-white/[0.04] overflow-y-auto">
               <div className="p-3 space-y-1">
                 {prioritized.map((f, i) => (
@@ -143,14 +174,13 @@ export function IntelligencePanel({ engagementId }: IntelligencePanelProps) {
               </div>
             </div>
 
-            {/* 3D Graph */}
             <div className="flex-1 relative">
               <CorrelationGraph3D engagementId={engagementId} />
             </div>
           </div>
         )}
 
-        {/* FINDING QUEUE (dense table view) */}
+        {/* FINDING QUEUE */}
         {activeSubTab === "findingQueue" && (
           <div className="h-full overflow-y-auto">
             <table className="w-full text-[10px] font-mono border-collapse">
@@ -239,7 +269,6 @@ export function IntelligencePanel({ engagementId }: IntelligencePanelProps) {
         {activeSubTab === "timeline" && (
           <div className="h-full overflow-y-auto p-4">
             <div className="grid grid-cols-2 gap-4">
-              {/* Snapshots */}
               <div>
                 <h4 className="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-[0.2em] mb-3">
                   Graph Snapshots ({snapshots.length})
@@ -252,16 +281,12 @@ export function IntelligencePanel({ engagementId }: IntelligencePanelProps) {
                     <div key={s.id} className="flex items-center justify-between p-2 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono">
                       <span className="text-zinc-400">{s.graphVersion}</span>
                       <span className="text-zinc-700">{s.snapshotType}</span>
-                      <span className="text-zinc-600">
-                        {s.entityCount}n / {s.relationshipCount}e
-                      </span>
+                      <span className="text-zinc-600">{s.entityCount}n / {s.relationshipCount}e</span>
                       <span className="text-zinc-700">{new Date(s.capturedAt).toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
               </div>
-
-              {/* Drift Events */}
               <div>
                 <h4 className="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-[0.2em] mb-3">
                   Drift Events ({drifts.length})
@@ -281,6 +306,278 @@ export function IntelligencePanel({ engagementId }: IntelligencePanelProps) {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* EVOLUTION — Temporal Graph Memory */}
+        {activeSubTab === "evolution" && (
+          <div className="h-full overflow-y-auto p-4">
+            {evolutionQuery.isLoading && <div className="text-zinc-600 text-[10px] font-mono">Loading evolution metrics...</div>}
+            {evolution && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-[0.2em] mb-3">
+                    Infrastructure Evolution
+                  </h4>
+                  <div className="space-y-1">
+                    {evolution.infrastructure_evolution?.metrics?.map((m: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between p-2 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono">
+                        <span className="text-zinc-300">{m.entity_type || m.label}</span>
+                        <span className="text-indigo-400 font-bold">{m.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-[0.2em] mb-3">
+                    Surface Entropy
+                  </h4>
+                  <div className="p-3 bg-white/[0.01] border border-white/[0.04] text-[10px] font-mono">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-zinc-600">Attack Surface Entropy:</span>
+                      <span className="text-amber-400 font-bold">{(evolution.surface_entropy?.attack_surface_entropy || 0).toFixed(4)}</span>
+                    </div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-zinc-600">Exposure Surface:</span>
+                      <span className="text-zinc-300">{evolution.surface_entropy?.exposure_surface || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-600">Trust Drift:</span>
+                      <span className="text-cyan-400 font-bold">{(evolution.trust_drift?.drift_score || 0).toFixed(4)}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <h4 className="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-[0.2em] mb-3">
+                    Credential Spread
+                  </h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="p-2 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono text-center">
+                      <div className="text-zinc-700 uppercase tracking-widest">Spread Score</div>
+                      <div className="text-amber-400 font-bold text-sm">{(evolution.credential_spread?.spread_score || 0).toFixed(3)}</div>
+                    </div>
+                    <div className="p-2 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono text-center">
+                      <div className="text-zinc-700 uppercase tracking-widest">Affected Services</div>
+                      <div className="text-zinc-300 font-bold text-sm">{evolution.credential_spread?.affected_services || 0}</div>
+                    </div>
+                    <div className="p-2 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono text-center">
+                      <div className="text-zinc-700 uppercase tracking-widest">Reuse Ratio</div>
+                      <div className="text-red-400 font-bold text-sm">{(evolution.credential_spread?.reuse_ratio || 0).toFixed(3)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* COUNTERFACTUAL — What-If Simulation */}
+        {activeSubTab === "counterfactual" && (
+          <div className="h-full overflow-y-auto p-4">
+            <div className="flex items-center gap-4 mb-4">
+              <select
+                value={cfScenario}
+                onChange={e => setCfScenario(e.target.value)}
+                className="bg-white/[0.03] border border-white/[0.08] text-[10px] font-mono text-zinc-300 px-2 py-1.5"
+              >
+                <option value="comprehensive">Full Scenario Sweep</option>
+                <option value="credential_compromise">Credential Compromise</option>
+                <option value="edge_removal">Edge Removal</option>
+                <option value="defense_addition">Defense Addition</option>
+              </select>
+              <button
+                onClick={async () => {
+                  const result = await simulateCf.mutateAsync({
+                    engagementId,
+                    scenario: cfScenario as any,
+                  });
+                  setCfResult(result);
+                }}
+                disabled={simulateCf.isPending}
+                className="text-[9px] font-mono font-bold uppercase tracking-widest px-3 py-1.5 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-600/30 transition-all disabled:opacity-40"
+              >
+                {simulateCf.isPending ? "SIMULATING..." : "RUN SIMULATION"}
+              </button>
+            </div>
+            {cfResult && (
+              <div className="grid grid-cols-1 gap-2">
+                {cfResult.scenarios?.map((s: any, i: number) => (
+                  <div key={i} className="p-3 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-zinc-400 font-bold uppercase tracking-widest">{s.name || s.scenario}</span>
+                      <span className={s.risk_delta > 0 ? "text-red-400" : "text-emerald-400"}>
+                        ΔRisk: {s.risk_delta !== undefined ? (s.risk_delta >= 0 ? "+" : "") + (s.risk_delta * 100).toFixed(1) + "%" : "—"}
+                      </span>
+                    </div>
+                    {s.paths_affected !== undefined && (
+                      <div className="text-zinc-600">Paths affected: {s.paths_affected}</div>
+                    )}
+                    {s.description && <div className="text-zinc-700 mt-1">{s.description}</div>}
+                  </div>
+                ))}
+                {!cfResult.scenarios && (
+                  <div className="p-3 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono">
+                    <pre className="text-zinc-400 whitespace-pre-wrap">{JSON.stringify(cfResult, null, 2)}</pre>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ENTROPY — Attack Path Entropy Collapse */}
+        {activeSubTab === "entropy" && (
+          <div className="h-full overflow-y-auto p-4">
+            {entropyQuery.isLoading && <div className="text-zinc-600 text-[10px] font-mono">Computing entropy collapse...</div>}
+            {entropy && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono text-center">
+                    <div className="text-zinc-700 uppercase tracking-widest mb-1">Path Entropy</div>
+                    <div className="text-cyan-400 font-bold text-lg">{(entropy.path_entropy?.entropy || 0).toFixed(4)}</div>
+                    <div className="text-zinc-700 text-[8px] mt-1">Max: {(entropy.path_entropy?.max_entropy || 0).toFixed(2)}</div>
+                  </div>
+                  <div className="p-3 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono text-center">
+                    <div className="text-zinc-700 uppercase tracking-widest mb-1">Privilege Inevitability</div>
+                    <div className="text-red-400 font-bold text-lg">{(entropy.privilege_inevitability?.inevitability_score || 0).toFixed(3)}</div>
+                    <div className="text-zinc-700 text-[8px] mt-1">Targets: {entropy.privilege_inevitability?.high_value_targets || 0}</div>
+                  </div>
+                  <div className="p-3 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono text-center">
+                    <div className="text-zinc-700 uppercase tracking-widest mb-1">Graph Ambiguity</div>
+                    <div className="text-amber-400 font-bold text-lg">{(entropy.graph_ambiguity?.normalized_ambiguity || 0).toFixed(4)}</div>
+                    <div className="text-zinc-700 text-[8px] mt-1">Paths: {entropy.graph_ambiguity?.total_paths || 0}</div>
+                  </div>
+                </div>
+                {entropy.collapse_recommendations?.collapsible_paths?.length > 0 && (
+                  <div>
+                    <h4 className="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-[0.2em] mb-2">
+                      Collapse Recommendations ({entropy.collapse_recommendations.collapsible_paths.length})
+                    </h4>
+                    <div className="space-y-1">
+                      {entropy.collapse_recommendations.collapsible_paths.map((p: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between p-2 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono">
+                          <span className="text-zinc-400">{p.path_id}</span>
+                          <span className="text-zinc-600">Entropy: {p.entropy.toFixed(3)}</span>
+                          <span className="text-amber-500">{p.reason}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* CAUSAL — Causal Inference Engine */}
+        {activeSubTab === "causal" && (
+          <div className="h-full overflow-y-auto p-4">
+            {causalQuery.isLoading && <div className="text-zinc-600 text-[10px] font-mono">Running causal inference...</div>}
+            {causal && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono text-center">
+                    <div className="text-zinc-700 uppercase tracking-widest mb-1">Paths Analyzed</div>
+                    <div className="text-zinc-300 font-bold text-lg">{causal.total_paths_analyzed || 0}</div>
+                  </div>
+                  <div className="p-3 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono text-center">
+                    <div className="text-zinc-700 uppercase tracking-widest mb-1">Root Causes</div>
+                    <div className="text-red-400 font-bold text-lg">{causal.root_causes?.length || 0}</div>
+                  </div>
+                  <div className="p-3 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono text-center">
+                    <div className="text-zinc-700 uppercase tracking-widest mb-1">Interventions</div>
+                    <div className="text-emerald-400 font-bold text-lg">{causal.interventions?.length || 0}</div>
+                  </div>
+                </div>
+                {causal.root_causes?.length > 0 && (
+                  <div>
+                    <h4 className="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-[0.2em] mb-2">
+                      Root Causes
+                    </h4>
+                    <div className="space-y-1">
+                      {causal.root_causes.map((r: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between p-2 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono">
+                          <div className="flex items-center gap-2">
+                            <span className="text-zinc-700">{i + 1}.</span>
+                            <span className="text-zinc-300">{r.name}</span>
+                            <span className="text-zinc-700 text-[7px] uppercase">({r.type})</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-indigo-400">Coverage: {(r.path_coverage * 100).toFixed(0)}%</span>
+                            <span className="text-zinc-600">Freq: {r.path_frequency}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {causal.interventions?.length > 0 && (
+                  <div>
+                    <h4 className="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-[0.2em] mb-2">
+                      Highest-Impact Interventions
+                    </h4>
+                    <div className="space-y-1">
+                      {causal.interventions.map((inv: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between p-2 bg-white/[0.01] border border-white/[0.04] text-[9px] font-mono">
+                          <span className="text-zinc-400">{inv.edge}</span>
+                          <span className="text-emerald-500">Affects {inv.affected_paths} paths</span>
+                          <span className="text-zinc-600">Impact: {(inv.impact_score * 100).toFixed(0)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* BLAST — Topological Blast Radius v2 */}
+        {activeSubTab === "blast" && (
+          <div className="h-full overflow-y-auto p-4">
+            {blastQuery.isLoading && <div className="text-zinc-600 text-[10px] font-mono">Computing blast radius...</div>}
+            {blast && (
+              <div className="space-y-4">
+                <h4 className="text-[9px] font-mono font-bold text-zinc-600 uppercase tracking-[0.2em] mb-3">
+                  Critical Nodes — Blast Radius Ranking
+                </h4>
+                <table className="w-full text-[9px] font-mono border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/[0.04] text-zinc-700 uppercase tracking-widest text-[8px]">
+                      <th className="text-left px-2 py-2 font-medium">Rank</th>
+                      <th className="text-left px-2 py-2 font-medium">Node</th>
+                      <th className="text-left px-2 py-2 font-medium">Type</th>
+                      <th className="text-right px-2 py-2 font-medium">Blast Score</th>
+                      <th className="text-right px-2 py-2 font-medium">Downstream</th>
+                      <th className="text-right px-2 py-2 font-medium">Cred Cascade</th>
+                      <th className="text-right px-2 py-2 font-medium">Priv Chains</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(blast.ranked_nodes || []).map((n: any, i: number) => (
+                      <tr key={i} className="border-b border-white/[0.02] hover:bg-white/[0.02]">
+                        <td className="px-2 py-2 text-zinc-700">{i + 1}</td>
+                        <td className="px-2 py-2 text-zinc-300 font-bold">{n.node?.name || n.node?.id}</td>
+                        <td className="px-2 py-2 text-zinc-600">{n.node?.type || "—"}</td>
+                        <td className="px-2 py-2 text-right">
+                          <span className={`font-bold ${n.blast_score > 0.7 ? "text-red-400" : n.blast_score > 0.4 ? "text-amber-400" : "text-zinc-400"}`}>
+                            {(n.blast_score * 100).toFixed(1)}%
+                          </span>
+                        </td>
+                        <td className="px-2 py-2 text-right text-zinc-400">{n.downstream_count}</td>
+                        <td className="px-2 py-2 text-right text-zinc-400">{n.credential_cascade_count}</td>
+                        <td className="px-2 py-2 text-right text-zinc-400">{n.privilege_chains}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {(!blast.ranked_nodes || blast.ranked_nodes.length === 0) && (
+                  <div className="text-zinc-700 text-[10px] font-mono text-center py-8">
+                    No blast radius data available
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
