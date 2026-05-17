@@ -4,15 +4,26 @@ import os
 async def render_all():
     from playwright.async_api import async_playwright
     
-    diagrams_dir = '/home/z/my-project/download/lattice9-diagrams'
+    diagrams_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    html_dir = os.path.join(diagrams_dir, 'html')
     
-    html_files = [f for f in os.listdir(diagrams_dir) if f.endswith('.html')]
+    html_files = [
+        '00-architecture-overview.html',
+        '04-quorum-partition-sync.html',
+        '05-graph-laplacian-spectral.html',
+        '06-entropy-geodesic-topology.html',
+        '07-attack-path-synthesis.html',
+    ]
+    
+    # Check which exist
+    existing = [f for f in html_files if os.path.exists(os.path.join(html_dir, f))]
+    print(f"Found {len(existing)} new diagrams to render")
     
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         
-        for html_file in sorted(html_files):
-            html_path = os.path.join(diagrams_dir, html_file)
+        for html_file in existing:
+            html_path = os.path.join(html_dir, html_file)
             png_name = html_file.replace('.html', '.png')
             png_path = os.path.join(diagrams_dir, png_name)
             
