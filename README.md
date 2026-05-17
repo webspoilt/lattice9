@@ -1,26 +1,14 @@
-<div align="center">
-
-<br/>
-
-<img src="https://raw.githubusercontent.com/webspoilt/lattice9/main/assets/lattice9-banner.png" alt="Lattice9" width="100%"/>
-
-<br/>
-
 # L A T T I C E 9
 
 **Graph-Native Offensive Intelligence Infrastructure**
 
-*Probabilistic Attack-Path Reasoning · Temporal Topology Cognition · Distributed Adversarial Computation*
-
-<br/>
+Probabilistic Attack-Path Reasoning · Temporal Topology Cognition · Distributed Adversarial Computation
 
 [![Author](https://img.shields.io/badge/AUTHOR-ZERODAY-1a1a2e?style=for-the-badge&logo=shield&logoColor=6B8FC2)](https://github.com/zeroday)
-![Topology](https://img.shields.io/badge/TOPOLOGY-GRAPH%20NATIVE-1a1a2e?style=for-the-badge&logo=neo4j&logoColor=6B8FC2)
-![Reasoning](https://img.shields.io/badge/REASONING-BAYESIAN-1a1a2e?style=for-the-badge&logo=probabilistic&logoColor=6B8FC2)
-![Infrastructure](https://img.shields.io/badge/INFRASTRUCTURE-DISTRIBUTED-1a1a2e?style=for-the-badge&logo=redis&logoColor=6B8FC2)
-![Model](https://img.shields.io/badge/MODEL-TEMPORAL-1a1a2e?style=for-the-badge&logo=clock&logoColor=6B8FC2)
-
-<br/>
+[![Topology](https://img.shields.io/badge/TOPOLOGY-GRAPH%20NATIVE-1a1a2e?style=for-the-badge&logo=neo4j&logoColor=6B8FC2)](https://github.com/zeroday)
+[![Reasoning](https://img.shields.io/badge/REASONING-BAYESIAN-1a1a2e?style=for-the-badge&logo=probabilistic&logoColor=6B8FC2)](https://github.com/zeroday)
+[![Infrastructure](https://img.shields.io/badge/INFRASTRUCTURE-DISTRIBUTED-1a1a2e?style=for-the-badge&logo=redis&logoColor=6B8FC2)](https://github.com/zeroday)
+[![Model](https://img.shields.io/badge/MODEL-TEMPORAL-1a1a2e?style=for-the-badge&logo=clock&logoColor=6B8FC2)](https://github.com/zeroday)
 
 ![Version](https://img.shields.io/badge/version-9.0.0--RC1-4A6FA5?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-3A7A6A?style=flat-square)
@@ -29,13 +17,13 @@
 ![Proxima](https://img.shields.io/badge/proxima-4.1.0-6B6A8A?style=flat-square)
 ![MCP](https://img.shields.io/badge/MCP-ready-8B5A5A?style=flat-square)
 
-</div>
-
 ---
+
+## The Lattice9 Mission
 
 > **Infrastructure is a graph. Vulnerabilities are edges. Compromise is a pathfinding problem.**
 >
-> Lattice9 models enterprise networks as a high-dimensional, bitemporally evolving directed multigraph. It executes **23 computational intelligence algorithms** across the topology — spanning graph field theory, topological data analysis, adversarial game theory, attack economics, wave propagation, causal inference, entropy collapse, and counterfactual simulation — to mathematically prioritize lateral path exposure and minimize analyst cognitive load.
+> Lattice9 models enterprise networks not as a flat list of assets, but as a high-dimensional, bitemporally evolving directed multigraph. It executes **23 computational intelligence algorithms** across the topology — spanning graph field theory, topological data analysis (TDA), adversarial game theory, attack economics, wave propagation, causal inference, entropy collapse, and counterfactual simulation — to mathematically prioritize lateral path exposure and minimize analyst cognitive load.
 >
 > **It does not scan. It does not dashboard. It computes.**
 >
@@ -50,7 +38,7 @@
 Lattice9 partitions and maps target subgraphs to independent traversers, utilizing Redis Streams for non-blocking task synchronization and Neo4j for structural schema relationships. The system operates across five computational layers:
 
 | Layer | Function | Components |
-|:------|:---------|:-----------|
+| :--- | :--- | :--- |
 | **L0 — Client** | Interface surface | CLI · REST API · WebSocket · MCP Client · Graph Console (D3/WebGL) |
 | **L1 — Orchestration** | Request routing | Exposure Router · Intelligence Router · Evidence Router · Proxima Router |
 | **L2 — Computation** | Graph intelligence | Topological Core + 23 Computational Intelligence Modules |
@@ -144,7 +132,7 @@ Where $\lambda = \ln(2) / t_{1/2}$ and the default half-life is calibrated at 30
 Seven specialized agents coordinate through **Proxima's Model Context Protocol (MCP)** routing layer, each grounded strictly in graph state:
 
 | Agent | Model | Operational Scope |
-|:------|:------|:------------------|
+| :--- | :--- | :--- |
 | **Planner** | Claude 3.5 Sonnet | Decomposes objectives into dependency-aware task DAGs |
 | **Recon** | GPT-4o / Local Llama | Executes discovery, port probing, fingerprinting |
 | **Correlation** | Claude 3.5 Sonnet | Maps relationships, trust boundaries, credential-to-asset bindings |
@@ -155,7 +143,7 @@ Seven specialized agents coordinate through **Proxima's Model Context Protocol (
 
 ### Execution Modes
 
-```
+```yaml
 Sequential:   Plan → Recon → Correlate → Exploit → Verify → Report
 Parallel:     Concurrent sub-task execution with async merge
 Debate:       Dialectic consensus rounds before Neo4j commit
@@ -170,10 +158,10 @@ Round-Robin:  Cyclic sweeps until graph confidence stabilizes
 
 Lattice9 has been rigorously audited and certified under strict computational constraints. The operational verification details are published in [analysis/runtime_validation_report.md](analysis/runtime_validation_report.md):
 
-1.  **Damped Belief Stabilization:** Loopy Belief Propagation sweeps are proven to converge within 10-15 cycles even under highly cyclical Active Directory trust loops, mitigated by our **Dynamic Oscillation Shield** that automatically scales down $\gamma$ when path oscillations are detected.
-2.  **Pearl Causal do-calculus:** The causal inference engine simulates network interventions—physically removing trust edges or isolating vertices—by dynamically altering the local graph state and re-solving joint probabilities without modifying the live production environment.
-3.  **D3/WebGL 3D Visual Fidelity:** Nodes in the 3D Force Graph console are sized dynamically by evidence-weighted Bayesian belief ($1 + C_i \times 3$) and colored by typed entities, while abstract non-Euclidean geometries (manifold curvature, homology voids) are isolated to sidebar telemetry panels to maintain human cognitive clarity.
-4.  **100% Passing Tests:** All 12 regression test cases (`server-py/test_engine.py`) execute and pass successfully, confirming complete computational and mathematical integrity.
+- **Damped Belief Stabilization:** Loopy Belief Propagation sweeps are proven to converge within 10-15 cycles even under highly cyclical Active Directory trust loops, mitigated by our **Dynamic Oscillation Shield** that automatically scales down $\gamma$ when path oscillations are detected.
+- **Pearl Causal do-calculus:** The causal inference engine simulates network interventions—physically removing trust edges or isolating vertices—by dynamically altering the local graph state and re-solving joint probabilities without modifying the live production environment.
+- **D3/WebGL 3D Visual Fidelity:** Nodes in the 3D Force Graph console are sized dynamically by evidence-weighted Bayesian belief ($1 + C_i \times 3$) and colored by typed entities, while abstract non-Euclidean geometries (manifold curvature, homology voids) are isolated to sidebar telemetry panels to maintain human cognitive clarity.
+- **100% Passing Tests:** All 12 regression test cases (`server-py/test_engine.py`) execute and pass successfully, confirming complete computational and mathematical integrity.
 
 ---
 
@@ -182,7 +170,7 @@ Lattice9 has been rigorously audited and certified under strict computational co
 Every mathematical model in Lattice9 maps to an operational consequence in lateral path computation. There is no decorative mathematics.
 
 | Module | Formulation | Operational Effect |
-|:-------|:-----------|:-------------------|
+| :--- | :--- | :--- |
 | **Field Theory** | $\Phi(v) = \sum \frac{\text{Risk}(u) \cdot \text{Trust}(u,v)}{d(u,v)^\gamma}$ | Maps compromise gravity wells and risk convergence zones |
 | **Wave Propagation** | $\frac{\partial C}{\partial t} = D\nabla^2 C - \lambda C + S(x,t)$ | Simulates threat contagion velocity across subnet boundaries |
 | **Resistance Theory** | $R(P) = \sum \frac{\text{DetectionRisk}(e)}{\text{TraversalProbability}(e)}$ | Calculates topological routing barriers to avoid detection |
@@ -206,7 +194,7 @@ Every mathematical model in Lattice9 maps to an operational consequence in later
 Traditional offensive-security platforms optimize for scan execution and vulnerability listing. Lattice9 operates on stateful adversarial graph cognition.
 
 | Dimension | Legacy Security Tools | Lattice9 Cognition Engine |
-|:----------|:----------------------|:--------------------------|
+| :--- | :--- | :--- |
 | **Core Data Model** | Flat, disconnected table of findings | Typed, directed, high-dimensional multigraph |
 | **Path Prioritization** | Static CVSS severity scoring | Attacker ROI utility optimized over topological context |
 | **Temporal State** | Per-engagement scan snapshots | Persistent, bitemporally evolving graph memory |
@@ -234,7 +222,7 @@ The Recon agent automatically detects and routes to available local models, fall
 
 ### Graph & Intelligence Computations
 
-```
+```http
 POST   /analyze/{engagement_id}              Full intelligence analysis sweep
 POST   /events/{engagement_id}               Event-driven graph recomputation
 GET    /snapshots/{engagement_id}             Temporal snapshots
@@ -259,7 +247,7 @@ GET    /evidence/{finding_id}/lineage         Cryptographic evidence ancestry tr
 
 ### Proxima & Agent Orchestration
 
-```
+```http
 GET    /proxima/health                        MCP connectivity status
 GET    /proxima/models                        Available LLM models
 GET    /proxima/agents                        Registered multi-agent runtimes
@@ -274,7 +262,7 @@ POST   /proxima/debate                        Dialectic multi-agent consensus de
 
 The repository maintains an exceptionally clean, modular systems-engineering structure:
 
-```
+```text
 lattice9/
 ├── server-py/                          # Python Graph Intelligence Engine
 │   ├── main.py                         # FastAPI REST framework
@@ -283,8 +271,7 @@ lattice9/
 │   │   ├── algorithms.py               # Constraint-aware path relaxing
 │   │   ├── confidence.py               # Loopy belief propagation core
 │   │   ├── field_theory.py             # Graph field spatial equations
-│   │   ├── topological_da.py           # Union-find & Bron-Kerbosch simplicial complexes
-│   │   └── temporal.py                 # Snapshots & temporal drift core
+│   │   └── topological_da.py           # Union-find & Bron-Kerbosch simplicial complexes
 │   └── proxima/                        # Proxima MCP & Multi-Agent systems
 │
 ├── server/                             # TypeScript Access Layer
@@ -327,7 +314,7 @@ Lattice9's computational framework opens several research frontiers in adversari
 ### System Requirements
 
 | Component | Requirement |
-|:----------|:------------|
+| :--- | :--- |
 | **OS** | Linux (Ubuntu 22.04+) or macOS |
 | **Graph Store** | Neo4j 5.x (local or remote) |
 | **Broker** | Redis 7.x (streams + async tasks) |
@@ -407,7 +394,7 @@ We eliminate AI hallucination by architectural constraints rather than prompt en
 ## Whitepaper & Documentation Publications
 
 | Document | Description |
-|:---------|:------------|
+| :--- | :--- |
 | [Systems Whitepaper](docs/whitepaper/lattice9.pdf) | Comprehensive mathematical and architectural specification (PDF) |
 | [Technical Whitepaper Spec](docs/whitepaper/Lattice9-Technical-Whitepaper.pdf) | Formal LaTeX compilation and equations list (PDF) |
 | [Distributed Worker Spec](docs/architecture/distributed-worker-architecture.md) | Hash-ring replication and partition synchronization spec |
@@ -417,59 +404,41 @@ We eliminate AI hallucination by architectural constraints rather than prompt en
 
 ## Mathematical Appendix
 
-<details>
-<summary><strong>Field Theory — Attack Pressure Formulation</strong></summary>
+### Field Theory — Attack Pressure Formulation
 
 $$\Phi(v) = \sum_{u \in V \setminus \{v\}} \frac{\text{Risk}(u) \cdot \text{Trust}(u, v)}{d(u, v)^\gamma}$$
 
 Where $d(u,v)$ is the geodesic distance on the topology, and $\gamma$ is the field spatial decay factor (default: inverse square law, $\gamma = 2.0$). The field density at each node identifies natural gravity wells where credential compromise propagates fastest.
 
-</details>
-
-<details>
-<summary><strong>Wave Propagation — Threat Diffusion PDE</strong></summary>
+### Wave Propagation — Threat Diffusion PDE
 
 $$\frac{\partial C}{\partial t} = D\nabla^2 C - \lambda C + S(x, t)$$
 
 A reaction-diffusion equation modeling compromise propagation: $D$ is the diffusion coefficient (network permeability), $\lambda$ is the natural decay rate (detection probability), and $S(x,t)$ is the source term (new compromise injections). This models the dynamic velocity of threat contagion across subnet boundaries.
 
-</details>
-
-<details>
-<summary><strong>Adversarial Game Theory — Minimax Equilibrium</strong></summary>
+### Adversarial Game Theory — Minimax Equilibrium
 
 $$V^*(s) = \max_a \min_d \mathbb{E}[R(s, a, d) + \gamma V^*(s')]$$
 
 The attacker selects action $a$ to maximize expected reward, while the defender selects action $d$ to minimize it. The resulting equilibrium identifies the most robust attack paths under the assumption of active defensive response.
 
-</details>
-
-<details>
-<summary><strong>Topology Resistance — Algebraic Connectivity</strong></summary>
+### Topology Resistance — Algebraic Connectivity
 
 $$R_{\text{topo}}(G, A) = \frac{\lambda_2 \cdot \Phi(A)}{|V|}$$
 
 Combines the Fiedler value $\lambda_2$ (algebraic connectivity) with the minimum cut $\Phi(A)$ for adversary $A$ to quantify structural resistance to adversarial traversal.
 
-</details>
-
-<details>
-<summary><strong>Entropy Collapse — Structural Uncertainty</strong></summary>
+### Entropy Collapse — Structural Uncertainty
 
 $$H(G) = -\sum_{i} P(P_i) \log_2 P(P_i)$$
 
 Shannon entropy over the distribution of attack paths $P_i$. Low entropy indicates structural convergence (few dominant paths — high risk), while high entropy indicates path diversity (many equally viable routes — defense complexity).
 
-</details>
-
-<details>
-<summary><strong>Information Geometry — Riemannian Metric</strong></summary>
+### Information Geometry — Riemannian Metric
 
 $$ds^2 = g_{ij}\, dx^i\, dx^j \quad | \quad \Gamma(\sigma) = \int_\sigma \sqrt{g_{ij}\, dx^i\, dx^j}$$
 
 The metric tensor $g_{ij}$ encodes traversal resistance on the attack manifold. Geodesic paths $\Gamma(\sigma)$ trace least-resistance routes through this curved space, naturally routing around high-detection zones.
-
-</details>
 
 ---
 
@@ -479,12 +448,6 @@ Lattice9 is provisioned under the [MIT License](LICENSE).
 
 ---
 
-<div align="center">
-
-*Infrastructure is a graph. Vulnerabilities are edges. Compromise is a pathfinding problem.*
-
 **LATTICE9 — COMPUTE, DON'T SCAN.**
 
 *Architected & Created by [zeroday](https://github.com/zeroday)*
-
-</div>
