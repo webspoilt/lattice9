@@ -21,9 +21,11 @@ Lattice9 is a graph-native offensive intelligence infrastructure for probabilist
 
 > **Infrastructure is a graph. Vulnerabilities are edges. Compromise is a pathfinding problem.**
 >
+> Modern reconnaissance and offensive intelligence pipelines are fundamentally broken. They produce millions of fragmented HTTP responses, disconnected endpoints, and un-exploitable vulnerability listings—leaving the operator to manually compress thousands of lines of unvalidated garbage under massive cognitive overload.
+>
 > Lattice9 models enterprise networks not as a flat list of assets, but as a high-dimensional, bitemporally evolving directed multigraph. It executes **23 computational intelligence algorithms** across the topology — spanning graph field theory, topological data analysis (TDA), adversarial game theory, attack economics, wave propagation, causal inference, entropy collapse, and counterfactual simulation — to mathematically prioritize lateral path exposure and minimize analyst cognitive load.
 >
-> **It does not scan. It does not dashboard. It computes.**
+> **It does not scan. It does not dashboard. It reasons.**
 >
 > *Architected and developed by **[zeroday](https://github.com/zeroday)***
 
@@ -42,6 +44,48 @@ Lattice9 partitions and maps target subgraphs to independent traversers, utilizi
 | **L2 — Computation** | Graph intelligence | Topological Core + 23 Computational Intelligence Modules |
 | **L3 — Agency** | Multi-agent reasoning | 7 Specialized Agents via Proxima MCP |
 | **L4 — Persistence** | State infrastructure | Neo4j 5.x · PostgreSQL 16 · Redis 7.x · FastAPI |
+
+### Ingestion, Reconnaissance & Reasoning Pipeline
+
+```text
+                     [ TARGET ]
+                          |
+           +--------------+--------------+
+           |                             |
+       [ DNS ]                     [ SERVICES ]
+           |                             |
+           +--------------+--------------+
+                          |
+                  [ INGESTION LAYER ]
+                          |
+           +--------------+--------------+
+           |                             |
+   [ TOPOLOGY ENGINE ]          [ RECON LAYER ]
+           |                             |
+           +--------------+--------------+
+                          |
+                   [ ASSET GRAPH ]
+                          |
+       Spectral Partitioning / Centrality Analysis
+                          |
+                  [ EVIDENCE FUSION ]
+                          |
+         Bayesian Confidence Propagation Engine
+                          |
+           +--------------+--------------+
+           |                             |
+      [ ATTACK PATH ]            [ INFRASTATE ]
+           |                             |
+           +--------------+--------------+
+                          |
+                [ DECISION COMPRESSION ]
+                          |
+                     [ OPERATOR ]
+```
+
+The ingestion and reconnaissance pipeline focuses on stealthy, asynchronous discovery and topology-aware traversal. Powered by **Scrapling** and non-blocking pipelines, the recon layer preserves strict evidence provenance and maintains graph continuity across boundaries while minimizing target behavioral fingerprints.
+
+![Evidence Lineage Flowchart](docs/diagrams/evidence_lineage.png)
 
 ---
 
@@ -63,6 +107,16 @@ Where:
 ![Core Architecture Topology](docs/diagrams/01-core-architecture-topology.png)
 
 > **Topological Invariant** — The graph is the sovereign source of truth. Every agent assertion must anchor to a specific Neo4j node or relationship. No agent can hypothesize a vulnerability or attack vector that violates the physical target state.
+
+### Spectral Graph Theory & The Graph Laplacian
+
+Lattice9 models infrastructure as a probabilistic topology model where assets are vertices and relationships are weighted edges representing DNS affinity, certificate reuse, shared authentication boundaries, or API dependencies.
+
+The topology engine computes connected components and spectral partitions using the **Graph Laplacian** $L$:
+
+$$L = D - A$$
+
+Where $D$ is the degree matrix and $A$ is the adjacency matrix. The Laplacian spectrum allows the engine to autonomously isolate weakly connected subnets, detect chokepoint assets, and evaluate trust-boundary emergence. If a critical vulnerability is observed on a node with high eigenvector centrality, its operational blast radius scales exponentially, and the routing engine immediately re-prioritizes path traversal.
 
 ---
 
@@ -122,6 +176,8 @@ $$C_t(e) = C_0(e) \cdot e^{-\lambda (t - t_{\text{update}})}$$
 
 Where $\lambda = \ln(2) / t_{1/2}$ and the default half-life is calibrated at 30 days. This automatically decays the validity of aged or inactive credentials, simulating natural environmental drift. The temporal engine maintains bitemporal snapshots — each engagement state is versioned, enabling drift computation between any two temporal points.
 
+![Temporal Mutation Pipeline](docs/diagrams/mutation_pipeline.png)
+
 ---
 
 ## Distributed Graph Computation
@@ -139,6 +195,8 @@ Seven specialized agents coordinate through **Proxima's Model Context Protocol (
 | **Verification** | Gemini 1.5 Pro | Skeptically audits inferences for false-positive elimination |
 | **Report** | Claude 3.5 Sonnet | Generates systems engineering documentation |
 | **Memory** | Gemini 1.5 Pro | Compiles snapshots, evolution tracking, topological drift |
+
+![Distributed Architecture Map](docs/diagrams/distributed_architecture.png)
 
 ### Execution Modes
 
@@ -185,6 +243,23 @@ Every mathematical model in Lattice9 maps to an operational consequence in later
 | **Temporal Decay** | $C_t(e) = C_0(e) \cdot e^{-\lambda \Delta t}$ | Decays credential validity simulating environmental drift |
 | **Blast Radius** | Multi-dimensional impact analysis | Computes cascading compromise reach from any node |
 | **Counterfactual** | Sandboxed mitigation simulation | Tests defense changes without affecting live graph |
+
+---
+
+## Decision Compression
+
+Modern attack surfaces generate more telemetry than human analysts can process efficiently. Lattice9 implements **Decision Compression** to aggregate millions of raw observations, thousands of endpoints, and conflicting evidence signals into high-confidence intelligence:
+
+- **Lateral Attack Narratives** — Sequential chains of compromise with structural context.
+- **Topology-Aware Exploit Paths** — Constraint-validated paths mapped to active environments.
+- **Operator-Relevant Intelligence** — Removing the operational noise to prioritize structural choke points.
+
+Instead of answering static questions like *"What vulnerabilities exist?"*, the engine autonomously resolves relational, goal-directed inquiries:
+
+- *"What relationships matter?"*
+- *"What evidence converges?"*
+- *"What infrastructure behaves anomalously?"*
+- *"What attack paths emerge probabilistically?"*
 
 ---
 
@@ -306,6 +381,19 @@ Lattice9's computational framework opens several research frontiers in adversari
 5. **GNN-Based Edge Prediction** — Predicting undocumented trust relationships from structural graph embeddings
 6. **Entropy-Weighted Geodesic Routing** — Combining information-theoretic entropy with geodesic distance for uncertainty-aware path planning
 
+### Research & Engineering Roadmap
+
+The planned engineering milestones and upcoming protocol expansions for Lattice9 include:
+
+- [ ] **Autonomous Exploit Validation** — Safe, sandboxed active exploit checks linked to evidence provenance.
+- [ ] **Episodic Infrastructure Memory** — Advanced episodic replay for tracking long-term structural drift.
+- [ ] **Reinforcement-Learning Recon** — Dynamic, agent-led reconnaissance paths to maximize target discovery.
+- [ ] **Temporal Topology Forecasting** — Predictive modeling of future asset changes and credential expirations.
+- [ ] **Latent-Space Embeddings** — Node2Vec and structural graph embeddings for predicting missing trust boundaries.
+- [ ] **Distributed Reasoning Agents** — Multi-agent consensus debate using lightweight, localized models.
+- [ ] **Adaptive Stealth Orchestration** — Graph-directed crawling to match traffic patterns and evade IPS systems.
+- [ ] **Causal Counterfactual Simulations** — Simulating patch effects and structural mutations before live deployment.
+
 ---
 
 ## Deployment
@@ -388,6 +476,14 @@ Traditional vulnerability platforms measure success by the count of integrated w
 
 We eliminate AI hallucination by architectural constraints rather than prompt engineering. The **graph is the sovereign source of truth**. When an agent makes an assertion, the statement must be anchored to a specific Neo4j node or relationship. If the telemetry state changes, the drift engine triggers active recomputation.
 
+### Epistemic Restraint & Operator Trust
+
+The engine operates under strict **epistemic restraint**—assuming that most individual findings are noisy, incomplete, or wrong until evidence converges. We prioritize explainability, confidence transparency, and mathematical provenance over bulk alert counts. Every lateral path inference provides a transparent chain of reasoning so the operator can always trace *why* the engine believes a particular exposure is viable.
+
+### UI Philosophy: Quiet Computational Intensity
+
+The Lattice9 operator console is built as an active adversarial systems observability environment rather than a static administrative dashboard. Avoiding cybersecurity clichés, fake terminal spam, or loud decorative aesthetics, it represents **quiet computational intensity**. It visualizes probabilistic topology graphs, Bayesian wave propagation, spectral clustering, and temporal exploit diffusion under realistic force-directed motion.
+
 ---
 
 ## Whitepaper & Documentation Publications
@@ -438,6 +534,16 @@ Shannon entropy over the distribution of attack paths $P_i$. Low entropy indicat
 $$ds^2 = g_{ij}\, dx^i\, dx^j \quad | \quad \Gamma(\sigma) = \int_\sigma \sqrt{g_{ij}\, dx^i\, dx^j}$$
 
 The metric tensor $g_{ij}$ encodes traversal resistance on the attack manifold. Geodesic paths $\Gamma(\sigma)$ trace least-resistance routes through this curved space, naturally routing around high-detection zones.
+
+---
+
+## Engineering Constraints
+
+As an offensive graph-reasoning operating system, Lattice9 operates under real-world computational constraints:
+
+- **Computational Complexity** — Large graph operations, such as Laplacian spectrum analysis, high-dimensional centrality, and continuous loopy belief propagation, scale aggressively with graph size. On massive infrastructures, these require significant RAM and can increase pathfinding latency.
+- **Graph Explosion** — Relationship modeling across rich perimeters can lead to overlapping trust boundaries and high edge densities. Minimizing graph instability during rapid topological drift is a major area of active engineering.
+- **Probabilistic Ambiguity** — Telemetry rarely behaves deterministically. Rather than forcing binary assumptions, the engine preserves and tracks uncertainty, requiring the analyst to calibrate convergence thresholds based on risk appetite.
 
 ---
 
