@@ -173,7 +173,7 @@ Every mathematical model in Lattice9 maps to an operational consequence in later
 | **Field Theory** | $\Phi(v) = \sum \frac{\text{Risk}(u) \cdot \text{Trust}(u,v)}{d(u,v)^\gamma}$ | Maps compromise gravity wells and risk convergence zones |
 | **Wave Propagation** | $\frac{\partial C}{\partial t} = D\nabla^2 C - \lambda C + S(x,t)$ | Simulates threat contagion velocity across subnet boundaries |
 | **Resistance Theory** | $R(P) = \sum \frac{\text{DetectionRisk}(e)}{\text{TraversalProbability}(e)}$ | Calculates topological routing barriers to avoid detection |
-| **Adversarial Game** | $V\^*(s) = \max_a \min_d \mathbb{E}[R(s,a,d) + \gamma V\^*(s')]$ | Identifies minimax pathways under active defensive patching |
+| **Adversarial Game** | $V^{\ast}(s) = \max_a \min_d \mathbb{E}[R(s,a,d) + \gamma V^{\ast}(s')]$ | Identifies minimax pathways under active defensive patching |
 | **Attack Economics** | $\mathcal{U}(P) = \frac{\text{Gain} \cdot \prod P_{\text{traverse}}}{\text{Risk}_{\text{detect}} \cdot \sum \text{Cost}}$ | Ranks exploit paths by attacker resource expenditure vs ROI |
 | **Entropy Collapse** | $H(G) = -\sum P(P_i) \log_2 P(P_i)$ | Isolates structural choke points to reduce uncertainty |
 | **Causal Inference** | $P(Y \mid \text{do}(X = x))$ | Identifies root causal exposures beyond correlation |
@@ -417,7 +417,7 @@ A reaction-diffusion equation modeling compromise propagation: $D$ is the diffus
 
 ### Adversarial Game Theory — Minimax Equilibrium
 
-$$V\^*(s) = \max_a \min_d \mathbb{E}[R(s, a, d) + \gamma V\^*(s')]$$
+$$V^{\ast}(s) = \max_a \min_d \mathbb{E}[R(s, a, d) + \gamma V^{\ast}(s')]$$
 
 The attacker selects action $a$ to maximize expected reward, while the defender selects action $d$ to minimize it. The resulting equilibrium identifies the most robust attack paths under the assumption of active defensive response.
 
