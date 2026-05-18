@@ -13,11 +13,7 @@ import {
   Loader2, 
   Shield, 
   Bug, 
-  FileText, 
   Network, 
-  Activity, 
-  Layers, 
-  Fingerprint,
   Zap,
   ChevronRight,
   Database,
@@ -98,25 +94,29 @@ export default function Lattice9Console() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0b] text-zinc-400 font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
-      {/* Global Status Bar */}
-      <div className="h-9 bg-black border-b border-white/5 flex items-center justify-between px-6 text-[10px] font-mono tracking-tighter">
-        <div className="flex items-center gap-6">
+      {/* Systems status bar — operational telemetry, not decorative */}
+      <div className="h-9 bg-black border-b border-white/5 flex items-center justify-between px-6 text-[10px] font-mono">
+        <div className="flex items-center gap-5">
           <div className="flex items-center gap-2">
-            <span className="text-zinc-600 uppercase">Status:</span>
-            <span className="text-emerald-500 font-bold uppercase">System_Nominal</span>
+            <span className="text-zinc-700 uppercase tracking-widest">Engine:</span>
+            <span className="text-emerald-500 font-bold uppercase">Lattice9</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-zinc-600 uppercase">Entropy:</span>
-            <span className="text-zinc-300">0.841bits</span>
-          </div>
-          <div className="flex items-center gap-2 text-zinc-500">
-            <Layers className="w-3 h-3" />
-            <span>Core: 5.0.0-L9</span>
-          </div>
+          {selectedEngagementId && (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="text-zinc-700 uppercase tracking-widest">Contexts:</span>
+                <span className="text-zinc-300 font-bold">{engagementsQuery.data?.length || 0}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-zinc-700 uppercase tracking-widest">Runs:</span>
+                <span className="text-zinc-300 font-bold">{runsQuery.data?.length || 0}</span>
+              </div>
+            </>
+          )}
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-5">
           <div className="flex items-center gap-2">
-            <span className="text-zinc-600 uppercase">Operator:</span>
+            <span className="text-zinc-700 uppercase tracking-widest">Operator:</span>
             <span className="text-zinc-300 uppercase">{user?.displayName || user?.email || "Anonymous"}</span>
           </div>
           <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />

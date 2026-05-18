@@ -1,9 +1,10 @@
 import { useEffect, useRef, useMemo, useState, useCallback } from "react";
 import ForceGraph3D from "react-force-graph-3d";
-import { trpc } from "@/lib/trpc";
 import * as THREE from "three";
 
-const NODE_COLORS: Record<string, string> = {
+export type AnalysisMode = "confidence" | "pressure" | "resistance" | "entropy" | "attractor" | "geometry" | "temporal";
+
+const TYPE_COLORS: Record<string, string> = {
   host: "#6366f1",
   service: "#00d9ff",
   endpoint: "#8b5cf6",
@@ -15,168 +16,265 @@ const NODE_COLORS: Record<string, string> = {
   trust_zone: "#10b981",
   objective: "#14b8a6",
 };
-
-const LINK_COLORS: Record<string, string> = {
+const DEFAULT_NODE_COLOR = "#6b7280";
+const LINK_TYPE_COLORS: Record<string, string> = {
   RESOLVES_TO: "rgba(99, 102, 241, 0.3)",
   HOSTS: "rgba(0, 217, 255, 0.25)",
   HAS_FINDING: "rgba(249, 115, 22, 0.35)",
   ATTACK_PATH: "rgba(239, 68, 68, 0.45)",
 };
-
-const DEFAULT_NODE_COLOR = "#6b7280";
 const DEFAULT_LINK_COLOR = "rgba(255, 255, 255, 0.08)";
 
-interface GraphNode {
-  id: string;
-  label: string;
-  type: string;
-  confidence: number;
-  severity?: string;
-  x?: number;
-  y?: number;
-  z?: number;
+interface GraphNode { id: string; label: string; type: string; confidence: number; severity?: string; x?: number; y?: number; z?: number; }
+interface GraphLink { source: string; target: string; type: string; confidence: number; }
+interface GraphData { nodes: GraphNode[]; links: GraphLink[]; }
+
+interface OverlayData {
+  fieldPressure?: Record<string, number>;
+  edgeResistance?: Array<{ source: string; target: string; resistance: number }>;
+  attractors?: Array<{ id: string; name: string; attractor_strength: number }>;
+  curvature?: Record<string, number>;
 }
 
-interface GraphLink {
-  source: string;
-  target: string;
-  type: string;
-  confidence: number;
-}
-
-interface GraphData {
-  nodes: GraphNode[];
-  links: GraphLink[];
-}
-
-interface CorrelationGraph3DProps {
+interface GraphCognitionEngineProps {
   engagementId: string;
+  graphData: GraphData;
+  analysisMode: AnalysisMode;
+  overlayData?: OverlayData;
+  temporalStep?: number;
+  selectedNodeId?: string | null;
+  onNodeSelect?: (node: GraphNode | null) => void;
 }
 
-export function CorrelationGraph3D({ engagementId }: CorrelationGraph3DProps) {
+function pressureToColor(p: number): string {
+  const t = Math.min(1, Math.max(0, p));
+  const r = Math.round(t * 239);
+  const g = Math.round((1 - t) * 217 + t * 68);
+  const b = Math.round((1 - t) * 255);
+  return `rgb(${r},${g},${b})`;
+}
+
+function curvatureToColor(k: number): string {
+  const t = Math.min(1, Math.max(0, k));
+  const r = Math.round(t * 245);
+  const g = Math.round((1 - t) * 158);
+  const b = Math.round((1 - t) * 11);
+  return `rgb(${r},${g},${b})`;
+}
+
+export function GraphCognitionEngine({
+  graphData, analysisMode, overlayData, temporalStep, selectedNodeId, onNodeSelect,
+}: GraphCognitionEngineProps) {
   const fgRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const nodeObjectsRef = useRef<Map<string, THREE.Group>>(new Map());
+  const tickRef = useRef(0);
   const [hoverNode, setHoverNode] = useState<GraphNode | null>(null);
+  const activeNodeId = selectedNodeId || hoverNode?.id || null;
 
-  const { data, isLoading } = trpc.exposure.getGraphData.useQuery(
-    { engagementId },
-    { refetchInterval: 10000 }
-  );
+  const modeForces = useMemo(() => ({
+    confidence: { charge: -80, link: 60, alpha: 0.02, velocity: 0.3 },
+    pressure: { charge: -120, link: 50, alpha: 0.015, velocity: 0.25 },
+    resistance: { charge: -60, link: 80, alpha: 0.025, velocity: 0.35 },
+    entropy: { charge: -100, link: 65, alpha: 0.03, velocity: 0.4 },
+    attractor: { charge: -150, link: 40, alpha: 0.01, velocity: 0.2 },
+    geometry: { charge: -90, link: 55, alpha: 0.02, velocity: 0.3 },
+    temporal: { charge: -80, link: 60, alpha: 0.02, velocity: 0.3 },
+  }), []);
 
-  const graphData = useMemo<GraphData>(() => {
-    if (!data) return { nodes: [], links: [] };
-    return {
-      nodes: data.nodes.map(n => ({
-        ...n,
-        x: (Math.random() - 0.5) * 10,
-        y: (Math.random() - 0.5) * 10,
-        z: (Math.random() - 0.5) * 10,
-      })),
-      links: data.links,
-    };
-  }, [data]);
+  const forces = modeForces[analysisMode] || modeForces.confidence;
+
+  const resistanceMap = useMemo(() => {
+    if (!overlayData?.edgeResistance) return null;
+    const m = new Map<string, number>();
+    for (const e of overlayData.edgeResistance) {
+      m.set(`${e.source}|${e.target}`, e.resistance);
+      m.set(`${e.target}|${e.source}`, e.resistance);
+    }
+    return m;
+  }, [overlayData?.edgeResistance]);
+
+  const attractorSet = useMemo(() => {
+    if (!overlayData?.attractors) return new Set<string>();
+    return new Set(overlayData.attractors.map(a => a.id));
+  }, [overlayData?.attractors]);
 
   useEffect(() => {
     const fg = fgRef.current;
-    if (fg && graphData.nodes.length > 0) {
-      try {
-        if (fg.d3Force) {
-          fg.d3Force("charge")?.strength(-80);
-          fg.d3Force("link")?.distance(60);
-          fg.d3AlphaDecay(0.02);
-          fg.d3VelocityDecay(0.3);
-          fg.d3ReheatSimulation();
-        }
-      } catch {
-        // forces not ready yet
-      }
-    }
-  }, [graphData.nodes.length]);
-
-  const handleNodeClick = useCallback((node: GraphNode) => {
-    setSelectedNode(prev => prev?.id === node.id ? null : node);
-  }, []);
+    if (!fg?.d3Force) return;
+    try {
+      fg.d3Force("charge")?.strength(forces.charge);
+      fg.d3Force("link")?.distance(forces.link);
+      fg.d3AlphaDecay(forces.alpha);
+      fg.d3VelocityDecay(forces.velocity);
+      fg.d3ReheatSimulation();
+    } catch {}
+  }, [forces.charge, forces.link, forces.alpha, forces.velocity]);
 
   const getNodeColor = useCallback((node: GraphNode): string => {
-    return NODE_COLORS[node.type] || DEFAULT_NODE_COLOR;
-  }, []);
+    if (activeNodeId && node.id !== activeNodeId) {
+      const base = TYPE_COLORS[node.type] || DEFAULT_NODE_COLOR;
+      const c = new THREE.Color(base);
+      c.multiplyScalar(0.3);
+      return c.getStyle();
+    }
+    if (analysisMode === "pressure" && overlayData?.fieldPressure) {
+      const p = overlayData.fieldPressure[node.id] || 0;
+      return pressureToColor(p);
+    }
+    if (analysisMode === "geometry" && overlayData?.curvature) {
+      const k = overlayData.curvature[node.id] || 0;
+      return curvatureToColor(k);
+    }
+    if (analysisMode === "attractor" && attractorSet.has(node.id)) {
+      return "#ff6b35";
+    }
+    if (analysisMode === "entropy") {
+      const c = 0.5 + (1 - node.confidence) * 0.5;
+      return `rgb(${Math.round(c * 245)}, ${Math.round(c * 158)}, ${Math.round(c * 11)})`;
+    }
+    return TYPE_COLORS[node.type] || DEFAULT_NODE_COLOR;
+  }, [analysisMode, overlayData, activeNodeId, attractorSet]);
 
   const nodeThreeObject = useCallback((node: GraphNode) => {
     const color = getNodeColor(node);
-    const size = 1 + node.confidence * 3;
-    const group = new THREE.Group();
+    const baseSize = 0.6 + node.confidence * 2.5;
+    const isActive = node.id === activeNodeId;
+    const isAttractor = attractorSet.has(node.id);
 
-    const sphereGeom = new THREE.SphereGeometry(size, 16, 12);
+    const group = new THREE.Group();
+    const size = baseSize * (isActive ? 1.5 : isAttractor ? 1.3 : 1);
+
+    const sphereGeom = new THREE.SphereGeometry(size, 12, 10);
     const sphereMat = new THREE.MeshBasicMaterial({
       color: new THREE.Color(color),
       transparent: true,
-      opacity: 0.9,
+      opacity: isActive ? 1 : 0.7 + node.confidence * 0.3,
     });
-    const sphere = new THREE.Mesh(sphereGeom, sphereMat);
-    group.add(sphere);
+    group.add(new THREE.Mesh(sphereGeom, sphereMat));
 
-    const glowGeom = new THREE.SphereGeometry(size * 1.6, 16, 12);
-    const glowMat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(color),
-      transparent: true,
-      opacity: 0.08,
-    });
-    const glow = new THREE.Mesh(glowGeom, glowMat);
-    group.add(glow);
+    if (analysisMode === "attractor" && isAttractor) {
+      const ringGeom = new THREE.RingGeometry(size * 1.2, size * 1.5, 24);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color("#ff6b35"),
+        transparent: true,
+        opacity: 0.4,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      });
+      const ring = new THREE.Mesh(ringGeom, ringMat);
+      ring.rotation.x = Math.PI / 2;
+      group.add(ring);
+    }
 
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d")!;
-    canvas.width = 256;
-    canvas.height = 64;
-    ctx.clearRect(0, 0, 256, 64);
+    if (node.confidence < 0.4) {
+      const glowGeom = new THREE.SphereGeometry(size * 1.8, 12, 10);
+      const glowMat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color("#f59e0b"),
+        transparent: true,
+        opacity: 0.15,
+        depthWrite: false,
+      });
+      group.add(new THREE.Mesh(glowGeom, glowMat));
+    }
 
-    ctx.font = "bold 20px 'IBM Plex Mono', monospace";
+    const labelCanvas = document.createElement("canvas");
+    labelCanvas.width = 192;
+    labelCanvas.height = 48;
+    const ctx = labelCanvas.getContext("2d")!;
+    ctx.clearRect(0, 0, 192, 48);
+    ctx.font = "bold 14px 'IBM Plex Mono', monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-    ctx.fillText(node.label.toUpperCase(), 128, 32);
+    ctx.fillStyle = isActive ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.5)";
+    ctx.fillText(node.label.toUpperCase(), 96, 24);
 
-    const texture = new THREE.CanvasTexture(canvas);
+    if (node.confidence < 0.5) {
+      ctx.fillStyle = "rgba(245, 158, 11, 0.6)";
+      ctx.font = "10px 'IBM Plex Mono', monospace";
+      ctx.fillText(`? ${(node.confidence * 100).toFixed(0)}%`, 96, 44);
+    }
+
+    const texture = new THREE.CanvasTexture(labelCanvas);
     texture.needsUpdate = true;
-    const spriteMat = new THREE.SpriteMaterial({
-      map: texture,
-      transparent: true,
-      depthWrite: false,
-    });
+    const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false });
     const sprite = new THREE.Sprite(spriteMat);
-    sprite.position.y = -size - 3;
-    sprite.scale.set(24, 6, 1);
+    sprite.position.y = -size - 2.5;
+    sprite.scale.set(18, 4.5, 1);
     group.add(sprite);
 
+    group.userData.nodeId = node.id;
+    group.userData.confidence = node.confidence;
+    nodeObjectsRef.current.set(node.id, group);
     return group;
-  }, [getNodeColor]);
+  }, [getNodeColor, analysisMode, activeNodeId, attractorSet]);
 
-  const handleLinkColor = useCallback((link: any): string => {
-    return LINK_COLORS[link.type] || DEFAULT_LINK_COLOR;
-  }, []);
+  const getLinkColor = useCallback((link: any): string => {
+    const srcId = typeof link.source === "object" ? link.source.id : link.source;
+    const tgtId = typeof link.target === "object" ? link.target.id : link.target;
+    const isAdj = activeNodeId && (srcId === activeNodeId || tgtId === activeNodeId);
 
-  const handleLinkWidth = useCallback((link: any): number => {
-    return 0.3 + link.confidence * 0.7;
-  }, []);
+    if (analysisMode === "resistance" && resistanceMap) {
+      const r = resistanceMap.get(`${srcId}|${tgtId}`);
+      if (r !== undefined) {
+        const t = Math.min(1, r / 2);
+        return `rgba(${Math.round(t * 239)}, ${Math.round((1 - t) * 68)}, ${Math.round((1 - t) * 36)}, ${isAdj ? 0.8 : 0.3})`;
+      }
+    }
+
+    const base = LINK_TYPE_COLORS[link.type] || DEFAULT_LINK_COLOR;
+    if (isAdj) return base.replace(/[\d.]+\)$/, "0.8)");
+    return base;
+  }, [analysisMode, resistanceMap, activeNodeId]);
+
+  const getLinkWidth = useCallback((link: any): number => {
+    const srcId = typeof link.source === "object" ? link.source.id : link.source;
+    const tgtId = typeof link.target === "object" ? link.target.id : link.target;
+    const isAdj = activeNodeId && (srcId === activeNodeId || tgtId === activeNodeId);
+
+    if (analysisMode === "resistance" && resistanceMap) {
+      const r = resistanceMap.get(`${srcId}|${tgtId}`);
+      if (r !== undefined) return Math.max(0.2, (1 - r) * 2) * (isAdj ? 2 : 1);
+    }
+
+    return (0.2 + link.confidence * 0.6) * (isAdj ? 2 : 1);
+  }, [analysisMode, resistanceMap, activeNodeId]);
 
   const isHighlighted = useCallback((node: GraphNode, link: any): boolean => {
-    if (!selectedNode && !hoverNode) return false;
-    const activeId = selectedNode?.id || hoverNode?.id;
-    return node.id === activeId || link.source.id === activeId || link.target.id === activeId;
-  }, [selectedNode, hoverNode]);
+    if (!activeNodeId) return false;
+    const srcId = typeof link.source === "object" ? link.source.id : link.source;
+    const tgtId = typeof link.target === "object" ? link.target.id : link.target;
+    return node.id === activeNodeId || srcId === activeNodeId || tgtId === activeNodeId;
+  }, [activeNodeId]);
 
-  if (isLoading) {
+  const isNodeHighlighted = useCallback((node: GraphNode): boolean => {
+    if (!activeNodeId) return true;
+    if (node.id === activeNodeId) return true;
+    for (const link of graphData.links) {
+      const srcId = typeof link.source === "object" ? (link.source as any).id : link.source;
+      const tgtId = typeof link.target === "object" ? (link.target as any).id : link.target;
+      if ((srcId === activeNodeId && tgtId === node.id) || (tgtId === activeNodeId && srcId === node.id)) return true;
+    }
+    return false;
+  }, [activeNodeId, graphData.links]);
+
+  const handleNodeClick = useCallback((node: GraphNode) => {
+    onNodeSelect?.(selectedNodeId === node.id ? null : node);
+  }, [onNodeSelect, selectedNodeId]);
+
+  const modeLabel = useMemo(() => ({
+    confidence: "CONFIDENCE PROPAGATION",
+    pressure: "ATTACK PRESSURE FIELD",
+    resistance: "TOPOLOGICAL RESISTANCE",
+    entropy: "SHANNON ENTROPY",
+    attractor: "COMPROMISE ATTRACTORS",
+    geometry: "MANIFOLD CURVATURE",
+    temporal: "TEMPORAL EVOLUTION",
+  }), []);
+
+  if (!graphData.nodes.length) {
     return (
-      <div className="h-full flex items-center justify-center bg-[#0a0a0b]">
-        <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">Synthesizing graph topology...</div>
-      </div>
-    );
-  }
-
-  return (
-    <div ref={containerRef} className="relative w-full h-full bg-[#0a0a0b]">
-      {graphData.nodes.length === 0 ? (
+      <div ref={containerRef} className="relative w-full h-full bg-[#0a0a0b]">
         <div className="h-full flex items-center justify-center">
           <div className="text-center space-y-3">
             <div className="text-[10px] font-mono text-zinc-700 uppercase tracking-widest">
@@ -187,88 +285,64 @@ export function CorrelationGraph3D({ engagementId }: CorrelationGraph3DProps) {
             </div>
           </div>
         </div>
-      ) : (
-        <ForceGraph3D
-          ref={fgRef}
-          graphData={graphData}
-          backgroundColor="#0a0a0b"
-          nodeRelSize={0.8}
-          linkColor={handleLinkColor}
-          linkWidth={handleLinkWidth}
-          linkOpacity={0.6}
-          nodeThreeObject={nodeThreeObject}
-          onNodeClick={handleNodeClick}
-          onNodeHover={setHoverNode}
-          d3AlphaDecay={0.02}
-          d3VelocityDecay={0.3}
-          enableNodeDrag={false}
-          enableNavigationControls={true}
-          showNavInfo={false}
-          rendererConfig={{
-            antialias: true,
-            alpha: true,
-            powerPreference: "high-performance",
-          }}
-        />
-      )}
+      </div>
+    );
+  }
 
-      {/* Legend */}
-      <div className="absolute top-4 left-4 flex flex-col gap-1.5 pointer-events-none z-10">
-        {Object.entries(NODE_COLORS).map(([type, color]) => {
-          const hasType = graphData.nodes.some(n => n.type === type);
-          if (!hasType) return null;
-          return (
-            <div key={type} className="flex items-center gap-2">
-              <div className="w-2 h-2" style={{ backgroundColor: color }} />
-              <span className="text-[8px] font-mono text-zinc-600 uppercase tracking-widest">{type}</span>
-            </div>
-          );
-        })}
+  return (
+    <div ref={containerRef} className="relative w-full h-full bg-[#0a0a0b]">
+      <ForceGraph3D
+        ref={fgRef}
+        graphData={graphData}
+        backgroundColor="#0a0a0b"
+        nodeRelSize={0.6}
+        linkColor={getLinkColor}
+        linkWidth={getLinkWidth}
+        linkOpacity={analysisMode === "entropy" ? 0.4 : 0.6}
+        nodeThreeObject={nodeThreeObject}
+        onNodeClick={handleNodeClick}
+        onNodeHover={setHoverNode}
+        d3AlphaDecay={forces.alpha}
+        d3VelocityDecay={forces.velocity}
+        enableNodeDrag={false}
+        enableNavigationControls={true}
+        showNavInfo={false}
+        rendererConfig={{
+          antialias: true,
+          alpha: true,
+          powerPreference: "high-performance",
+        }}
+      />
+
+      {/* Mode indicator */}
+      <div className="absolute top-4 left-4 z-10 pointer-events-none">
+        <div className="text-[8px] font-mono text-cyan-700 uppercase tracking-[0.3em]">{modeLabel[analysisMode]}</div>
       </div>
 
-      {/* Stats */}
-      <div className="absolute top-4 right-4 flex gap-4 pointer-events-none z-10">
-        <div className="text-[9px] font-mono text-zinc-700 uppercase tracking-widest">
-          Nodes: {graphData.nodes.length}
-        </div>
-        <div className="text-[9px] font-mono text-zinc-700 uppercase tracking-widest">
-          Edges: {graphData.links.length}
-        </div>
-      </div>
-
-      {/* Detail Panel */}
-      {selectedNode && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[480px] bg-[#0e0e10] border border-white/[0.06] shadow-2xl z-20">
-          <div className="px-5 py-4 border-b border-white/[0.04] flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-2.5 h-2.5" style={{ backgroundColor: getNodeColor(selectedNode) }} />
-              <span className="text-[11px] font-bold text-zinc-200 uppercase tracking-tight">
-                {selectedNode.label}
-              </span>
-            </div>
-            <button
-              onClick={() => setSelectedNode(null)}
-              className="text-zinc-700 hover:text-zinc-400 text-[10px] font-mono uppercase tracking-wider cursor-pointer"
-            >
-              Close
-            </button>
+      {/* Disconnected warning */}
+      {graphData.nodes.length > 1 && (
+        <div className="absolute top-4 right-4 flex gap-3 z-10 pointer-events-none">
+          <div className="text-[9px] font-mono text-zinc-700 uppercase tracking-widest">
+            N: {graphData.nodes.length}
           </div>
-          <div className="px-5 py-4 flex gap-6 text-[10px] font-mono">
-            <div className="space-y-2">
-              <div className="text-zinc-700 uppercase tracking-widest">Type</div>
-              <div className="text-zinc-300 uppercase">{selectedNode.type}</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-zinc-700 uppercase tracking-widest">Confidence</div>
-              <div className="text-zinc-300">{(selectedNode.confidence * 100).toFixed(0)}%</div>
-            </div>
-            {selectedNode.severity && (
-              <div className="space-y-2">
-                <div className="text-zinc-700 uppercase tracking-widest">Severity</div>
-                <div className="text-orange-400 uppercase">{selectedNode.severity}</div>
-              </div>
-            )}
+          <div className="text-[9px] font-mono text-zinc-700 uppercase tracking-widest">
+            E: {graphData.links.length}
           </div>
+          {analysisMode === "entropy" && (
+            <div className="text-[9px] font-mono text-amber-700 uppercase tracking-widest">
+              UNCERTAINTY: {graphData.nodes.filter(n => n.confidence < 0.5).length}
+            </div>
+          )}
+          {analysisMode === "pressure" && overlayData?.fieldPressure && (
+            <div className="text-[9px] font-mono text-cyan-700 uppercase tracking-widest">
+              WELLS: {Object.values(overlayData.fieldPressure).filter(v => v > 0.6).length}
+            </div>
+          )}
+          {analysisMode === "attractor" && (
+            <div className="text-[9px] font-mono text-orange-700 uppercase tracking-widest">
+              ATTRACTORS: {attractorSet.size}
+            </div>
+          )}
         </div>
       )}
     </div>

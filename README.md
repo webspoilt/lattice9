@@ -484,6 +484,57 @@ The engine operates under strict **epistemic restraint**—assuming that most in
 
 The Lattice9 operator console is built as an active adversarial systems observability environment rather than a static administrative dashboard. Avoiding cybersecurity clichés, fake terminal spam, or loud decorative aesthetics, it represents **quiet computational intensity**. It visualizes probabilistic topology graphs, Bayesian wave propagation, spectral clustering, and temporal exploit diffusion under realistic force-directed motion.
 
+### Graph Cognition & Operational Reasoning Interface
+
+Lattice9 consolidates 18 legacy static tables into a unified, high-fidelity Graph Cognition Console divided into 4 tightly integrated operational surfaces:
+
+```
+                      +---------------------------------------------+
+                      |               LATTICE9 CONSOLE              |
+                      +---------------------------------------------+
+                      |  [COGNITION]   [FINDINGS]   [ATTACK]   [TEMPORAL] |
+                      +---------------------------------------------+
+                      |                                             |
+                      |          3D GRAPH REASONING ENGINE          |
+                      |       (Dynamic Physics-Based Overlays)       |
+                      |                                             |
+                      |   [CONFIDENCE] [PRESSURE] [RESISTANCE]     |
+                      |   [ENTROPY]    [ATTRACTOR] [CURVATURE]      |
+                      |                                             |
+                      +---------------------+-----------------------+
+                      |  REASONING CHAIN    | EVIDENCE PROVENANCE   |
+                      |  - Prior Transition | - Hash Validation     |
+                      |  - Edge Weights     | - CWE / CVSS Mapping  |
+                      |  - Joint Probability| - Source Attributions |
+                      +---------------------+-----------------------+
+```
+
+#### 1. COGNITION — Physics-Based Graph Observation
+The central viewport renders a fully interactive 3D Force-Directed Graph connected directly to our computational layers. Visual behavior is tightly bound to active mathematical models, modifying Three.js forces, charge levels, and node/link aesthetics in real time:
+* **CONFIDENCE MODE (Bayesian Belief Damping):** Node sizes are scaled by their converged Bayesian belief ($1 + C_i \times 3$), while less confident nodes visually oscillate and vibrate to communicate model uncertainty to the operator.
+* **PRESSURE MODE (Risk Gravity Wells):** Renders spatial field intensity $\Phi(v)$, coloring nodes using HSL thermal gradients (cyan to amber/red) to isolate risk hotspots and compromise gravity wells.
+* **RESISTANCE MODE (Stealth Corridors):** Edge opacities and widths represent topological resistance $R(e)$. High-resistance boundaries drift physically apart in space, making network isolation regions visually intuitive.
+* **ENTROPY MODE (Shannon Uncertainty):** Visualizes structural information chaos $H(G)$. The layout increases charges and kinetic velocities, highlighting high-entropy boundaries where structural uncertainty is concentrated.
+* **ATTRACTOR MODE (Compromise Basins):** Attractor nodes $A(v)$ exert gravitational pull, pulling surrounding network nodes into compact, dense subgraphs representing target compromise basins.
+* **CURVATURE MODE (Riemannian Geodesics):** Colors vertices by their Ricci/manifold curvature $g_{ij}$, mapping the topological curves of the attack surface to identify optimal routing pathways.
+
+#### 2. FINDINGS — Evidence-Driven Queue
+An operational panel mapping validated exposures to their exact cryptographic provenance. Every finding is indexed with:
+* **Evidence Lineage Panel:** Shows the deterministic ancestry chain from raw ingestion hashes to high-level multi-agent assertions, completely eliminating hallucination risks.
+* **Severity & Priority Weighting:** Combines CVSS/CWE taxonomy with dynamic topological centrality to rank exposures by true operational impact rather than generic scores.
+
+#### 3. ATTACK SURFACE — Strategic Decision Synthesis
+A specialized cockpit for lateral routing, attacker economics, and game-theoretic sandboxing:
+* **Path Economics:** Ranks exploit paths by Attacker ROI/Utility $\mathcal{U}(P)$, helping the operator identify the highest-probability paths of least resistance.
+* **Nash Equilibrium & Minimax Layouts:** Isolates game-theoretic optimal routing corridors, assuming an active, patching adversary.
+* **What-If Counterfactual Sandbox:** Allows the operator to simulate defensive changes—such as severing a trust edge or isolating a service—and immediately observe the resulting wave-propagation decay and topology resistance collapse without touching the production environment.
+
+#### 4. TEMPORAL — Bitemporal History Timeline
+Tracks structural drift and credential decay over a bitemporal timeline:
+* **Snapshot History:** High-speed time-scrubber to step back and observe graph evolution.
+* **Topological Drift Logs:** Audits added/modified/deleted entities and relationships between any two temporal points.
+* **Credential Half-Life Decay Visuals:** Displays the active exponential decay curve of credential validity, highlighting stale credentials that require refreshing.
+
 ---
 
 ## Whitepaper & Documentation Publications
